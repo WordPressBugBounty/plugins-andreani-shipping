@@ -1,0 +1,158 @@
+/**
+ * Vista: Panel de bultos en la ficha de producto. Repeater dentro de #woocommerce-product-data.
+ * Scope estricto en `.andreani-bultos-section` para evitar leaks al admin de WC y otros plugins.
+ * Depende de: andreani-core-variables
+ */
+
+#woocommerce-product-data .andreani-bultos-section {
+	padding: var(--andr-sp-2) var(--andr-sp-3) !important;
+	border-top: 1px solid var(--andr-color-border);
+	margin-top: var(--andr-sp-2);
+}
+
+.andreani-bultos-section .andreani-bultos-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin: 0 0 var(--andr-sp-2);
+	gap: var(--andr-sp-3);
+}
+
+.andreani-bultos-section .andreani-bultos-title {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--andr-sp-2);
+	font-family: var(--andr-font-display);
+	font-weight: var(--andr-fw-semibold);
+	font-size: var(--andr-text-md);
+	color: var(--andr-color-text-strong);
+}
+
+.andreani-bultos-section .andreani-bultos-logo {
+	height: 22px;
+	width: 22px;
+	display: inline-block;
+	flex-shrink: 0;
+}
+
+.andreani-bultos-section .andreani-bultos-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: var(--andr-sp-1) var(--andr-sp-3);
+	border-radius: var(--andr-radius-pill);
+	font-family: var(--andr-font-body);
+	font-size: var(--andr-text-xs);
+	font-weight: var(--andr-fw-semibold);
+	letter-spacing: 0.02em;
+	line-height: 1.4;
+	white-space: nowrap;
+	transition: background-color var(--andr-transition-fast), color var(--andr-transition-fast);
+}
+
+.andreani-bultos-section .andreani-bultos-badge--regular {
+	background: var(--andr-color-surface-muted);
+	color: var(--andr-color-text-subtle);
+}
+
+.andreani-bultos-section .andreani-bultos-badge--bigger {
+	background: var(--andr-color-success-subtle);
+	color: var(--andr-color-success-strong);
+}
+
+.andreani-bultos-section .andreani-bultos-toggle-field {
+	display: flex;
+	align-items: center;
+	margin: 0 0 var(--andr-sp-2);
+}
+
+.woocommerce_options_panel .andreani-bultos-section .andreani-bultos-toggle-field label {
+	display: inline-flex !important;
+	align-items: center;
+	float: none !important;
+	width: auto !important;
+	margin: 0 !important;
+	font-weight: var(--andr-fw-semibold);
+	font-size: var(--andr-text-base);
+	color: var(--andr-color-text);
+	cursor: pointer;
+}
+
+.woocommerce_options_panel .andreani-bultos-section .andreani-bultos-toggle-field input[type="checkbox"] {
+	width: auto !important;
+	margin: 0 var(--andr-sp-1) 0 0 !important;
+	float: none !important;
+}
+
+.andreani-bultos-section #andreani-bultos-content {
+	display: none;
+	padding-top: var(--andr-sp-2);
+}
+
+.andreani-bultos-section #andreani-bultos-content.active {
+	display: block;
+}
+
+.andreani-bultos-section .andreani-bultos-help {
+	color: var(--andr-color-text-subtle);
+	font-size: var(--andr-text-sm);
+	margin: 0 0 var(--andr-sp-3);
+}
+
+#woocommerce-product-data .andreani-bultos-section .andreani-bulto-row {
+	display: flex;
+	align-items: flex-end;
+	gap: var(--andr-sp-2);
+	margin-bottom: var(--andr-sp-2);
+	padding: var(--andr-sp-2);
+	background: var(--andr-color-surface-subtle);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-xs);
+}
+
+#woocommerce-product-data .andreani-bultos-section .andreani-bulto-row label {
+	display: flex;
+	flex-direction: column;
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-subtle);
+	flex: 1;
+	float: none;
+	width: auto;
+	margin: 0;
+	padding: 0;
+}
+
+#woocommerce-product-data .andreani-bultos-section .andreani-bulto-row input[type="number"] {
+	width: 100% !important;
+	margin-top: 2px;
+	float: none;
+	min-height: 0;
+}
+
+#woocommerce-product-data .andreani-bultos-section .andreani-bulto-label {
+	font-weight: var(--andr-fw-semibold);
+	font-size: var(--andr-text-sm);
+	min-width: 55px;
+	color: var(--andr-color-text);
+	align-self: center;
+}
+
+#woocommerce-product-data .andreani-bultos-section .andreani-remove-bulto {
+	color: var(--andr-color-error-strong) !important;
+	border-color: var(--andr-color-error-strong) !important;
+	font-size: var(--andr-text-lg);
+	line-height: 1;
+	padding: 2px var(--andr-sp-2) !important;
+	min-height: 28px;
+	cursor: pointer;
+	flex-shrink: 0;
+	transition: background-color var(--andr-transition-fast), color var(--andr-transition-fast);
+}
+
+#woocommerce-product-data .andreani-bultos-section .andreani-remove-bulto:hover {
+	background: var(--andr-color-error-strong) !important;
+	color: var(--andr-color-text-inverse) !important;
+}
+
+#woocommerce-product-data .andreani-bultos-section #andreani-add-bulto {
+	margin-top: var(--andr-sp-2);
+}

@@ -1,0 +1,693 @@
+/**
+ * Vista: Grilla de productos del admin (página "Ver mis productos").
+ * Depende de: andreani-core-base + componentes badge/button/modal
+ */
+
+.andreani-products-wrap {
+	max-width: 1440px;
+	padding-right: var(--andr-sp-4);
+}
+
+/* --- Tabla de productos: mismo look que la grilla de envíos (scoped al wrap) --- */
+
+.andreani-products-wrap .wp-list-table {
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-sm);
+	border-collapse: separate;
+	border-spacing: 0;
+	overflow: hidden;
+	background: var(--andr-color-surface);
+	box-shadow: var(--andr-shadow-xs);
+}
+
+.andreani-products-wrap .wp-list-table thead th {
+	background: var(--andr-color-surface-subtle);
+	border-bottom: 1px solid var(--andr-color-border);
+	padding: var(--andr-sp-3);
+	font-size: var(--andr-text-xs);
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	white-space: nowrap;
+}
+
+.andreani-products-wrap .wp-list-table tbody tr {
+	transition: background 0.15s ease;
+}
+
+.andreani-products-wrap .wp-list-table tbody tr:hover {
+	background: color-mix(in srgb, var(--andreani-primary) 5%, transparent);
+}
+
+.andreani-products-wrap .wp-list-table tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.andreani-products-wrap .wp-list-table td {
+	padding: var(--andr-sp-3);
+	border-bottom: 1px solid var(--andr-color-border-subtle);
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-subtle);
+	vertical-align: middle;
+}
+
+/* --- Celda de producto --- */
+
+.andreani-product-cell {
+	display: flex;
+	align-items: center;
+	gap: var(--andr-sp-2);
+}
+
+.andreani-product-cell__thumb {
+	width: 40px;
+	height: 40px;
+	object-fit: cover;
+	border-radius: var(--andr-radius-sm);
+	flex-shrink: 0;
+}
+
+.andreani-product-cell__thumb-placeholder {
+	width: 40px;
+	height: 40px;
+	background: var(--andr-color-surface-raised);
+	border-radius: var(--andr-radius-sm);
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-product-cell__info {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	gap: 2px;
+}
+
+.andreani-product-cell__name {
+	font-weight: 500;
+	color: var(--andr-color-text);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 240px;
+}
+
+.andreani-product-cell__sku {
+	font-size: var(--andr-text-xs);
+	color: var(--andr-color-text-muted);
+}
+
+/* --- Valores de dimensión --- */
+
+.andreani-dim-value {
+	font-variant-numeric: tabular-nums;
+	color: var(--andr-color-text);
+}
+
+.andreani-dim-value--empty {
+	color: var(--andr-color-text-muted);
+}
+
+/* --- Acciones por fila --- */
+
+.andreani-product-actions {
+	display: flex;
+	gap: var(--andr-sp-1);
+	white-space: nowrap;
+}
+
+/* --- Estado vacío --- */
+
+.andreani-products-empty {
+	text-align: center;
+	padding: var(--andr-sp-8) var(--andr-sp-4);
+	color: var(--andr-color-text-muted);
+}
+
+/* --- Paginación --- */
+
+.andreani-products-pagination {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--andr-sp-2);
+	padding: var(--andr-sp-3) 0;
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-muted);
+}
+
+/* --- Modal edición: grid de campos --- */
+
+.andreani-product-dims {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--andr-sp-3);
+	margin-top: var(--andr-sp-3);
+}
+
+/* Los inputs traen .regular-text/.small-text de WP (ancho fijo en em) que
+ * desbordan el grid del modal → forzamos que llenen su columna. */
+.andreani-product-dims input {
+	width: 100%;
+	box-sizing: border-box;
+	margin: 0;
+}
+
+.andreani-product-dims__field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--andr-sp-1);
+}
+
+.andreani-product-dims__field--full {
+	grid-column: 1 / -1;
+}
+
+.andreani-product-dims__label {
+	font-size: var(--andr-text-sm);
+	font-weight: 500;
+	color: var(--andr-color-text);
+}
+
+.andreani-product-dims__hint {
+	font-size: var(--andr-text-xs);
+	color: var(--andr-color-text-muted);
+}
+
+/* --- Modal probador de cotización --- */
+
+.andreani-quote-tester {
+	display: flex;
+	align-items: flex-end;
+	gap: var(--andr-sp-2);
+	margin-top: var(--andr-sp-3);
+}
+
+.andreani-quote-tester__field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--andr-sp-1);
+	flex: 1;
+}
+
+.andreani-quote-tester input {
+	width: 100%;
+	box-sizing: border-box;
+	margin: 0;
+}
+
+.andreani-quote-tester__label {
+	font-size: var(--andr-text-sm);
+	font-weight: 500;
+}
+
+.andreani-quote-results {
+	margin-top: var(--andr-sp-3);
+}
+
+.andreani-quote-rate {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: var(--andr-sp-2) var(--andr-sp-3);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-sm);
+	margin-bottom: var(--andr-sp-2);
+}
+
+.andreani-quote-rate__name {
+	font-weight: 500;
+}
+
+.andreani-quote-rate__price {
+	font-weight: 600;
+	color: var(--andr-color-brand);
+}
+
+/* --- Mensaje inline (éxito / error) --- */
+
+.andreani-products-inline-msg {
+	margin-top: var(--andr-sp-3);
+	padding: var(--andr-sp-2) var(--andr-sp-3);
+	border-radius: var(--andr-radius-sm);
+	font-size: var(--andr-text-sm);
+}
+
+.andreani-products-inline-msg--success {
+	background: var(--andr-color-success-subtle);
+	color: var(--andr-color-success-strong);
+	border: 1px solid var(--andr-color-success);
+}
+
+.andreani-products-inline-msg--error {
+	background: var(--andr-color-error-subtle);
+	color: var(--andr-color-error-strong);
+	border: 1px solid var(--andr-color-error);
+}
+
+/* --- Per-page: mismo look que envíos (botón activo rojo). El CSS base está
+   scopeado a .andreani-shipments-wrap, así que lo replicamos para products. --- */
+.andreani-products-wrap .andreani-per-page {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--andr-sp-2);
+	margin-top: var(--andr-sp-3);
+}
+
+.andreani-products-wrap .andreani-per-page__label {
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-muted);
+	margin-right: var(--andr-sp-1);
+}
+
+.andreani-products-wrap .andreani-per-page__btn {
+	min-width: 36px;
+	padding: 6px 12px;
+	font-size: var(--andr-text-sm);
+	font-weight: 500;
+	color: var(--andr-color-text);
+	background: var(--andr-color-surface);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-sm);
+	cursor: pointer;
+	transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.andreani-products-wrap .andreani-per-page__btn:hover {
+	background: color-mix(in srgb, var(--andreani-primary) 6%, transparent);
+	border-color: var(--andreani-primary);
+}
+
+.andreani-products-wrap .andreani-per-page__btn.is-active,
+.andreani-products-wrap .andreani-per-page__btn.is-active:hover,
+.andreani-products-wrap .andreani-per-page__btn.is-active:focus {
+	background: #e31e24 !important;
+	border-color: #e31e24 !important;
+	color: #fff !important;
+}
+
+/* ===========================================================
+   Lista jerárquica de productos (nombre prominente + medidas
+   consolidadas en una línea muted debajo). Reemplaza la tabla.
+   =========================================================== */
+
+.andreani-products-list {
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-sm);
+	overflow: hidden;
+	background: var(--andr-color-surface);
+	box-shadow: var(--andr-shadow-xs);
+}
+
+.andreani-product-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--andr-sp-3);
+	padding: var(--andr-sp-3);
+	border-bottom: 1px solid var(--andr-color-border-subtle);
+	transition: background 0.15s ease;
+}
+
+.andreani-product-item:last-child {
+	border-bottom: none;
+}
+
+.andreani-product-item:hover {
+	background: color-mix(in srgb, var(--andreani-primary) 5%, transparent);
+}
+
+.andreani-product-item__main {
+	display: flex;
+	align-items: center;
+	gap: var(--andr-sp-3);
+	min-width: 0;
+	flex: 1;
+}
+
+.andreani-product-item__thumb,
+.andreani-product-item__thumb-ph {
+	width: 44px;
+	height: 44px;
+	border-radius: var(--andr-radius-sm);
+	flex-shrink: 0;
+	object-fit: cover;
+}
+
+.andreani-product-item__thumb-ph {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--andr-color-surface-subtle);
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-product-item__info {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	min-width: 0;
+}
+
+.andreani-product-item__title {
+	display: flex;
+	align-items: center;
+	gap: var(--andr-sp-2);
+	flex-wrap: wrap;
+}
+
+.andreani-product-item__name {
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-text-strong);
+	font-size: var(--andr-text-base);
+}
+
+.andreani-product-item__sku {
+	font-size: var(--andr-text-xs);
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-product-item__meas {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--andr-sp-3);
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-meas {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	font-variant-numeric: tabular-nums;
+}
+
+.andreani-meas svg {
+	width: 14px;
+	height: 14px;
+	opacity: 0.75;
+	flex-shrink: 0;
+}
+
+.andreani-meas--empty {
+	color: var(--andr-color-error);
+}
+
+.andreani-product-item__actions {
+	display: flex;
+	gap: var(--andr-sp-1);
+	flex-shrink: 0;
+}
+
+@media screen and (max-width: 600px) {
+	.andreani-product-item {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+	.andreani-product-item__actions {
+		align-self: flex-end;
+	}
+}
+
+/* ===========================================================
+   Modal: bloque de bultos (stepper + mini-cards + badge categoría)
+   =========================================================== */
+
+.andreani-bultos-block {
+	margin-top: var(--andr-sp-4);
+	padding-top: var(--andr-sp-3);
+	border-top: 1px solid var(--andr-color-border);
+}
+
+.andreani-bultos-block__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--andr-sp-2);
+	margin-bottom: var(--andr-sp-1);
+}
+
+.andreani-bultos-block__title {
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-text-strong);
+}
+
+.andreani-bultos-stepper {
+	display: flex;
+	align-items: center;
+	gap: var(--andr-sp-2);
+	margin: var(--andr-sp-2) 0;
+}
+
+.andreani-stepper-btn {
+	width: 32px;
+	height: 32px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 18px;
+	line-height: 1;
+	border: 1px solid var(--andr-color-border-strong);
+	border-radius: var(--andr-radius-sm);
+	background: var(--andr-color-surface);
+	color: var(--andr-color-text);
+	cursor: pointer;
+	transition: var(--andr-transition-fast);
+}
+
+.andreani-stepper-btn:hover {
+	border-color: var(--andreani-primary);
+	color: var(--andreani-primary);
+	background: color-mix(in srgb, var(--andreani-primary) 6%, transparent);
+}
+
+.andreani-stepper-btn:disabled {
+	opacity: 0.45;
+	cursor: default;
+}
+
+.andreani-bultos-count {
+	min-width: 28px;
+	text-align: center;
+	font-weight: var(--andr-fw-semibold);
+	font-size: var(--andr-text-base);
+}
+
+.andreani-bultos-stepper__label {
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-bultos-cards {
+	display: flex;
+	flex-direction: column;
+	gap: var(--andr-sp-2);
+}
+
+.andreani-bulto-card {
+	background: var(--andr-color-surface-subtle);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-sm);
+	padding: var(--andr-sp-2) var(--andr-sp-3);
+}
+
+.andreani-bulto-card__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: var(--andr-sp-1);
+}
+
+.andreani-bulto-card__title {
+	font-weight: var(--andr-fw-semibold);
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-strong);
+}
+
+.andreani-bulto-card__remove {
+	border: none;
+	background: none;
+	color: var(--andr-color-error);
+	font-size: 18px;
+	line-height: 1;
+	cursor: pointer;
+	padding: 0 4px;
+}
+
+.andreani-bulto-card__grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr 1fr;
+	gap: var(--andr-sp-2);
+}
+
+.andreani-bulto-card__field {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+}
+
+.andreani-bulto-card__field span {
+	font-size: var(--andr-text-xs);
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-bulto-card__field input {
+	width: 100%;
+	box-sizing: border-box;
+	margin: 0;
+}
+
+@media screen and (max-width: 520px) {
+	.andreani-bulto-card__grid {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
+/* ===========================================================
+   Probador de cotización: loader animado (cajita) + blur de fondo
+   =========================================================== */
+
+/* El body del modal es el contenedor del overlay del loader. */
+#andreani-product-quote-modal .andr-modal__body {
+	position: relative;
+}
+
+.andreani-quote-loader {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--andr-sp-3);
+	background: color-mix(in srgb, var(--andr-color-surface) 60%, transparent);
+	backdrop-filter: blur(4px);
+	-webkit-backdrop-filter: blur(4px);
+	z-index: 5;
+	animation: andr-quote-loader-in 0.18s ease-out;
+}
+
+.andreani-quote-loader[hidden] {
+	display: none;
+}
+
+@keyframes andr-quote-loader-in {
+	from { opacity: 0; }
+	to   { opacity: 1; }
+}
+
+.andreani-quote-loader__text {
+	font-size: var(--andr-text-sm);
+	font-weight: var(--andr-fw-medium);
+	color: var(--andr-color-text-muted);
+	letter-spacing: 0.3px;
+}
+
+.andreani-box-anim {
+	width: 64px;
+	height: 64px;
+	color: var(--andreani-primary, #e31e24);
+	overflow: visible;
+}
+
+.andreani-box-anim__lid,
+.andreani-box-anim__item {
+	transform-box: fill-box;
+}
+
+.andreani-box-anim__item {
+	transform-origin: 50% 50%;
+	animation: andr-box-item 1.6s ease-in-out infinite;
+}
+
+.andreani-box-anim__lid--l {
+	transform-origin: 100% 100%;
+	animation: andr-box-lid-l 1.6s ease-in-out infinite;
+}
+
+.andreani-box-anim__lid--r {
+	transform-origin: 0% 100%;
+	animation: andr-box-lid-r 1.6s ease-in-out infinite;
+}
+
+/* El paquetito cae dentro de la caja */
+@keyframes andr-box-item {
+	0%        { transform: translateY(-4px); opacity: 0; }
+	15%       { opacity: 1; }
+	40%, 100% { transform: translateY(20px); opacity: 1; }
+}
+
+/* Las solapas: abiertas mientras cae el paquete, cierran después */
+@keyframes andr-box-lid-l {
+	0%, 45%   { transform: rotate(-58deg); }
+	68%, 100% { transform: rotate(0deg); }
+}
+
+@keyframes andr-box-lid-r {
+	0%, 45%   { transform: rotate(58deg); }
+	68%, 100% { transform: rotate(0deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.andreani-box-anim__item,
+	.andreani-box-anim__lid--l,
+	.andreani-box-anim__lid--r {
+		animation: none;
+	}
+}
+
+/* --- Cabecera de producto en el modal de edición (imagen + nombre) --- */
+.andreani-edit-product-head {
+	display: flex;
+	align-items: center;
+	gap: var(--andr-sp-3);
+	margin-bottom: var(--andr-sp-4);
+	padding-bottom: var(--andr-sp-3);
+	border-bottom: 1px solid var(--andr-color-border-subtle);
+}
+
+.andreani-edit-product-head__thumb {
+	width: 56px;
+	height: 56px;
+	border-radius: var(--andr-radius-sm);
+	object-fit: cover;
+	flex-shrink: 0;
+	background: var(--andr-color-surface-subtle);
+	border: 1px solid var(--andr-color-border);
+}
+
+.andreani-edit-product-head__name {
+	font-weight: var(--andr-fw-semibold);
+	font-size: var(--andr-text-md);
+	color: var(--andr-color-text-strong);
+	line-height: 1.3;
+}
+
+/* --- Probador de cotización: empty state (antes de cotizar) --- */
+.andreani-quote-empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	gap: var(--andr-sp-2);
+	padding: var(--andr-sp-5) var(--andr-sp-4);
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-quote-empty svg {
+	width: 40px;
+	height: 40px;
+	color: var(--andr-color-border-strong);
+}
+
+.andreani-quote-empty p {
+	margin: 0;
+	font-size: var(--andr-text-sm);
+	max-width: 300px;
+	line-height: 1.4;
+}

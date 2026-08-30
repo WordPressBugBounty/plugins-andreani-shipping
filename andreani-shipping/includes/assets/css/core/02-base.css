@@ -1,0 +1,92 @@
+/**
+ * Andreani Plugin — Base styles aplicados solo dentro de `.andr-scope`.
+ * No toca el WP admin/frontend global. Los componentes individuales traen su propio CSS.
+ * Depende de: andreani-core-variables.
+ */
+
+.andr-scope,
+.andr-scope *,
+.andr-scope *::before,
+.andr-scope *::after {
+	box-sizing: border-box;
+}
+
+.andr-scope {
+	font-family: var(--andr-font-body);
+	font-size: var(--andr-text-base);
+	line-height: var(--andr-leading-normal);
+	color: var(--andr-color-text);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.andr-scope h1,
+.andr-scope h2,
+.andr-scope h3,
+.andr-scope h4,
+.andr-scope h5,
+.andr-scope h6 {
+	font-family: var(--andr-font-display);
+	font-weight: var(--andr-fw-semibold);
+	line-height: var(--andr-leading-tight);
+	color: var(--andr-color-text-strong);
+	margin: 0;
+}
+
+.andr-scope h1 { font-size: var(--andr-text-3xl); }
+.andr-scope h2 { font-size: var(--andr-text-2xl); }
+.andr-scope h3 { font-size: var(--andr-text-xl); }
+.andr-scope h4 { font-size: var(--andr-text-lg); }
+.andr-scope h5 { font-size: var(--andr-text-md); }
+.andr-scope h6 { font-size: var(--andr-text-base); }
+
+.andr-scope p {
+	margin: 0;
+}
+
+.andr-scope a {
+	color: var(--andr-color-text-link);
+	text-decoration: none;
+	transition: color var(--andr-transition-fast);
+}
+
+.andr-scope a:hover,
+.andr-scope a:focus {
+	color: var(--andr-color-text-link-hover);
+	text-decoration: underline;
+}
+
+.andr-scope :focus-visible {
+	outline: 2px solid var(--andr-color-border-focus);
+	outline-offset: 2px;
+	border-radius: var(--andr-radius-xs);
+}
+
+.andr-scope code,
+.andr-scope pre,
+.andr-scope kbd,
+.andr-scope samp {
+	font-family: var(--andr-font-mono);
+	font-size: 0.92em;
+}
+
+.andr-scope img,
+.andr-scope svg {
+	max-width: 100%;
+	height: auto;
+	display: block;
+}
+
+.andr-scope input,
+.andr-scope select,
+.andr-scope textarea,
+.andr-scope button {
+	font-family: inherit;
+}
+
+.andr-scope ul.andr-reset,
+.andr-scope ol.andr-reset {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}

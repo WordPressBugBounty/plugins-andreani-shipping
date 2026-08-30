@@ -1,0 +1,3310 @@
+/**
+ * Vista: Configuración del plugin (WC > Envíos > Andreani).
+ * Depende de: andreani-core-base + componentes button/card
+ */
+
+.andreani-settings-wrapper {
+	max-width: 800px;
+	position: relative;
+}
+
+.andreani-settings-loader {
+	position: absolute;
+	inset: 0;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	z-index: 100;
+	background: rgba(255, 255, 255, 0.6);
+	backdrop-filter: blur(4px);
+	-webkit-backdrop-filter: blur(4px);
+	border-radius: var(--andr-radius-sm);
+}
+
+.andreani-settings-wrapper--saving .andreani-settings-loader {
+	display: flex;
+}
+
+.andreani-settings-wrapper--saving .andreani-settings-header,
+.andreani-settings-wrapper--saving .andr-tabs,
+.andreani-settings-wrapper--saving .andreani-settings-footer {
+	pointer-events: none;
+	user-select: none;
+}
+
+.andreani-settings-loader__spinner {
+	width: 72px;
+	height: 72px;
+	position: relative;
+	overflow: hidden;
+	border-radius: 50%;
+}
+
+.andreani-settings-loader__spinner::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.85) 50%, transparent 65%);
+	background-size: 220% 100%;
+	background-repeat: no-repeat;
+	animation: andr-loader-shimmer 1.8s ease-in-out infinite;
+	mix-blend-mode: overlay;
+	pointer-events: none;
+	z-index: 2;
+}
+
+.andreani-settings-loader__logo {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.andreani-settings-loader__logo--bg {
+	color: var(--andr-color-border-strong);
+	opacity: 0.18;
+}
+
+.andreani-settings-loader__logo--fill {
+	color: var(--andr-color-brand);
+	animation: andr-loader-pulse 1.6s ease-in-out infinite;
+	transform-origin: center;
+}
+
+@keyframes andr-loader-pulse {
+	0%, 100% {
+		opacity: 0.55;
+		transform: scale(1);
+		filter: drop-shadow(0 0 0 transparent);
+	}
+	50% {
+		opacity: 1;
+		transform: scale(1.06);
+		filter: drop-shadow(0 0 12px rgba(215, 25, 32, 0.35));
+	}
+}
+
+@keyframes andr-loader-shimmer {
+	0%   { background-position: 220% 0; }
+	100% { background-position: -120% 0; }
+}
+
+.andreani-settings-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0;
+	padding: var(--andr-sp-3) var(--andr-sp-5);
+	min-height: 56px;
+	background: linear-gradient(135deg, var(--andr-color-brand) 0%, var(--andr-color-brand-hover) 100%);
+	border-radius: var(--andr-radius-sm) var(--andr-radius-sm) 0 0;
+}
+
+.andreani-settings-header__title {
+	color: var(--andr-color-text-inverse);
+	font-size: var(--andr-text-lg);
+	font-weight: var(--andr-fw-semibold);
+	letter-spacing: 0.01em;
+	margin: 0;
+}
+
+.andreani-settings-header__logo {
+	height: 24px;
+	filter: brightness(0) invert(1);
+}
+
+/* Wrapper que contiene los tabs (reemplaza al .andreani-settings-card del flujo viejo).
+ * El .andr-tabs hereda los bordes/sombra y se conecta visualmente con header/footer. */
+.andreani-settings-wrapper > .andr-tabs {
+	background-color: var(--andr-color-surface);
+	border: 1px solid var(--andr-color-border);
+	border-top: none;
+	box-shadow: var(--andr-shadow-md);
+	overflow: hidden;
+}
+
+.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list {
+	padding: 0;
+	gap: 0;
+	overflow: visible;
+	background: var(--andr-color-surface-subtle);
+}
+
+.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item {
+	flex: 1 1 0;
+	justify-content: center;
+	min-width: 0;
+	padding: var(--andr-sp-3) var(--andr-sp-2);
+	font-size: var(--andr-text-sm);
+}
+
+.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item svg {
+	width: 16px;
+	height: 16px;
+}
+
+.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item--active {
+	background: var(--andr-color-surface);
+}
+
+.andreani-settings-wrapper > .andr-tabs > .andr-tabs__panel {
+	padding: var(--andr-sp-4) var(--andr-sp-5) var(--andr-sp-5);
+}
+
+@media (max-width: 700px) {
+	.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item {
+		font-size: var(--andr-text-xs);
+		padding: var(--andr-sp-2) var(--andr-sp-1);
+		gap: var(--andr-sp-1);
+	}
+	.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item span {
+		display: none;
+	}
+	.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item svg {
+		width: 18px;
+		height: 18px;
+	}
+	.andreani-settings-wrapper > .andr-tabs > .andr-tabs__panel {
+		padding: var(--andr-sp-4);
+	}
+}
+
+/* Hidden fields renderizados fuera de los tabs (no ocupan espacio) */
+.andreani-settings-hidden-fields {
+	display: none;
+}
+
+/* Empty state cuando no hay credencial / contratos en el tab Modos.
+ * Reemplazo del legacy .andreani-modos-empty: ahora con icono SVG ilustrativo,
+ * título y CTA opcional (.andreani-empty-state__cta). */
+.andreani-modos-empty {
+	padding: 32px 24px;
+	text-align: center;
+	color: var(--andr-color-text-muted);
+	background: var(--andr-color-surface-subtle);
+	border: 1px dashed var(--andr-color-border);
+	border-radius: var(--andr-radius-xs);
+}
+
+.andreani-modos-empty p {
+	margin: 0;
+	font-size: var(--andr-text-base);
+}
+
+.andreani-empty-state {
+	padding: var(--andr-sp-7) var(--andr-sp-5);
+	text-align: center;
+	background: var(--andr-color-surface-subtle);
+	border: 1px dashed var(--andr-color-border);
+	border-radius: var(--andr-radius-sm);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--andr-sp-2);
+}
+
+.andreani-empty-state__icon {
+	width: 56px;
+	height: 56px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--andr-color-brand);
+	background: var(--andr-color-surface);
+	border-radius: 50%;
+	margin-bottom: var(--andr-sp-1);
+	box-shadow: 0 1px 2px rgba(29, 32, 35, 0.06);
+}
+
+.andreani-empty-state__icon svg {
+	width: 28px;
+	height: 28px;
+}
+
+.andreani-empty-state__title {
+	margin: 0;
+	font-family: var(--andr-font-display);
+	font-size: var(--andr-text-lg);
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-text-strong);
+	line-height: 1.3;
+}
+
+.andreani-empty-state__desc {
+	margin: 0;
+	max-width: 480px;
+	font-size: var(--andr-text-base);
+	color: var(--andr-color-text-muted);
+	line-height: 1.5;
+}
+
+.andreani-empty-state__desc strong {
+	color: var(--andr-color-text-strong);
+	font-weight: var(--andr-fw-semibold);
+}
+
+.andreani-empty-state__cta {
+	margin-top: var(--andr-sp-3);
+}
+
+.andreani-empty-state__cta svg {
+	width: 14px;
+	height: 14px;
+	fill: currentColor;
+}
+
+/* Panel de modos de entrega: hereda la estructura visual del card viejo
+ * pero sin lógica de colapso. Vive dentro de .andr-tabs__panel[data-panel="modos"]. */
+.andreani-modos-panel {
+	background-color: var(--andr-color-surface);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-xs);
+	overflow: hidden;
+	transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Variante "seamless": el header se sacó del panel y se subió a un
+ * .andreani-section-heading arriba. El panel queda solo con el body, sin doble
+ * border ni padding adicional arriba. */
+.andreani-modos-panel--seamless {
+	background: transparent;
+	border: none;
+	border-radius: 0;
+	overflow: visible;
+}
+
+.andreani-modos-panel--seamless .andreani-modos-panel__body {
+	padding: 0;
+}
+
+.andreani-modos-panel--hidden {
+	opacity: 0;
+	transform: translateY(-10px);
+	pointer-events: none;
+	height: 0;
+	overflow: hidden;
+	margin: 0;
+	padding: 0;
+	border-width: 0;
+}
+
+.andreani-modos-panel__header {
+	background-color: var(--andr-color-surface-subtle);
+	padding: 12px 20px;
+	border-bottom: 1px solid var(--andr-color-border);
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-height: 60px;
+}
+
+.andreani-modos-panel__icon {
+	width: 32px;
+	height: 32px;
+	background-color: var(--andr-color-brand);
+	border-radius: var(--andr-radius-xs);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--andr-color-text-inverse);
+	flex-shrink: 0;
+}
+
+.andreani-modos-panel__icon svg {
+	width: 18px;
+	height: 18px;
+	fill: currentColor;
+}
+
+.andreani-modos-panel__title {
+	margin: 0;
+	font-size: var(--andr-text-md);
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-text-strong);
+	flex-grow: 1;
+}
+
+.andreani-modos-panel__body {
+	padding: 20px;
+}
+
+/* Section heading reutilizable dentro de los paneles de tabs.
+ * Le da una jerarquía clara al contenido de cada tab y unifica el aire arriba.
+ * La variante --with-action permite alinear stats/buttons a la derecha sin
+ * romper el line-break del título. */
+.andreani-section-heading {
+	display: flex;
+	align-items: center;
+	gap: var(--andr-sp-3);
+	margin: 0 0 var(--andr-sp-4);
+	padding-bottom: var(--andr-sp-2);
+	font-family: var(--andr-font-display);
+	font-size: var(--andr-text-md);
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-text-strong);
+	border-bottom: 1px solid var(--andr-color-border);
+	line-height: 1.3;
+}
+
+.andreani-section-heading--with-action {
+	flex-wrap: wrap;
+	gap: var(--andr-sp-2);
+}
+
+.andreani-section-heading__title {
+	flex: 1;
+	min-width: 0;
+}
+
+/* El botón ghost dentro del heading respira mejor con un border-color sutil y
+ * un margen al stats pill — así no se siente apretado. */
+.andreani-section-heading--with-action .andreani-contratos-stats {
+	margin-left: auto;
+}
+
+.andreani-section-heading--with-action .andr-btn {
+	flex-shrink: 0;
+}
+
+.andreani-section-heading + .form-table,
+.andreani-section-heading + .andreani-modos-panel,
+.andreani-section-heading + .andreani-cliente-summary {
+	margin-top: 0;
+}
+
+/* form-table dentro de cualquier panel del .andr-tabs.
+ * IMPORTANTE: layout vertical (label arriba) — más moderno y permite inputs anchos.
+ * WC genera <tr><th>label</th><td>input</td></tr> que NO se puede tocar a nivel HTML,
+ * pero sí lo reescribimos visualmente con CSS via display:block.
+ *
+ * Excepción: los .andreani-info-box-wrapper tienen <th> vacío como spacer y NO entran
+ * en este layout — se overridean más abajo para que no rompan el info box. */
+.andr-tabs__panel .form-table {
+	margin: 0;
+}
+
+.andr-tabs__panel .form-table tr:not(.andreani-info-box-wrapper) {
+	display: block;
+	padding: 0;
+	border: none;
+	margin-bottom: var(--andr-sp-5);
+}
+
+.andr-tabs__panel .form-table tr:not(.andreani-info-box-wrapper):last-child {
+	margin-bottom: 0;
+}
+
+.andr-tabs__panel .form-table tr:not(.andreani-info-box-wrapper) > th {
+	display: block;
+	width: auto;
+	padding: 0 0 var(--andr-sp-1);
+	font-size: var(--andr-text-base);
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-text-strong);
+	line-height: 1.4;
+	text-align: left;
+}
+
+.andr-tabs__panel .form-table tr:not(.andreani-info-box-wrapper) > th label {
+	font-weight: inherit;
+	color: inherit;
+}
+
+.andr-tabs__panel .form-table tr:not(.andreani-info-box-wrapper) > td {
+	display: block;
+	padding: 0;
+	max-width: 100%;
+}
+
+/* WC inyecta un <span class="woocommerce-help-tip"> dentro del <th> que ya no tiene
+ * tanto sentido con labels arriba — lo dejamos pero más sutil. */
+.andr-tabs__panel .form-table tr:not(.andreani-info-box-wrapper) > th .woocommerce-help-tip {
+	margin-left: 6px;
+	opacity: 0.6;
+	transition: opacity var(--andr-transition-fast);
+}
+
+.andr-tabs__panel .form-table tr:not(.andreani-info-box-wrapper) > th .woocommerce-help-tip:hover {
+	opacity: 1;
+}
+
+.andr-tabs__panel .form-table input[type="text"],
+.andr-tabs__panel .form-table input[type="number"],
+.andr-tabs__panel .form-table input[type="password"] {
+	border: 1px solid var(--andr-color-border-strong);
+	border-radius: var(--andr-radius-xs);
+	padding: 0 14px !important;
+	font-size: var(--andr-text-md) !important;
+	font-family: inherit !important;
+	line-height: 38px !important;
+	transition: border-color var(--andr-transition-base), box-shadow var(--andr-transition-base);
+	width: 100% !important;
+	max-width: 480px !important;
+	height: 40px !important;
+	min-height: 40px !important;
+	max-height: 40px !important;
+	box-sizing: border-box !important;
+	background: var(--andr-color-surface);
+	-webkit-appearance: none;
+	appearance: none;
+	margin: 0;
+	vertical-align: middle;
+	letter-spacing: normal;
+}
+
+.andr-tabs__panel select {
+	border: 1px solid var(--andr-color-border-strong);
+	border-radius: var(--andr-radius-xs);
+	padding: 0 14px;
+	font-size: var(--andr-text-md);
+	transition: border-color var(--andr-transition-base), box-shadow var(--andr-transition-base);
+	width: 100%;
+	max-width: 480px;
+	height: 40px;
+	box-sizing: border-box;
+	line-height: 40px;
+	background: var(--andr-color-surface);
+}
+
+.andr-tabs__panel input[type="text"]:focus,
+.andr-tabs__panel input[type="number"]:focus,
+.andr-tabs__panel input[type="password"]:focus,
+.andr-tabs__panel select:focus {
+	border-color: var(--andr-color-text-link);
+	box-shadow: 0 0 0 1px var(--andr-color-text-link);
+	outline: none;
+}
+
+/* Checkbox base — usado en filas que NO son toggle (compatibilidad). */
+.andr-tabs__panel input[type="checkbox"] {
+	width: 18px;
+	height: 18px;
+	border-radius: var(--andr-radius-xs);
+	cursor: pointer;
+	accent-color: var(--andr-color-brand);
+}
+
+.andr-tabs__panel .description {
+	color: var(--andr-color-text-muted);
+	font-size: var(--andr-text-sm);
+	margin-top: var(--andr-sp-2);
+	line-height: 1.55;
+}
+
+.andr-tabs__panel .description strong {
+	color: var(--andr-color-text-strong);
+	font-weight: var(--andr-fw-semibold);
+}
+
+/* Toggle moderno: convierte un checkbox WC nativo en pill switch sin tocar el HTML.
+ * Aplica a las filas check dentro de los paneles "Checkout" y "Avanzado".
+ * WC genera: <td><fieldset><legend>...</legend><label><input type="checkbox">texto</label><p class="description"></p></fieldset></td>.
+ * Mantenemos el input nativo y solo lo restilamos con appearance:none. */
+.andr-tabs__panel[data-panel="checkout"] .form-table fieldset,
+.andr-tabs__panel[data-panel="avanzado"] .form-table fieldset {
+	border: none;
+	margin: 0;
+	padding: 0;
+}
+
+.andr-tabs__panel[data-panel="checkout"] .form-table fieldset > label,
+.andr-tabs__panel[data-panel="avanzado"] .form-table fieldset > label {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--andr-sp-3);
+	cursor: pointer;
+	font-size: var(--andr-text-base);
+	color: var(--andr-color-text-strong);
+	font-weight: var(--andr-fw-medium);
+	user-select: none;
+}
+
+/* Toggle: background-image (SVG) en lugar de ::before porque los <input>
+ * son replaced elements y sus pseudo-elementos no son confiables cross-browser.
+ * accent-color: transparent evita que el browser pinte el check default sobre el SVG. */
+.andr-tabs__panel[data-panel="checkout"] .form-table fieldset input[type="checkbox"],
+.andr-tabs__panel[data-panel="avanzado"] .form-table fieldset input[type="checkbox"] {
+	appearance: none !important;
+	-webkit-appearance: none !important;
+	-moz-appearance: none !important;
+	accent-color: transparent;
+	color: transparent;
+	width: 40px;
+	height: 22px;
+	border-radius: var(--andr-radius-pill);
+	background-color: var(--andr-color-border-strong);
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='8' fill='white'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: 3px center;
+	background-size: 16px 16px;
+	border: none;
+	cursor: pointer;
+	transition: background-color var(--andr-transition-base), background-position var(--andr-transition-base);
+	flex-shrink: 0;
+	margin: 0;
+	padding: 0;
+	box-shadow: inset 0 1px 2px rgba(29, 32, 35, 0.08);
+}
+
+.andr-tabs__panel[data-panel="checkout"] .form-table fieldset input[type="checkbox"]:checked,
+.andr-tabs__panel[data-panel="avanzado"] .form-table fieldset input[type="checkbox"]:checked {
+	background-color: var(--andr-color-brand);
+	background-position: calc(100% - 3px) center;
+}
+
+/* WordPress nativo agrega un ::before con un check SVG sobre los checkbox.
+ * Anularlo para que no aparezca encima del toggle. */
+.andr-tabs__panel[data-panel="checkout"] .form-table fieldset input[type="checkbox"]::before,
+.andr-tabs__panel[data-panel="avanzado"] .form-table fieldset input[type="checkbox"]::before,
+.andr-tabs__panel[data-panel="checkout"] .form-table fieldset input[type="checkbox"]::after,
+.andr-tabs__panel[data-panel="avanzado"] .form-table fieldset input[type="checkbox"]::after {
+	content: none !important;
+	display: none !important;
+}
+
+.andr-tabs__panel[data-panel="checkout"] .form-table fieldset input[type="checkbox"]:focus-visible,
+.andr-tabs__panel[data-panel="avanzado"] .form-table fieldset input[type="checkbox"]:focus-visible {
+	box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.25);
+	outline: none;
+}
+
+/* Sutil note de warning para el modo_debug (expone datos sensibles).
+ * Lo aplicamos como un border-left rojo discreto en su <p class="description">. */
+.andr-tabs__panel[data-panel="avanzado"] tr:has(input[id*="modo_debug"]) .description {
+	padding: 10px 12px;
+	margin-top: var(--andr-sp-2);
+	background: var(--andr-color-warning-subtle);
+	border-left: 3px solid var(--andr-color-warning);
+	border-radius: 0 var(--andr-radius-xs) var(--andr-radius-xs) 0;
+	color: var(--andr-color-text-strong);
+	font-size: var(--andr-text-sm);
+}
+
+/* Email read-only encima del campo de credencial */
+.andreani-email-field {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	width: fit-content;
+	padding: 10px 14px;
+	margin-bottom: 15px;
+	background-color: var(--andr-color-surface-subtle);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-xs);
+	transition: opacity 0.3s ease, max-height 0.3s ease;
+}
+
+.andreani-email-field__icon {
+	fill: var(--andr-color-text-muted);
+	flex-shrink: 0;
+}
+
+.andreani-email-field__label {
+	font-size: var(--andr-text-base);
+	font-weight: var(--andr-fw-medium);
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-email-field__value {
+	font-size: var(--andr-text-md);
+	font-weight: var(--andr-fw-medium);
+	color: var(--andr-color-text-strong);
+	font-family: var(--andr-font-mono);
+	letter-spacing: 0.3px;
+}
+
+.andreani-email-field.andreani-cliente-info--hidden {
+	opacity: 0;
+	max-height: 0;
+	padding: 0 16px;
+	margin-bottom: 0;
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.andreani-credential-wrapper {
+	position: relative;
+	display: block;
+	width: 100%;
+	max-width: 480px;
+}
+
+.andreani-credential-wrapper input[type="text"],
+.andreani-credential-wrapper input[type="password"] {
+	width: 100% !important;
+	max-width: none !important;
+	padding-right: 44px;
+}
+
+.andreani-credential-toggle {
+	position: absolute;
+	right: 12px;
+	top: 50%;
+	transform: translateY(-50%);
+	cursor: pointer;
+	color: var(--andr-color-text-muted);
+	font-size: 20px;
+	line-height: 1;
+}
+
+.andreani-credential-toggle:hover {
+	color: var(--andr-color-brand);
+}
+
+.andreani-credential-wrapper + .andreani-cancel-edit {
+	display: block;
+	margin-top: 8px;
+	margin-left: 0;
+	text-align: left;
+}
+
+.andreani-cp-status {
+	display: none;
+	margin-top: 8px;
+	font-size: 12.5px;
+	line-height: 1.4;
+	clear: both;
+	width: 100%;
+}
+
+.andreani-cp-status--success {
+	color: var(--andr-color-success);
+}
+
+.andreani-cp-status--error {
+	color: var(--andr-color-error);
+}
+
+.andreani-field-success {
+	border-color: var(--andr-color-success);
+	box-shadow: 0 0 0 3px rgba(31, 126, 90, 0.15);
+}
+
+/* Cliente info → ahora se renderiza como un "summary card" (check verde + label
+ * + email + badge tipo). Vive arriba del form en el panel "Cuenta".
+ * .andreani-cliente-info es SOLO el hook que el JS usa para ocultar al editar la
+ * credencial: no debe traer estilo propio o pinta de verde lo que la lleve. */
+.andreani-cliente-summary {
+	display: flex;
+	align-items: center;
+	gap: var(--andr-sp-3);
+	padding: var(--andr-sp-3) var(--andr-sp-4);
+	margin: 0 0 var(--andr-sp-4);
+	background: var(--andr-color-success-subtle, rgba(31, 126, 90, 0.08));
+	border: 1px solid var(--andr-color-success, #1f7e5a);
+	border-radius: var(--andr-radius-sm);
+	transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.andreani-cliente-info--hidden,
+.andreani-cliente-summary--hidden {
+	display: none;
+}
+
+.andreani-cliente-summary__check {
+	width: 28px;
+	height: 28px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--andr-color-success, #1f7e5a);
+	color: var(--andr-color-text-inverse);
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.andreani-cliente-summary__check svg {
+	width: 16px;
+	height: 16px;
+}
+
+.andreani-cliente-summary__content {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+	flex: 1;
+}
+
+.andreani-cliente-summary__label {
+	font-size: var(--andr-text-xs);
+	color: var(--andr-color-success-strong, #155a3f);
+	font-weight: var(--andr-fw-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.andreani-cliente-summary__titular {
+	font-family: var(--andr-font-display);
+	font-size: var(--andr-text-lg);
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-text-strong);
+	line-height: 1.25;
+	word-break: break-word;
+}
+
+.andreani-cliente-summary__apoyo {
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-subtle);
+	word-break: break-word;
+}
+
+.andreani-cliente-summary__email {
+	font-size: var(--andr-text-md);
+	font-weight: var(--andr-fw-medium);
+	color: var(--andr-color-text-strong);
+	font-family: var(--andr-font-mono);
+	letter-spacing: 0.2px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Badge tipo de cliente: minimalista (dot + texto), sin background ni border,
+ * para no competir visualmente con el card verde. */
+.andreani-cliente-summary .andr-badge {
+	flex-shrink: 0;
+	background: transparent;
+	border: none;
+	padding: 0;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: var(--andr-text-xs);
+	font-weight: var(--andr-fw-semibold);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.andreani-cliente-summary .andr-badge::before {
+	content: "";
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: currentColor;
+	flex-shrink: 0;
+}
+
+.andreani-cliente-summary .andr-badge--corpo {
+	color: var(--andr-color-info-strong);
+}
+
+.andreani-cliente-summary .andr-badge--pyme {
+	color: var(--andr-color-brand);
+}
+
+.andreani-cliente-summary .andr-badge--mm {
+	color: var(--andr-color-mm-strong);
+}
+
+.andreani-cliente-email {
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-muted);
+	font-weight: var(--andr-fw-medium);
+}
+
+.andreani-cancel-edit {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 12px;
+	background-color: var(--andr-color-surface-muted);
+	border: 1px solid var(--andr-color-border-strong);
+	border-radius: var(--andr-radius-xs);
+	font-size: var(--andr-text-base);
+	font-weight: var(--andr-fw-medium);
+	color: var(--andr-color-text-muted);
+	cursor: pointer;
+	transition: all var(--andr-transition-base);
+}
+
+.andreani-cancel-edit:hover {
+	background-color: var(--andr-color-surface);
+	border-color: var(--andr-color-brand);
+	color: var(--andr-color-brand);
+}
+
+.andreani-cancel-edit svg {
+	width: 14px;
+	height: 14px;
+	vertical-align: middle;
+	position: relative;
+	top: -1px;
+	fill: currentColor;
+}
+
+.andreani-field-error {
+	border-color: var(--andr-color-error) !important;
+	box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.15) !important;
+}
+
+.andreani-field-error:focus,
+.andreani-field-success:focus {
+	border-color: var(--andr-color-text-link) !important;
+	box-shadow: 0 0 0 1px var(--andr-color-text-link) !important;
+}
+
+.andreani-products-warning {
+	max-width: 800px;
+	margin-top: 16px;
+	margin-bottom: 8px;
+	background-color: var(--andr-color-warning-subtle);
+	border: 1px solid var(--andr-color-warning);
+	border-left: 4px solid var(--andr-color-warning);
+	border-radius: var(--andr-radius-sm);
+	overflow: hidden;
+}
+
+.andreani-products-warning__header {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 12px 20px;
+	cursor: pointer;
+	user-select: none;
+	transition: background-color var(--andr-transition-base);
+}
+
+.andreani-products-warning__header:hover {
+	background-color: rgba(212, 161, 64, 0.1);
+}
+
+.andreani-products-warning__icon {
+	width: 28px;
+	height: 28px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--andr-color-warning);
+	flex-shrink: 0;
+}
+
+.andreani-products-warning__icon svg {
+	width: 22px;
+	height: 22px;
+	fill: currentColor;
+}
+
+.andreani-products-warning__title {
+	font-size: var(--andr-text-md);
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-text-strong);
+	flex-grow: 1;
+}
+
+.andreani-products-warning__toggle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	background: transparent;
+	border: none;
+	border-radius: var(--andr-radius-xs);
+	color: var(--andr-color-text-muted);
+	cursor: pointer;
+	transition: all var(--andr-transition-base);
+	flex-shrink: 0;
+}
+
+.andreani-products-warning__toggle:hover {
+	background-color: rgba(29, 32, 35, 0.05);
+	color: var(--andr-color-text-strong);
+}
+
+.andreani-products-warning__toggle svg {
+	width: 20px;
+	height: 20px;
+	fill: currentColor;
+	transition: transform 0.3s ease;
+}
+
+.andreani-products-warning--collapsed .andreani-products-warning__toggle svg {
+	transform: rotate(-90deg);
+}
+
+.andreani-products-warning__body {
+	padding: 0 20px 16px;
+	transition: all 0.3s ease;
+	overflow: hidden;
+}
+
+.andreani-products-warning--collapsed .andreani-products-warning__body {
+	max-height: 0;
+	padding: 0 20px;
+	opacity: 0;
+}
+
+.andreani-products-warning--expanded .andreani-products-warning__body {
+	max-height: 1000px;
+	opacity: 1;
+}
+
+.andreani-products-warning__desc {
+	margin: 0 0 12px;
+	font-size: var(--andr-text-base);
+	color: var(--andr-color-text-subtle);
+	line-height: 1.5;
+}
+
+.andreani-products-warning__list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.andreani-products-warning__item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 12px;
+	border-bottom: 1px solid rgba(212, 161, 64, 0.2);
+	font-size: var(--andr-text-base);
+}
+
+.andreani-products-warning__item:last-child {
+	border-bottom: none;
+}
+
+.andreani-products-warning__product-name {
+	color: var(--andr-color-text-strong);
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.andreani-products-warning__edit-link {
+	color: var(--andr-color-brand);
+	text-decoration: none;
+	font-weight: var(--andr-fw-medium);
+	font-size: var(--andr-text-sm);
+	margin-left: 12px;
+	flex-shrink: 0;
+}
+
+.andreani-products-warning__edit-link:hover {
+	text-decoration: underline;
+}
+
+.andreani-products-warning__more {
+	margin: 8px 0 0;
+	padding: 0 12px;
+	font-size: var(--andr-text-base);
+	color: var(--andr-color-text-subtle);
+	font-style: italic;
+}
+
+.andreani-settings-footer {
+	margin-top: 0;
+	padding: 10px 20px;
+	background-color: var(--andr-color-surface-subtle);
+	border-radius: 0 0 var(--andr-radius-sm) var(--andr-radius-sm);
+	border: 1px solid var(--andr-color-border);
+	border-top: none;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.andreani-settings-footer__icon {
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-settings-footer__icon svg {
+	width: 16px;
+	height: 16px;
+	fill: currentColor;
+}
+
+.andreani-settings-footer__text {
+	color: var(--andr-color-text-muted);
+	font-size: var(--andr-text-sm);
+	margin: 0;
+	line-height: 1.4;
+}
+
+.andreani-settings-footer__text a {
+	color: var(--andr-color-brand);
+	text-decoration: none;
+	font-weight: var(--andr-fw-medium);
+}
+
+.andreani-settings-footer__text a:hover {
+	text-decoration: underline;
+}
+
+.andreani-settings-wrapper + p.submit {
+	margin-top: 20px;
+}
+
+.andreani-settings-wrapper + p.submit .woocommerce-save-button {
+	background: linear-gradient(135deg, var(--andr-color-brand) 0%, var(--andr-color-brand-hover) 100%) !important;
+	border: none !important;
+	border-radius: var(--andr-radius-xs) !important;
+	padding: 10px 24px !important;
+	font-size: var(--andr-text-md) !important;
+	font-weight: var(--andr-fw-medium) !important;
+	color: var(--andr-color-text-inverse) !important;
+	cursor: pointer !important;
+	transition: all var(--andr-transition-base) !important;
+	box-shadow: var(--andr-shadow-sm) !important;
+}
+
+.andreani-settings-wrapper + p.submit .woocommerce-save-button:hover {
+	background: linear-gradient(135deg, var(--andr-color-brand-hover) 0%, var(--andr-color-brand-pressed) 100%) !important;
+	box-shadow: var(--andr-shadow-md) !important;
+	transform: translateY(-1px) !important;
+}
+
+.andreani-contratos-description {
+	margin: 0 0 16px 0;
+	color: var(--andr-color-text-muted);
+	font-size: var(--andr-text-base);
+}
+
+.andreani-contratos-stats {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	height: 28px;
+	padding: 4px 12px;
+	font-size: var(--andr-text-xs);
+	font-weight: var(--andr-fw-medium);
+	line-height: 1;
+	border-radius: var(--andr-radius-pill);
+	border: 1px solid var(--andr-color-border-strong);
+	background: var(--andr-color-surface);
+	color: var(--andr-color-text-muted);
+	box-sizing: border-box;
+	transition: background var(--andr-transition-fast), border-color var(--andr-transition-fast);
+}
+
+.andreani-contratos-stats::before {
+	content: "";
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--andr-color-text-disabled);
+	flex-shrink: 0;
+}
+
+.andreani-contratos-stats--all {
+	background: var(--andr-color-success-subtle);
+	border-color: var(--andr-color-success);
+	color: var(--andr-color-success-strong);
+}
+
+.andreani-contratos-stats--all::before {
+	background: var(--andr-color-success);
+}
+
+.andreani-contratos-stats--partial {
+	background: var(--andr-color-warning-subtle);
+	border-color: var(--andr-color-warning);
+	color: var(--andr-color-warning-strong);
+}
+
+.andreani-contratos-stats--partial::before {
+	background: var(--andr-color-warning);
+}
+
+.andreani-contratos-stats__count {
+	font-weight: var(--andr-fw-semibold);
+}
+
+.andreani-contratos-list {
+	display: grid;
+	gap: 12px;
+}
+
+.andreani-contratos-list--toggleable {
+	display: grid;
+	gap: 10px;
+}
+
+.andreani-contratos-list--pyme {
+	grid-template-columns: 1fr;
+	max-width: 300px;
+}
+
+.andreani-contrato-item {
+	background-color: var(--andr-color-surface-subtle);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-xs);
+	padding: 12px 16px;
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 8px;
+}
+
+.andreani-contrato-item--toggleable {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 14px 16px;
+	cursor: pointer;
+	transition: all var(--andr-transition-base);
+}
+
+.andreani-contrato-item--toggleable:hover {
+	background-color: var(--andr-color-surface-muted);
+	border-color: var(--andr-color-border-strong);
+}
+
+.andreani-contrato-item--disabled {
+	opacity: 0.5;
+	background-color: var(--andr-gray-50);
+}
+
+.andreani-contrato-item--disabled:hover {
+	background-color: var(--andr-color-surface-muted);
+}
+
+.andreani-contrato-item--pyme {
+	padding: 12px 16px;
+}
+
+.andreani-contrato-item--pyme .andreani-contrato-item__content {
+	display: block;
+}
+
+.andreani-contrato-item__row {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.andreani-contrato-item__label {
+	font-size: var(--andr-text-xs);
+	color: var(--andr-color-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.3px;
+}
+
+.andreani-contrato-item__value {
+	font-size: var(--andr-text-md);
+	color: var(--andr-color-text-strong);
+	font-weight: var(--andr-fw-medium);
+}
+
+.andreani-contrato-item__value--code {
+	font-family: var(--andr-font-mono);
+	background-color: var(--andr-color-surface);
+	padding: 2px 6px;
+	border-radius: var(--andr-radius-xs);
+	border: 1px solid var(--andr-color-border);
+	display: inline-block;
+}
+
+.andreani-contrato-item__toggle {
+	position: relative;
+	width: 44px;
+	height: 24px;
+	flex-shrink: 0;
+}
+
+.andreani-contrato-item__toggle input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+	position: absolute;
+}
+
+.andreani-contrato-item__toggle-slider {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: var(--andr-color-border-strong);
+	border-radius: 24px;
+	transition: all 0.3s ease;
+}
+
+.andreani-contrato-item__toggle-slider::before {
+	position: absolute;
+	content: "";
+	height: 18px;
+	width: 18px;
+	left: 3px;
+	bottom: 3px;
+	background-color: var(--andr-color-surface);
+	border-radius: 50%;
+	transition: all 0.3s ease;
+	box-shadow: 0 1px 3px rgba(29, 32, 35, 0.2);
+}
+
+.andreani-contrato-item__toggle input:checked + .andreani-contrato-item__toggle-slider {
+	background-color: var(--andr-color-brand);
+}
+
+.andreani-contrato-item__toggle input:checked + .andreani-contrato-item__toggle-slider::before {
+	transform: translateX(20px);
+}
+
+.andreani-contrato-item__toggle input:focus + .andreani-contrato-item__toggle-slider {
+	box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.2);
+}
+
+.andreani-contrato-item__content {
+	flex: 1;
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 8px;
+}
+
+.andreani-contrato-item__mode-name {
+	font-size: var(--andr-text-md);
+	font-weight: var(--andr-fw-medium);
+	color: var(--andr-color-text-strong);
+}
+
+.andreani-contrato-item--disabled .andreani-contrato-item__mode-name {
+	text-decoration: line-through;
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-contratos-list--rows {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.andreani-contrato-row {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 12px 16px;
+	background: var(--andr-color-surface-subtle);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-xs);
+	transition: all var(--andr-transition-base);
+}
+
+.andreani-contrato-row:hover {
+	border-color: var(--andr-color-border-strong);
+}
+
+.andreani-contrato-row--disabled {
+	opacity: 0.6;
+	background-color: var(--andr-gray-50);
+}
+
+.andreani-contrato-row--disabled .andreani-contrato-row__toggle {
+	opacity: 1;
+}
+
+.andreani-contrato-row__toggle {
+	position: relative;
+	display: inline-block;
+	width: 44px;
+	height: 24px;
+	flex-shrink: 0;
+	cursor: pointer;
+}
+
+.andreani-contrato-row__toggle input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+	position: absolute;
+}
+
+.andreani-contrato-row__slider {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: var(--andr-color-border-strong);
+	border-radius: 24px;
+	transition: all 0.3s ease;
+}
+
+.andreani-contrato-row__slider::before {
+	position: absolute;
+	content: "";
+	height: 18px;
+	width: 18px;
+	left: 3px;
+	bottom: 3px;
+	background-color: var(--andr-color-surface);
+	border-radius: 50%;
+	transition: all 0.3s ease;
+	box-shadow: 0 1px 3px rgba(29, 32, 35, 0.2);
+}
+
+.andreani-contrato-row__toggle input:checked + .andreani-contrato-row__slider {
+	background-color: var(--andr-color-brand);
+}
+
+.andreani-contrato-row__toggle input:checked + .andreani-contrato-row__slider::before {
+	transform: translateX(20px);
+}
+
+.andreani-contrato-row__toggle input:focus + .andreani-contrato-row__slider {
+	box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.2);
+}
+
+.andreani-contrato-row__info {
+	flex: 1;
+	min-width: 120px;
+}
+
+.andreani-contrato-row__name {
+	font-size: var(--andr-text-md);
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-text-strong);
+	display: block;
+}
+
+.andreani-contrato-row__detail {
+	font-size: var(--andr-text-xs);
+	color: var(--andr-color-text-muted);
+	display: block;
+	margin-top: 2px;
+}
+
+.andreani-contrato-row--disabled .andreani-contrato-row__name {
+	text-decoration: line-through;
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-contrato-row__fields {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-left: auto;
+	flex-shrink: 0;
+}
+
+.andreani-contrato-row__field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	flex-shrink: 0;
+}
+
+.andreani-contrato-row__field label {
+	font-size: 10px;
+	color: var(--andr-color-text-muted);
+	white-space: nowrap;
+}
+
+.andreani-input-prefix {
+	display: inline-flex;
+	align-items: stretch;
+	flex-shrink: 0;
+}
+
+.andreani-input-prefix span {
+	display: flex;
+	align-items: center;
+	padding: 0 6px;
+	background: var(--andr-color-surface);
+	border: 1px solid var(--andr-color-border-strong);
+	border-right: none;
+	border-radius: var(--andr-radius-xs) 0 0 var(--andr-radius-xs);
+	color: var(--andr-color-text-muted);
+	font-size: var(--andr-text-sm);
+	height: 32px;
+	box-sizing: border-box;
+}
+
+.andreani-input-prefix .andreani-costo-input {
+	border-radius: 0 var(--andr-radius-xs) var(--andr-radius-xs) 0 !important;
+}
+
+.andreani-contrato-row__field .andreani-costo-input {
+	width: 75px !important;
+	min-width: 75px !important;
+	max-width: 75px !important;
+}
+
+.andreani-contrato-row__field input[type="number"] {
+	padding: 6px 6px !important;
+	border: 1px solid var(--andr-color-border-strong) !important;
+	border-radius: var(--andr-radius-xs) !important;
+	font-size: var(--andr-text-base) !important;
+	height: 32px !important;
+	box-sizing: border-box !important;
+	text-align: right;
+}
+
+.andreani-costo-input:focus,
+.andreani-dias-input:focus {
+	border-color: var(--andr-color-text-link);
+	box-shadow: 0 0 0 1px var(--andr-color-text-link);
+	outline: none;
+}
+
+@media screen and (max-width: 782px) {
+	.andreani-contrato-row {
+		flex-wrap: wrap;
+		gap: 12px;
+	}
+
+	.andreani-contrato-row__info {
+		flex: 1 1 calc(100% - 60px);
+	}
+
+	.andreani-contrato-row__fields {
+		flex: 1 1 100%;
+		margin-left: 60px;
+	}
+}
+
+/* Cards de configuración por modo de entrega (expandibles, con toggle) */
+.andreani-modos-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.andreani-modo-card {
+	background: var(--andr-color-surface);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-xs);
+	overflow: hidden;
+	transition: all var(--andr-transition-base);
+}
+
+.andreani-modo-card:hover {
+	border-color: var(--andr-color-border-strong);
+}
+
+.andreani-modo-card--disabled {
+	opacity: 0.6;
+}
+
+.andreani-modo-card--disabled .andreani-modo-card__toggle {
+	opacity: 1;
+}
+
+.andreani-modo-card--disabled .andreani-modo-card__name {
+	text-decoration: line-through;
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-modo-card__header {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 12px 16px;
+	background: var(--andr-color-surface-subtle);
+	cursor: pointer;
+	user-select: none;
+	transition: background-color var(--andr-transition-base);
+}
+
+.andreani-modo-card__header:hover {
+	background: var(--andr-color-surface-muted);
+}
+
+.andreani-modo-card__toggle {
+	position: relative;
+	display: inline-block;
+	width: 44px;
+	height: 24px;
+	flex-shrink: 0;
+	cursor: pointer;
+}
+
+.andreani-modo-card__toggle input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+	position: absolute;
+}
+
+.andreani-modo-card__slider {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: var(--andr-color-border-strong);
+	border-radius: 24px;
+	transition: all 0.3s ease;
+}
+
+.andreani-modo-card__slider::before {
+	position: absolute;
+	content: "";
+	height: 18px;
+	width: 18px;
+	left: 3px;
+	bottom: 3px;
+	background-color: var(--andr-color-surface);
+	border-radius: 50%;
+	transition: all 0.3s ease;
+	box-shadow: 0 1px 3px rgba(29, 32, 35, 0.2);
+}
+
+.andreani-modo-card__toggle input:checked + .andreani-modo-card__slider {
+	background-color: var(--andr-color-brand);
+}
+
+.andreani-modo-card__toggle input:checked + .andreani-modo-card__slider::before {
+	transform: translateX(20px);
+}
+
+.andreani-modo-card__toggle input:focus + .andreani-modo-card__slider {
+	box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.2);
+}
+
+.andreani-modo-card__info {
+	flex: 1;
+	min-width: 0;
+}
+
+.andreani-modo-card__name {
+	font-size: var(--andr-text-md);
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-text-strong);
+	display: block;
+}
+
+.andreani-modo-card__detail {
+	font-size: var(--andr-text-xs);
+	color: var(--andr-color-text-muted);
+	display: block;
+	margin-top: 2px;
+}
+
+.andreani-modo-card__expand {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	background: transparent;
+	border: none;
+	border-radius: var(--andr-radius-xs);
+	color: var(--andr-color-text-muted);
+	cursor: pointer;
+	transition: all var(--andr-transition-base);
+	flex-shrink: 0;
+}
+
+.andreani-modo-card__expand:hover {
+	background: rgba(29, 32, 35, 0.05);
+	color: var(--andr-color-text-strong);
+}
+
+.andreani-modo-card__expand svg {
+	width: 20px;
+	height: 20px;
+	fill: currentColor;
+	transition: transform 0.3s ease;
+}
+
+.andreani-modo-card--collapsed .andreani-modo-card__expand svg {
+	transform: rotate(-90deg);
+}
+
+.andreani-modo-card__body {
+	border-top: 1px solid var(--andr-color-border);
+	padding: 20px;
+	background: var(--andr-color-surface);
+	transition: all 0.3s ease;
+	overflow: hidden;
+}
+
+.andreani-modo-card--collapsed .andreani-modo-card__body {
+	max-height: 0;
+	padding: 0 20px;
+	opacity: 0;
+	border-top: none;
+}
+
+.andreani-modo-card--expanded .andreani-modo-card__body {
+	max-height: 500px;
+	opacity: 1;
+}
+
+.andreani-modo-card__form {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.andreani-modo-card__row {
+	display: flex;
+	gap: 16px;
+	align-items: flex-start;
+}
+
+.andreani-modo-card__row .andreani-modo-card__field--motivo {
+	flex: 1;
+}
+
+.andreani-modo-card__field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.andreani-modo-card__field > label {
+	font-size: var(--andr-text-base);
+	font-weight: var(--andr-fw-medium);
+	color: var(--andr-color-text-strong);
+}
+
+.andreani-modo-card__field--checkbox > label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-weight: var(--andr-fw-normal);
+	cursor: pointer;
+}
+
+.andreani-modo-card__hint {
+	font-size: var(--andr-text-xs);
+	color: var(--andr-color-text-muted);
+	margin-top: 2px;
+}
+
+.andreani-modo-costo,
+.andreani-modo-monto {
+	width: 120px !important;
+	padding: 8px 10px !important;
+	border: 1px solid var(--andr-color-border-strong) !important;
+	border-radius: 0 var(--andr-radius-xs) var(--andr-radius-xs) 0 !important;
+	font-size: var(--andr-text-md) !important;
+	height: 38px !important;
+	box-sizing: border-box !important;
+	text-align: right;
+}
+
+.andreani-modo-motivo {
+	width: 100% !important;
+	max-width: 350px !important;
+	padding: 8px 12px !important;
+	border: 1px solid var(--andr-color-border-strong) !important;
+	border-radius: var(--andr-radius-xs) !important;
+	font-size: var(--andr-text-md) !important;
+	height: 38px !important;
+	box-sizing: border-box !important;
+}
+
+.andreani-modo-motivo:focus,
+.andreani-modo-costo:focus,
+.andreani-modo-monto:focus {
+	border-color: var(--andr-color-text-link) !important;
+	box-shadow: 0 0 0 1px var(--andr-color-text-link) !important;
+	outline: none;
+}
+
+.andreani-modo-gratis {
+	width: 18px;
+	height: 18px;
+	accent-color: var(--andr-color-brand);
+	cursor: pointer;
+}
+
+.andreani-modo-card__field .andreani-input-prefix {
+	display: inline-flex;
+	align-items: stretch;
+	width: fit-content;
+}
+
+.andreani-modo-card__field .andreani-input-prefix span {
+	display: flex;
+	align-items: center;
+	padding: 0 10px;
+	background: var(--andr-color-surface-subtle);
+	border: 1px solid var(--andr-color-border-strong);
+	border-right: none;
+	border-radius: var(--andr-radius-xs) 0 0 var(--andr-radius-xs);
+	color: var(--andr-color-text-muted);
+	font-size: var(--andr-text-md);
+	height: 38px;
+	box-sizing: border-box;
+}
+
+.andreani-hidden {
+	display: none !important;
+}
+
+.andreani-cotizador-config {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.andreani-cotizador-config__toggle {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+	font-size: var(--andr-text-md);
+	color: var(--andr-color-text-strong);
+}
+
+.andreani-cotizador-config__toggle input[type="checkbox"] {
+	width: 18px;
+	height: 18px;
+	border-radius: var(--andr-radius-xs);
+	cursor: pointer;
+	accent-color: var(--andr-color-brand);
+}
+
+.andreani-cotizador-config .description {
+	margin: 0 0 0 26px;
+	color: var(--andr-color-text-muted);
+	font-size: var(--andr-text-base);
+	line-height: 1.4;
+}
+
+.andreani-cotizador-config__options {
+	margin-left: 26px;
+	margin-top: 12px;
+	padding: 18px 20px;
+	background: var(--andr-color-surface-subtle);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-xs);
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	max-height: 500px;
+	opacity: 1;
+	overflow: hidden;
+	transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.3s ease, margin-top 0.3s ease;
+}
+
+.andreani-cotizador-config__options.andreani-hidden {
+	display: flex !important;
+	max-height: 0;
+	opacity: 0;
+	padding-top: 0;
+	padding-bottom: 0;
+	margin-top: 0;
+	border-color: transparent;
+	pointer-events: none;
+}
+
+.andreani-cotizador-config__row {
+	display: flex;
+	align-items: flex-start;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+.andreani-cotizador-config__field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.andreani-cotizador-config__field--full {
+	flex: 1 1 100%;
+}
+
+.andreani-cotizador-config__field label {
+	font-size: var(--andr-text-xs);
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+}
+
+.andreani-cotizador-config__field select {
+	width: auto !important;
+	min-width: 140px !important;
+	padding: 6px 10px;
+	border: 1px solid var(--andr-color-border-strong);
+	border-radius: var(--andr-radius-xs);
+	font-size: var(--andr-text-base);
+	height: auto;
+	background-color: var(--andr-color-surface);
+}
+
+.andreani-cotizador-config__field select:focus {
+	border-color: var(--andr-color-brand);
+	outline: none;
+	box-shadow: 0 0 0 1px rgba(215, 25, 32, 0.2);
+}
+
+.andreani-cotizador-config__field select.andreani-cotizador-posicion {
+	min-width: 340px !important;
+	max-width: 400px;
+}
+
+@media (max-width: 782px) {
+	.andreani-cotizador-config__row {
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	.andreani-cotizador-config__field {
+		width: 100%;
+	}
+
+	.andreani-cotizador-config__field select {
+		width: 100% !important;
+		min-width: unset !important;
+		max-width: 100%;
+	}
+
+	.andreani-cotizador-config__field select.andreani-cotizador-posicion {
+		min-width: unset !important;
+		max-width: 100%;
+	}
+}
+
+.andreani-cotizador-config__checkbox {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: var(--andr-text-base);
+	color: var(--andr-color-text-strong);
+	cursor: pointer;
+}
+
+.andreani-cotizador-config__checkbox input[type="checkbox"] {
+	width: 16px;
+	height: 16px;
+	border-radius: var(--andr-radius-xs);
+	cursor: pointer;
+	accent-color: var(--andr-color-brand);
+}
+
+.andreani-cotizador-config__shortcode {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 14px;
+	background: var(--andr-color-surface);
+	border: 1px dashed var(--andr-color-border-strong);
+	border-radius: var(--andr-radius-xs);
+	max-height: 100px;
+	opacity: 1;
+	overflow: hidden;
+	transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.25s ease;
+}
+
+.andreani-cotizador-config__shortcode.andreani-hidden {
+	display: flex !important;
+	max-height: 0;
+	opacity: 0;
+	padding-top: 0;
+	padding-bottom: 0;
+	border-color: transparent;
+	pointer-events: none;
+}
+
+.andreani-cotizador-config__posicion {
+	max-height: 100px;
+	opacity: 1;
+	overflow: visible;
+	transition: max-height 0.25s ease, opacity 0.2s ease;
+}
+
+.andreani-cotizador-config__posicion.andreani-hidden {
+	display: flex !important;
+	max-height: 0;
+	opacity: 0;
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.andreani-cotizador-config__shortcode-label {
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-cotizador-config__shortcode-code {
+	font-family: var(--andr-font-mono);
+	font-size: var(--andr-text-base);
+	background: var(--andr-color-surface-muted);
+	padding: 4px 10px;
+	border-radius: var(--andr-radius-xs);
+	color: var(--andr-color-brand-hover);
+	user-select: all;
+}
+
+/* Field legacy — mantener mientras existan instalaciones con setting `cotizador_tema` */
+.andreani-cotizador-config__tema {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-left: 26px;
+	padding: 10px 14px;
+	background: var(--andr-color-surface-subtle);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-xs);
+	width: fit-content;
+}
+
+.andreani-cotizador-config__tema label {
+	font-size: var(--andr-text-base);
+	font-weight: var(--andr-fw-medium);
+	color: var(--andr-color-text-strong);
+	white-space: nowrap;
+}
+
+.andreani-cotizador-config__tema select.andreani-cotizador-tema {
+	width: 90px !important;
+	min-width: 90px !important;
+	max-width: 90px !important;
+	padding: 5px 8px;
+	border: 1px solid var(--andr-color-border-strong);
+	border-radius: var(--andr-radius-xs);
+	font-size: var(--andr-text-base);
+	height: auto;
+	background-color: var(--andr-color-surface);
+}
+
+.andreani-cotizador-config__tema select.andreani-cotizador-tema:focus {
+	border-color: var(--andr-color-text-link);
+	outline: none;
+	box-shadow: 0 0 0 1px var(--andr-color-text-link);
+}
+
+@media screen and (max-width: 782px) {
+	.andreani-cotizador-config__options {
+		margin-left: 0;
+	}
+
+	.andreani-cotizador-config__row {
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	.andreani-cotizador-config__field select {
+		width: 100% !important;
+	}
+
+	.andreani-cotizador-config__tema {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 8px;
+		margin-left: 0;
+	}
+
+	.andreani-cotizador-config__tema select {
+		width: 100% !important;
+	}
+}
+
+@media screen and (max-width: 782px) {
+	.andreani-modo-card__header {
+		flex-wrap: wrap;
+		gap: 10px;
+	}
+
+	.andreani-modo-card__info {
+		flex: 1 1 calc(100% - 90px);
+	}
+
+	.andreani-modo-card__expand {
+		margin-left: auto;
+	}
+
+	.andreani-modo-card__row {
+		flex-direction: column;
+	}
+
+	.andreani-modo-motivo {
+		max-width: 100% !important;
+	}
+}
+
+/* Botón "Actualizar contratos". Cuando se usa solo (legacy) se renderiza como
+ * pill ghost. Cuando viene combinado con .andr-btn .andr-btn--ghost (nuevo
+ * markup en section-heading), respeta los estilos del componente y solo
+ * agregamos el spinner del loading state. */
+.andreani-refresh-contratos:not(.andr-btn) {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	height: 28px;
+	padding: 4px 12px;
+	background-color: var(--andr-color-surface);
+	border: 1px solid var(--andr-color-border-strong);
+	border-radius: var(--andr-radius-pill);
+	font-size: var(--andr-text-xs);
+	font-weight: var(--andr-fw-medium);
+	line-height: 1;
+	color: var(--andr-color-text-muted);
+	cursor: pointer;
+	box-sizing: border-box;
+	transition: background-color var(--andr-transition-fast), border-color var(--andr-transition-fast), color var(--andr-transition-fast);
+}
+
+.andreani-refresh-contratos:not(.andr-btn):hover {
+	background-color: var(--andr-color-brand-subtle);
+	border-color: var(--andr-color-brand);
+	color: var(--andr-color-brand);
+}
+
+.andreani-refresh-contratos:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.andreani-refresh-contratos svg {
+	width: 14px;
+	height: 14px;
+	fill: currentColor;
+}
+
+.andreani-refresh-contratos--loading svg {
+	animation: andreani-settings-spin 1s linear infinite;
+}
+
+/* Container dedicado para los notices admin de la pantalla de envíos.
+ * Vive como hijo directo del .wrap, justo después de <hr class="wp-header-end">,
+ * para que los notices NUNCA queden visualmente metidos dentro de la tabla o del
+ * detalle expandido (eg. confundidos con el card de error del aside). */
+.andreani-notices-container {
+	position: relative;
+	z-index: 100;
+	margin: 0;
+}
+
+.andreani-notices-container .andreani-temp-notice {
+	margin: 5px 0 15px;
+}
+
+.andreani-admin-notice,
+.andreani-temp-notice {
+	border-left-color: var(--andr-color-brand) !important;
+}
+
+.andreani-admin-notice.notice-error,
+.andreani-temp-notice.notice-error {
+	border-left-color: var(--andr-color-error) !important;
+}
+
+.andreani-admin-notice.notice-success,
+.andreani-temp-notice.notice-success {
+	border-left-color: var(--andr-color-success) !important;
+}
+
+.andreani-admin-notice.notice-warning,
+.andreani-temp-notice.notice-warning {
+	border-left-color: var(--andr-color-warning) !important;
+}
+
+/* Info box (card expandible reutilizable). Se monta como <tr> en la form-table
+ * con un <th> vacío al lado para alinear con el field de arriba.
+ *
+ * IMPORTANTE: con el nuevo layout vertical de form-table dentro de tabs,
+ * los <tr> normales pasan a display:block y están excluidos de ese cambio
+ * via :not(.andreani-info-box-wrapper). Esa exclusión deja al info box con
+ * el layout original (tabla), pero sin <th> a la izquierda visualmente.
+ * Necesitamos: ocultar el <th> spacer y que el <td> ocupe todo el ancho. */
+.andreani-info-box-wrapper[data-hidden="true"],
+.andr-tabs__panel .andreani-info-box-wrapper[data-hidden="true"] {
+	display: none;
+}
+
+/* En el contexto de tabs, el spacer ya no aporta nada (no hay columna fija
+ * de labels). Lo escondemos visualmente para que el info box ocupe todo el
+ * ancho disponible debajo del field anterior. */
+.andr-tabs__panel .andreani-info-box-wrapper__spacer {
+	display: none !important;
+	padding: 0 !important;
+}
+
+.andreani-info-box-wrapper__spacer {
+	padding: 0 !important;
+}
+
+.andr-tabs__panel .andreani-info-box-wrapper {
+	display: block;
+	margin-top: calc(var(--andr-sp-2) * -1);
+	margin-bottom: var(--andr-sp-5);
+}
+
+.andr-tabs__panel .andreani-info-box-wrapper > td.forminp {
+	display: block;
+	padding: 0 !important;
+	width: 100%;
+	max-width: 100%;
+}
+
+.andreani-info-box-wrapper > td.forminp {
+	padding-top: 0 !important;
+}
+
+.andreani-info-box-wrapper--attached .andreani-info-box {
+	border-left: 3px solid var(--andr-color-brand);
+}
+
+.andreani-info-box {
+	background: var(--andr-color-surface-subtle);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-xs);
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.andreani-info-box:hover {
+	border-color: var(--andr-color-text-muted);
+}
+
+.andreani-info-box[data-open="true"] {
+	border-color: var(--andr-color-brand);
+	box-shadow: 0 0 0 1px rgba(215, 25, 32, 0.12);
+}
+
+.andreani-info-box__header {
+	display: flex;
+	align-items: center;
+	gap: 0.75em;
+	width: 100%;
+	padding: 0.85em 1em;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	text-align: left;
+	font-family: inherit;
+	font-size: var(--andr-text-md);
+	color: var(--andr-color-text-strong);
+	transition: background-color 0.15s ease;
+}
+
+.andreani-info-box__header:hover {
+	background: rgba(215, 25, 32, 0.04);
+}
+
+.andreani-info-box__header:focus {
+	outline: 2px solid var(--andr-color-brand);
+	outline-offset: -2px;
+}
+
+.andreani-info-box__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 14px;
+	height: 14px;
+	color: var(--andr-color-info);
+	flex-shrink: 0;
+}
+
+.andreani-info-box__icon svg {
+	width: 100%;
+	height: 100%;
+}
+
+.andreani-info-box__title {
+	flex: 1;
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-text-strong);
+}
+
+.andreani-info-box__chevron {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	color: var(--andr-color-text-muted);
+	transition: transform 0.25s ease;
+	flex-shrink: 0;
+}
+
+.andreani-info-box__chevron svg {
+	width: 100%;
+	height: 100%;
+}
+
+.andreani-info-box[data-open="true"] .andreani-info-box__chevron {
+	transform: rotate(180deg);
+}
+
+.andreani-info-box__body {
+	max-height: 0;
+	overflow: hidden;
+	transition: max-height 0.3s ease, padding 0.3s ease;
+	padding: 0 1em;
+	border-top: 1px solid transparent;
+	color: var(--andr-color-text-strong);
+	font-size: var(--andr-text-base);
+	line-height: 1.5;
+}
+
+.andreani-info-box[data-open="true"] .andreani-info-box__body {
+	max-height: 800px;
+	padding: 1em;
+	border-top-color: var(--andr-color-border);
+}
+
+.andreani-info-box__fields {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	margin-bottom: 16px;
+}
+
+.andreani-info-box__fields .andreani-info-box__field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.andreani-info-box__field select {
+	max-width: 480px;
+}
+
+.andreani-info-box__field label {
+	font-size: var(--andr-text-xs);
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+}
+
+.andreani-info-box__field select {
+	width: 100%;
+	padding: 7px 10px;
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-xs);
+	font-size: var(--andr-text-base);
+	height: auto;
+	background-color: var(--andr-color-surface);
+	color: var(--andr-color-text-strong);
+}
+
+.andreani-info-box__field select:focus {
+	border-color: var(--andr-color-brand);
+	outline: none;
+	box-shadow: 0 0 0 1px rgba(215, 25, 32, 0.2);
+}
+
+.andreani-info-box__field.andreani-hidden {
+	display: none;
+}
+
+.andreani-info-box__divider {
+	height: 1px;
+	background: var(--andr-color-border);
+	margin: 4px 0 16px 0;
+	border: 0;
+}
+
+.andreani-info-box__advanced {
+	margin-top: 14px;
+	padding-top: 12px;
+	border-top: 1px dashed var(--andr-color-border);
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-info-box__advanced summary {
+	cursor: pointer;
+	font-weight: var(--andr-fw-medium);
+	color: var(--andr-color-text-muted);
+	list-style: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 2px 0;
+	transition: color 0.15s ease;
+	user-select: none;
+}
+
+.andreani-info-box__advanced summary::-webkit-details-marker,
+.andreani-info-box__advanced summary::marker {
+	display: none;
+	content: '';
+}
+
+.andreani-info-box__advanced summary:hover {
+	color: var(--andr-color-brand);
+}
+
+.andreani-info-box__advanced summary::before {
+	content: '▸';
+	font-size: 10px;
+	transition: transform 0.2s ease;
+	display: inline-block;
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-info-box__advanced[open] summary::before {
+	transform: rotate(90deg);
+}
+
+.andreani-info-box__advanced[open] summary {
+	color: var(--andr-color-text-strong);
+	margin-bottom: 8px;
+}
+
+.andreani-info-box__advanced ul {
+	list-style: none;
+	padding: 0 0 0 18px;
+	margin: 0 0 8px 0;
+}
+
+.andreani-info-box__advanced li {
+	padding: 3px 0;
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-info-box__advanced code {
+	background: transparent;
+	color: var(--andr-color-brand);
+	padding: 0;
+	font-size: 11.5px;
+	font-weight: var(--andr-fw-semibold);
+	border-radius: 0;
+}
+
+.andreani-info-box__advanced p {
+	margin: 4px 0 0 18px;
+	font-size: 11.5px;
+	font-style: italic;
+	color: var(--andr-color-text-muted);
+}
+
+@media (max-width: 782px) {
+	.andreani-info-box__fields {
+		grid-template-columns: 1fr;
+	}
+}
+
+.andreani-info-box__body p {
+	margin: 0.5em 0;
+}
+
+.andreani-info-box__body p:first-child {
+	margin-top: 0;
+}
+
+.andreani-info-box__body p:last-child {
+	margin-bottom: 0;
+}
+
+.andreani-info-box__body code {
+	display: inline-block;
+	padding: 3px 8px;
+	background: var(--andr-color-text-strong);
+	color: var(--andr-color-text-inverse);
+	border-radius: var(--andr-radius-xs);
+	font-family: var(--andr-font-mono);
+	font-size: var(--andr-text-sm);
+	word-break: break-all;
+	white-space: normal;
+	max-width: 100%;
+}
+
+.andreani-info-box__body ul {
+	list-style: none;
+	padding: 0;
+	margin: 0.5em 0;
+}
+
+.andreani-info-box__body li {
+	padding: 0.4em 0;
+	display: flex;
+	align-items: center;
+	gap: 0.75em;
+	flex-wrap: wrap;
+}
+
+.andreani-info-box__body li code {
+	flex-shrink: 0;
+}
+
+.andreani-info-box__shortcodes li {
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.35em;
+	padding: 0.5em 0;
+}
+
+.andreani-info-box__shortcodes li span {
+	color: var(--andr-color-text-muted);
+	font-size: var(--andr-text-sm);
+}
+
+.andreani-info-box-row[data-hidden="true"] {
+	display: none;
+}
+
+@media screen and (max-width: 782px) {
+	.andreani-settings-header {
+		flex-direction: column;
+		gap: 15px;
+		text-align: center;
+	}
+
+	.andreani-modos-panel__header {
+		flex-wrap: wrap;
+	}
+
+	.andreani-modos-panel__title {
+		flex-basis: calc(100% - 52px);
+	}
+
+	.andr-tabs__panel .form-table th {
+		display: block;
+		width: 100%;
+		padding-bottom: 5px;
+	}
+
+	.andr-tabs__panel .form-table td {
+		display: block;
+		padding-top: 0;
+	}
+
+	.andr-tabs__panel input[type="text"],
+	.andr-tabs__panel input[type="number"],
+	.andr-tabs__panel select {
+		min-width: 100%;
+		width: 100%;
+	}
+
+	.andreani-contrato-item {
+		grid-template-columns: 1fr;
+	}
+
+	.andreani-contrato-item__content {
+		grid-template-columns: 1fr;
+	}
+}
+
+@keyframes andreani-settings-spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/**
+ * Section anatomy + code cards + submit button.
+ * Cada tab usa la misma anatomía: wrapper .andreani-section → heading con ícono
+ * opcional → descripción sutil → contenido (form-table o panel).
+ */
+
+/* Section wrapper: agrupa el heading + descripción + contenido. Se usa solo cuando
+ * hay descripción que renderizar (en el tab "Modos" el wrapper queda implícito). */
+.andreani-section {
+	margin-bottom: var(--andr-sp-5);
+}
+
+.andreani-section:last-child {
+	margin-bottom: 0;
+}
+
+/* Cuando hay dos o más secciones apiladas en el mismo panel (ej: tab "Visualización"
+ * con Checkout + Cotizador), separarlas con un divider sutil para que se lean como
+ * bloques distintos en lugar de un único muro de texto. */
+.andr-tabs__panel[data-panel="checkout"] .andreani-section + .andreani-section,
+.andr-tabs__panel[data-panel="origen"] .andreani-section + .andreani-section {
+	margin-top: var(--andr-sp-6);
+	padding-top: var(--andr-sp-5);
+	border-top: 1px solid var(--andr-color-border);
+}
+
+/* Icon dentro del section heading. Vive a la izquierda del título, mismo estilo
+ * que los iconos de tab (16-18px, color brand sutil). Lo usamos solo en headings
+ * marcados con .andreani-section-heading--with-icon para no romper headings legacy. */
+.andreani-section-heading--with-icon {
+	gap: var(--andr-sp-2);
+}
+
+.andreani-section-heading__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	color: var(--andr-color-brand);
+	flex-shrink: 0;
+}
+
+.andreani-section-heading__icon svg {
+	width: 100%;
+	height: 100%;
+}
+
+/* Descripción opcional debajo del heading. Texto sutil, ancho controlado para
+ * legibilidad. El heading le da `margin-bottom: var(--andr-sp-4)` (16px); subimos
+ * la descripción con margin-top negativo para que quede a 4px del heading
+ * (acoplada visualmente) y damos un mb=16px para separarla del form-table siguiente. */
+.andreani-section-heading + .andreani-section-description {
+	margin-top: calc(var(--andr-sp-3) * -1);
+}
+
+.andreani-section-description {
+	margin: 0 0 var(--andr-sp-4);
+	max-width: 640px;
+	color: var(--andr-color-text-muted);
+	font-size: var(--andr-text-base);
+	line-height: 1.55;
+}
+
+.andreani-section-description strong {
+	color: var(--andr-color-text-strong);
+	font-weight: var(--andr-fw-semibold);
+}
+
+.andreani-section-description + .form-table,
+.andreani-section-description + .andreani-modos-panel {
+	margin-top: 0;
+}
+
+/**
+ * Code cards (shortcodes copiables) — usados en el info box del tab Checkout
+ * modo Manual. Cada card es clickeable y copia al portapapeles via .andreani-copy-click.
+ * El estado .copied lo aplica JS y revierte a los 1.5s.
+ */
+
+.andreani-info-box__body p.andreani-shortcodes-intro,
+.andreani-shortcodes-intro {
+	margin: 0 0 var(--andr-sp-3);
+	color: var(--andr-color-text-strong);
+	font-size: var(--andr-text-base);
+	line-height: 1.5;
+}
+
+.andreani-info-box__body p.andreani-shortcodes-tip,
+.andreani-shortcodes-tip {
+	margin: var(--andr-sp-3) 0 0;
+	padding: var(--andr-sp-2) var(--andr-sp-3);
+	background: var(--andr-color-surface);
+	border-left: 3px solid var(--andr-color-border-strong);
+	border-radius: 0 var(--andr-radius-xs) var(--andr-radius-xs) 0;
+	color: var(--andr-color-text-muted);
+	font-size: var(--andr-text-sm);
+	line-height: 1.5;
+}
+
+.andreani-shortcodes-tip strong {
+	color: var(--andr-color-text-strong);
+	font-weight: var(--andr-fw-semibold);
+}
+
+.andreani-code-card-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--andr-sp-2);
+	margin: 0;
+}
+
+/* Card individual. Es clickeable en toda su superficie (rol button) y copia el shortcode.
+ * Visual: fondo subtle, border que se intensifica en hover, accent-left brand al pasar. */
+.andreani-code-card {
+	display: flex;
+	align-items: center;
+	gap: var(--andr-sp-3);
+	padding: var(--andr-sp-3) var(--andr-sp-4);
+	background: var(--andr-color-surface);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-xs);
+	cursor: pointer;
+	transition: border-color var(--andr-transition-fast), box-shadow var(--andr-transition-fast), transform var(--andr-transition-fast);
+	position: relative;
+	user-select: none;
+}
+
+.andreani-code-card::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 3px;
+	background: transparent;
+	border-radius: var(--andr-radius-xs) 0 0 var(--andr-radius-xs);
+	transition: background var(--andr-transition-fast);
+}
+
+.andreani-code-card:hover {
+	border-color: var(--andr-color-brand);
+	box-shadow: var(--andr-shadow-sm);
+}
+
+.andreani-code-card:hover::before {
+	background: var(--andr-color-brand);
+}
+
+.andreani-code-card:focus-visible {
+	outline: 2px solid var(--andr-color-brand);
+	outline-offset: 2px;
+}
+
+.andreani-code-card:active {
+	transform: translateY(1px);
+}
+
+.andreani-code-card__main {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+/* El <code> queda en line propia, mono, con el color brand sutil para que destaque
+ * como "código" sin gritarte. Override sobre `.andreani-info-box__body code` que
+ * pone fondo oscuro pill — adentro del code-card no queremos eso. */
+.andreani-info-box__body code.andreani-code-card__code,
+.andreani-code-card__code {
+	display: block;
+	font-family: var(--andr-font-mono);
+	font-size: var(--andr-text-base);
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-brand-hover);
+	background: transparent;
+	padding: 0;
+	border-radius: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	letter-spacing: 0.2px;
+	max-width: 100%;
+	word-break: normal;
+}
+
+.andreani-code-card__desc {
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-muted);
+	line-height: 1.4;
+}
+
+.andreani-code-card__copy {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	flex-shrink: 0;
+	padding: 6px 10px;
+	background: var(--andr-color-surface-subtle);
+	border-radius: var(--andr-radius-xs);
+	font-size: var(--andr-text-xs);
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	transition: background var(--andr-transition-fast), color var(--andr-transition-fast);
+}
+
+.andreani-code-card:hover .andreani-code-card__copy {
+	background: var(--andr-color-brand);
+	color: var(--andr-color-text-inverse);
+}
+
+.andreani-code-card__copy-icon {
+	display: inline-flex;
+	width: 14px;
+	height: 14px;
+	flex-shrink: 0;
+}
+
+.andreani-code-card__copy-icon svg {
+	width: 100%;
+	height: 100%;
+}
+
+/* Default: muestra ícono "copy" + label "Copiar". Cuando el JS añade .copied,
+ * cambiamos a ícono "check" + label "Copiado". */
+.andreani-code-card__copy-icon--success,
+.andreani-code-card__copy-label--success {
+	display: none;
+}
+
+.andreani-code-card.copied {
+	border-color: var(--andr-color-success);
+	background: var(--andr-color-success-subtle);
+}
+
+.andreani-code-card.copied::before {
+	background: var(--andr-color-success);
+}
+
+.andreani-code-card.copied .andreani-code-card__copy {
+	background: var(--andr-color-success);
+	color: var(--andr-color-text-inverse);
+}
+
+.andreani-code-card.copied .andreani-code-card__copy-icon--default,
+.andreani-code-card.copied .andreani-code-card__copy-label--default {
+	display: none;
+}
+
+.andreani-code-card.copied .andreani-code-card__copy-icon--success,
+.andreani-code-card.copied .andreani-code-card__copy-label--success {
+	display: inline-flex;
+}
+
+/**
+ * Code reference table (CSS selectors → descripción) dentro del <details>
+ * "Personalización con CSS". 2 columnas: selector mono / descripción.
+ */
+
+.andreani-code-reference {
+	margin-top: var(--andr-sp-4);
+}
+
+.andreani-code-reference__inner {
+	margin-top: var(--andr-sp-2);
+	background: var(--andr-color-surface);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-xs);
+	overflow: hidden;
+}
+
+.andreani-code-reference__table {
+	display: flex;
+	flex-direction: column;
+}
+
+.andreani-code-reference__head {
+	display: grid;
+	grid-template-columns: minmax(220px, 1fr) 1.4fr;
+	gap: var(--andr-sp-3);
+	padding: var(--andr-sp-2) var(--andr-sp-3);
+	background: var(--andr-color-surface-subtle);
+	border-bottom: 1px solid var(--andr-color-border);
+}
+
+.andreani-code-reference__head .andreani-code-reference__cell {
+	font-size: var(--andr-text-xs);
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.andreani-code-reference__row {
+	display: grid;
+	grid-template-columns: minmax(220px, 1fr) 1.4fr;
+	gap: var(--andr-sp-3);
+	padding: var(--andr-sp-2) var(--andr-sp-3);
+	border-bottom: 1px solid var(--andr-color-border-subtle);
+	align-items: center;
+}
+
+.andreani-code-reference__row:last-of-type {
+	border-bottom: none;
+}
+
+.andreani-code-reference__cell {
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-strong);
+	line-height: 1.5;
+}
+
+/* Override sobre `.andreani-info-box__body code` que pone fondo oscuro pill. */
+.andreani-info-box__body .andreani-code-reference__cell--selector code,
+.andreani-code-reference__cell--selector code {
+	display: inline-block;
+	background: transparent;
+	padding: 0;
+	border-radius: 0;
+	font-family: var(--andr-font-mono);
+	font-size: var(--andr-text-sm);
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-brand-hover);
+	letter-spacing: 0.2px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 100%;
+	word-break: normal;
+}
+
+.andreani-code-reference__cell--desc {
+	color: var(--andr-color-text-muted);
+}
+
+/* `.andreani-info-box__advanced p` aplica margin-left:18px y font-italic — los
+ * neutralizamos acá para el footer (mismo selector pero con clase específica). */
+.andreani-info-box__advanced p.andreani-code-reference__footer,
+.andreani-code-reference__footer {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--andr-sp-2);
+	margin: var(--andr-sp-3) 0 0;
+	padding: var(--andr-sp-2) var(--andr-sp-3);
+	background: var(--andr-color-surface-subtle);
+	border-radius: var(--andr-radius-xs);
+	font-size: var(--andr-text-sm);
+	font-style: normal;
+	color: var(--andr-color-text-muted);
+	line-height: 1.5;
+}
+
+.andreani-code-reference__footer-icon {
+	display: inline-flex;
+	width: 14px;
+	height: 14px;
+	color: var(--andr-color-brand);
+	flex-shrink: 0;
+	margin-top: 2px;
+}
+
+.andreani-code-reference__footer-icon svg {
+	width: 100%;
+	height: 100%;
+}
+
+.andreani-code-reference__footer strong {
+	color: var(--andr-color-text-strong);
+	font-weight: var(--andr-fw-semibold);
+}
+
+@media (max-width: 700px) {
+	.andreani-code-reference__head,
+	.andreani-code-reference__row {
+		grid-template-columns: 1fr;
+		gap: 4px;
+	}
+	.andreani-code-reference__head .andreani-code-reference__cell--desc {
+		display: none;
+	}
+
+	.andreani-code-card {
+		flex-direction: column;
+		align-items: stretch;
+		gap: var(--andr-sp-2);
+	}
+	.andreani-code-card__copy {
+		align-self: flex-start;
+	}
+}
+
+/**
+ * Submit button override — convertimos el <button> nativo de WC a .andr-btn--primary
+ * con tamaño grande, alineado al wrapper para que se sienta parte del módulo.
+ */
+
+.andreani-settings-wrapper + p.submit {
+	margin: var(--andr-sp-5) 0 0;
+	padding: 0;
+	display: flex;
+	gap: var(--andr-sp-3);
+}
+
+.andreani-settings-wrapper + p.submit .button-primary,
+.andreani-settings-wrapper + p.submit .woocommerce-save-button {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	gap: var(--andr-sp-2) !important;
+	height: 44px !important;
+	padding: 0 var(--andr-sp-5) !important;
+	background: linear-gradient(135deg, var(--andr-color-brand) 0%, var(--andr-color-brand-hover) 100%) !important;
+	border: 1px solid var(--andr-color-brand-hover) !important;
+	border-radius: var(--andr-radius-md) !important;
+	font-size: var(--andr-text-md) !important;
+	font-weight: var(--andr-fw-semibold) !important;
+	color: var(--andr-color-text-inverse) !important;
+	letter-spacing: 0.01em !important;
+	cursor: pointer !important;
+	box-shadow: var(--andr-shadow-sm) !important;
+	text-shadow: none !important;
+	transition: all var(--andr-transition-base) !important;
+}
+
+.andreani-settings-wrapper + p.submit .button-primary:hover,
+.andreani-settings-wrapper + p.submit .woocommerce-save-button:hover {
+	background: linear-gradient(135deg, var(--andr-color-brand-hover) 0%, var(--andr-color-brand-pressed) 100%) !important;
+	border-color: var(--andr-color-brand-pressed) !important;
+	box-shadow: var(--andr-shadow-md) !important;
+	transform: translateY(-1px) !important;
+}
+
+.andreani-settings-wrapper + p.submit .button-primary:active,
+.andreani-settings-wrapper + p.submit .woocommerce-save-button:active {
+	transform: translateY(0) !important;
+	box-shadow: var(--andr-shadow-xs) !important;
+}
+
+.andreani-settings-wrapper + p.submit .button-primary:focus-visible,
+.andreani-settings-wrapper + p.submit .woocommerce-save-button:focus-visible {
+	outline: 2px solid var(--andr-color-brand) !important;
+	outline-offset: 2px !important;
+}
+
+/* Footer polish — spacing más generoso. */
+
+.andreani-settings-footer {
+	padding: var(--andr-sp-3) var(--andr-sp-5);
+}
+
+.andreani-settings-footer__icon svg {
+	width: 18px;
+	height: 18px;
+}
+
+/**
+ * Padding del primer elemento dentro del panel activo — da aire entre el header rojo
+ * y el primer elemento (cliente-summary, section-heading o empty-state).
+ */
+
+.andr-tabs__panel > .andreani-section:first-child > .andreani-section-heading,
+.andr-tabs__panel > .andreani-cliente-summary:first-child {
+	margin-top: 0;
+}
+
+/* Help-tip refinement — el ? de WC ahora más sutil, más circular, con tooltip
+ * mejor posicionado en hover. Solo afecta los help-tips dentro de los tabs. */
+.andr-tabs__panel .woocommerce-help-tip {
+	font-size: 1em;
+	color: var(--andr-color-text-disabled);
+	transition: color var(--andr-transition-fast), opacity var(--andr-transition-fast);
+}
+
+.andr-tabs__panel .woocommerce-help-tip:hover {
+	color: var(--andr-color-brand);
+	opacity: 1;
+}
+
+/**
+ * Pestaña "Mi cuenta" — tarjeta de identidad, dirección de origen y selector de
+ * sucursal de origen. Sobre .andr-card / .andr-btn / .andr-badge.
+ */
+
+/* .andreani-cliente-info es el hook que usa el JS para ocultar los datos al cambiar
+   credencial, pero en admin.css trae align-items:center y centra todo el contenido. */
+.andreani-cuenta-datos {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: var(--andr-sp-4);
+}
+
+/* Gana por especificidad: .andreani-cliente-info--hidden se declara antes en esta
+   misma hoja y su display:none quedaria pisado por el display:flex de arriba. */
+.andreani-cuenta-datos.andreani-cliente-info--hidden {
+	display: none;
+}
+
+.andreani-cuenta-identidad__label {
+	margin: 0;
+	font-size: var(--andr-text-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-cuenta-identidad__titular {
+	margin: 2px 0 0;
+	font-family: var(--andr-font-display);
+	font-size: var(--andr-text-lg);
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-text-strong);
+}
+
+.andreani-cuenta-identidad__apoyo {
+	margin: 4px 0 0;
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-subtle);
+}
+
+.andreani-cuenta-mas > summary {
+	cursor: pointer;
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-subtle);
+	width: fit-content;
+}
+
+.andreani-cuenta-mas[open] > summary {
+	margin-bottom: var(--andr-sp-3);
+}
+
+.andreani-cuenta-card__datos {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: var(--andr-sp-3);
+	margin: 0;
+}
+
+.andreani-cuenta-card__dato dt {
+	margin: 0 0 var(--andr-sp-1);
+	font-size: var(--andr-text-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-cuenta-card__dato dd {
+	margin: 0;
+	color: var(--andr-color-text-strong);
+	word-break: break-word;
+}
+
+.andreani-cuenta-card__vacio {
+	margin: 0;
+	color: var(--andr-color-text-subtle);
+}
+
+.andreani-cuenta-card__acciones {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--andr-sp-2);
+}
+
+.andreani-origen-aviso {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--andr-sp-2);
+	padding: var(--andr-sp-3);
+	margin-bottom: var(--andr-sp-3);
+	border-radius: var(--andr-radius-sm);
+	background: var(--andr-yellow-50);
+	color: var(--andr-yellow-900);
+}
+
+.andreani-origen-aviso svg {
+	flex: 0 0 auto;
+	width: 18px;
+	height: 18px;
+	margin-top: 2px;
+}
+
+.andreani-origen-traer-fila {
+	display: flex;
+	align-items: center;
+	gap: var(--andr-sp-2);
+	flex-wrap: wrap;
+	margin: var(--andr-sp-3) 0 0;
+}
+
+.andreani-origen-traer__aviso {
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-subtle);
+}
+
+.andreani-origen-grid {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	gap: var(--andr-sp-3);
+	margin-top: var(--andr-sp-3);
+}
+
+.andreani-origen-campo--cp,
+.andreani-origen-campo--numero,
+.andreani-origen-campo--piso {
+	grid-column: span 1;
+}
+
+.andreani-origen-campo--calle,
+.andreani-origen-campo--localidad,
+.andreani-origen-campo--provincia {
+	grid-column: span 3;
+}
+
+@media (max-width: 900px) {
+	.andreani-origen-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	.andreani-origen-campo--calle,
+	.andreani-origen-campo--localidad,
+	.andreani-origen-campo--provincia {
+		grid-column: span 2;
+	}
+}
+
+.andreani-origen-campo {
+	display: flex;
+	flex-direction: column;
+	gap: var(--andr-sp-1);
+	margin: 0;
+}
+
+.andreani-origen-campo label {
+	font-weight: var(--andr-fw-medium);
+	color: var(--andr-color-text-strong);
+}
+
+.andreani-origen-campo input[type="text"] {
+	width: 100%;
+}
+
+.andreani-origen-campo--remitente {
+	margin-top: var(--andr-sp-3);
+	max-width: 420px;
+}
+
+.andreani-origen-campo__ayuda {
+	color: var(--andr-color-text-muted);
+	font-size: var(--andr-text-sm);
+	line-height: 1.5;
+}
+
+.andreani-origen-sucursales {
+	border: 0;
+	padding: 0;
+	margin: 0;
+}
+
+.andreani-origen-sucursales__lista {
+	display: flex;
+	flex-direction: column;
+	gap: var(--andr-sp-2);
+	margin-top: var(--andr-sp-3);
+	box-sizing: border-box;
+	max-height: 200px;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: var(--andr-sp-1);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-md);
+	background: var(--andr-color-surface-subtle);
+}
+
+.andreani-origen-buscador {
+	display: flex;
+	align-items: center;
+	gap: var(--andr-sp-2);
+	margin-top: var(--andr-sp-3);
+	padding: 0 var(--andr-sp-3);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-sm);
+	background: var(--andr-color-surface);
+}
+
+.andreani-origen-buscador:focus-within {
+	border-color: var(--andr-color-border-focus);
+}
+
+.andreani-origen-buscador__icono {
+	display: inline-flex;
+	flex: 0 0 auto;
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-origen-buscador__icono svg {
+	width: 16px;
+	height: 16px;
+}
+
+/* El admin de WordPress estiliza input[type="search"], que le gana en
+   especificidad a una sola clase: sin el selector de tipo, el input queda con su
+   propio borde adentro del buscador y se ve un marco duplicado. */
+.andreani-origen-buscador input[type="search"].andreani-origen-buscador__input,
+.andreani-origen-buscador input[type="search"].andreani-origen-buscador__input:focus {
+	flex: 1 1 auto;
+	min-width: 0;
+	margin: 0;
+	border: 0;
+	outline: 0;
+	box-shadow: none;
+	background: transparent;
+	padding: var(--andr-sp-2) 0;
+	font-size: var(--andr-text-sm);
+	line-height: 1.4;
+}
+
+.andreani-origen-buscador__contador {
+	flex: 0 0 auto;
+	font-size: var(--andr-text-xs);
+	color: var(--andr-color-text-muted);
+	white-space: nowrap;
+}
+
+/* Doble clase: .andreani-origen-opcion se declara despues en esta hoja y su
+   display:flex pisaria un display:none de una sola clase. */
+.andreani-origen-opcion.andreani-origen-opcion--oculta {
+	display: none;
+}
+
+.andreani-origen-opcion__mapa {
+	flex: 0 0 auto;
+	align-self: center;
+	margin-left: var(--andr-sp-2);
+	font-size: var(--andr-text-xs);
+	white-space: nowrap;
+}
+
+/* Doble clase a propósito: .andr-card impone flex-direction:column y, con una sola
+   clase, el radio queda arriba del texto y cada opción triplica su alto. */
+.andr-card.andreani-origen-opcion {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: var(--andr-sp-2);
+	padding: var(--andr-sp-2) var(--andr-sp-3);
+	cursor: pointer;
+	transition: border-color var(--andr-transition-fast), box-shadow var(--andr-transition-fast);
+	/* Sin esto la lista con max-height comprime cada opción hasta la altura del radio
+	   y .andr-card recorta el texto con su overflow:hidden. */
+	flex: 0 0 auto;
+}
+
+.andreani-origen-opcion:hover {
+	border-color: var(--andr-color-border-strong);
+}
+
+.andreani-origen-opcion:focus-within {
+	border-color: var(--andr-color-border-focus);
+}
+
+.andreani-origen-opcion input[type="radio"] {
+	margin: 0;
+	flex: 0 0 auto;
+}
+
+.andreani-origen-opcion__cuerpo {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.andreani-origen-opcion__titulo {
+	font-size: var(--andr-text-sm);
+	font-weight: var(--andr-fw-semibold);
+	line-height: 1.35;
+	color: var(--andr-color-text-strong);
+}
+
+.andreani-origen-opcion__detalle {
+	font-size: var(--andr-text-xs);
+	line-height: 1.35;
+	color: var(--andr-color-text-subtle);
+}
+
+.andreani-origen-opcion__tag {
+	display: inline-block;
+	margin-left: var(--andr-sp-2);
+	padding: 0 6px;
+	border-radius: var(--andr-radius-pill, 999px);
+	background: var(--andr-color-surface-subtle);
+	border: 1px solid var(--andr-color-border);
+	font-size: var(--andr-text-xs);
+	font-weight: var(--andr-fw-medium);
+	color: var(--andr-color-text-subtle);
+	text-transform: none;
+	vertical-align: middle;
+}
+
+.andreani-origen-estado {
+	margin: 0;
+	padding: var(--andr-sp-3);
+	border-radius: var(--andr-radius-sm);
+	background: var(--andr-color-surface-subtle);
+	color: var(--andr-color-text-subtle);
+}
+
+.andreani-origen-estado--error {
+	background: var(--andr-red-50);
+	color: var(--andr-red-800);
+}

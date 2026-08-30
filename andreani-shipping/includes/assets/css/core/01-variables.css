@@ -1,0 +1,202 @@
+/**
+ * Andreani Plugin — Design system variables (paleta, spacing, tipografía, radius, shadows, z-index, transiciones).
+ * Paleta extraída del Style System oficial: https://stylesystem.andreani.com/
+ * Naming: --andr-{categoria}-{escala|nombre} / --andr-color-{rol-semantico}
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Rubik:wght@400;500;600;700&display=swap');
+
+:root {
+	--andr-red-50:  #fbe8e9;
+	--andr-red-100: #f7d1d2;
+	--andr-red-200: #f3babc;
+	--andr-red-300: #efa3a6;
+	--andr-red-400: #e77579;
+	--andr-red-500: #df474d;
+	--andr-red-600: #d71920;
+	--andr-red-700: #b6040b;
+	--andr-red-800: #810f13;
+	--andr-red-900: #560a0d;
+
+	--andr-gray-0:   #ffffff;
+	--andr-gray-50:  #fafafa;
+	--andr-gray-100: #dfe1e3;
+	--andr-gray-200: #c0c3c8;
+	--andr-gray-300: #a0a6ac;
+	--andr-gray-400: #818891;
+	--andr-gray-500: #616a75;
+	--andr-gray-600: #4e555e;
+	--andr-gray-700: #3a4046;
+	--andr-gray-800: #272a2f;
+	--andr-gray-900: #1d2023;
+
+	--andr-green-50:  #ddf3ea;
+	--andr-green-100: #bfe8d9;
+	--andr-green-200: #9cd1bd;
+	--andr-green-300: #8ac5af;
+	--andr-green-400: #66ad92;
+	--andr-green-500: #439676;
+	--andr-green-600: #1f7e5a;
+	--andr-green-700: #196548;
+	--andr-green-800: #134c36;
+	--andr-green-900: #0c3224;
+
+	--andr-blue-50:  #edeffb;
+	--andr-blue-100: #dce0f7;
+	--andr-blue-200: #cad0f3;
+	--andr-blue-300: #b8c1ef;
+	--andr-blue-400: #95a1e7;
+	--andr-blue-500: #7182df;
+	--andr-blue-600: #4e63d7;
+	--andr-blue-700: #3e4fac;
+	--andr-blue-800: #2f3b81;
+	--andr-blue-900: #1f2856;
+
+	--andr-yellow-50:  #fff9ed;
+	--andr-yellow-100: #fff3dc;
+	--andr-yellow-200: #ffedca;
+	--andr-yellow-300: #ffe7b9;
+	--andr-yellow-400: #ffdb96;
+	--andr-yellow-500: #ffcf73;
+	--andr-yellow-600: #ffc350;
+	--andr-yellow-700: #d4a140;
+	--andr-yellow-800: #a97f30;
+	--andr-yellow-900: #684d18;
+
+	--andr-orange-50:  #fdefe9;
+	--andr-orange-100: #fae0d4;
+	--andr-orange-200: #f8d0be;
+	--andr-orange-300: #f6c1a9;
+	--andr-orange-400: #f1a27d;
+	--andr-orange-500: #ed8352;
+	--andr-orange-600: #e86427;
+	--andr-orange-700: #ba501f;
+	--andr-orange-800: #8b3c17;
+	--andr-orange-900: #5d2810;
+
+	--andr-violet-50:  #f5f3ff;
+	--andr-violet-100: #ede9fe;
+	--andr-violet-200: #ddd6fe;
+	--andr-violet-300: #c4b5fd;
+	--andr-violet-400: #a78bfa;
+	--andr-violet-500: #8b5cf6;
+	--andr-violet-600: #7c3aed;
+	--andr-violet-700: #6d28d9;
+	--andr-violet-800: #5b21b6;
+	--andr-violet-900: #4c1d95;
+
+	/* Semantic tokens */
+	--andr-color-brand:          var(--andr-red-600);
+	--andr-color-brand-hover:    var(--andr-red-700);
+	--andr-color-brand-pressed:  var(--andr-red-800);
+	--andr-color-brand-subtle:   var(--andr-red-50);
+	--andr-color-brand-on-brand: var(--andr-gray-0);
+
+	--andr-color-surface:         var(--andr-gray-0);
+	--andr-color-surface-subtle:  var(--andr-gray-50);
+	--andr-color-surface-muted:   var(--andr-gray-100);
+	--andr-color-surface-hover:   var(--andr-gray-50);
+	--andr-color-surface-overlay: rgba(29, 32, 35, 0.5);
+
+	--andr-color-text:            var(--andr-gray-900);
+	--andr-color-text-strong:     var(--andr-gray-900);
+	--andr-color-text-subtle:     var(--andr-gray-600);
+	--andr-color-text-muted:      var(--andr-gray-500);
+	--andr-color-text-disabled:   var(--andr-gray-300);
+	--andr-color-text-inverse:    var(--andr-gray-0);
+	--andr-color-text-link:       var(--andr-blue-600);
+	--andr-color-text-link-hover: var(--andr-blue-700);
+
+	--andr-color-border:        var(--andr-gray-100);
+	--andr-color-border-subtle: var(--andr-gray-50);
+	--andr-color-border-strong: var(--andr-gray-300);
+	--andr-color-border-focus:  var(--andr-red-600);
+
+	--andr-color-success:        var(--andr-green-600);
+	--andr-color-success-subtle: var(--andr-green-50);
+	--andr-color-success-strong: var(--andr-green-700);
+
+	--andr-color-error:        var(--andr-red-600);
+	--andr-color-error-subtle: var(--andr-red-50);
+	--andr-color-error-strong: var(--andr-red-700);
+
+	--andr-color-warning:        var(--andr-yellow-700);
+	--andr-color-warning-subtle: var(--andr-yellow-50);
+	--andr-color-warning-strong: var(--andr-yellow-800);
+
+	--andr-color-info:        var(--andr-blue-600);
+	--andr-color-info-subtle: var(--andr-blue-50);
+	--andr-color-info-strong: var(--andr-blue-700);
+
+	--andr-color-mm:        var(--andr-violet-600);
+	--andr-color-mm-subtle: var(--andr-violet-100);
+	--andr-color-mm-strong: var(--andr-violet-700);
+
+	/* Spacing (4px scale) */
+	--andr-sp-0: 0;
+	--andr-sp-1: 4px;
+	--andr-sp-2: 8px;
+	--andr-sp-3: 12px;
+	--andr-sp-4: 16px;
+	--andr-sp-5: 24px;
+	--andr-sp-6: 32px;
+	--andr-sp-7: 48px;
+	--andr-sp-8: 64px;
+
+	/* Typography */
+	--andr-font-body:    'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+	--andr-font-display: 'Rubik', var(--andr-font-body);
+	--andr-font-mono:    'Roboto Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+	--andr-text-xs:   11px;
+	--andr-text-sm:   12px;
+	--andr-text-base: 13px;
+	--andr-text-md:   14px;
+	--andr-text-lg:   16px;
+	--andr-text-xl:   20px;
+	--andr-text-2xl:  24px;
+	--andr-text-3xl:  32px;
+
+	--andr-leading-tight:  1.2;
+	--andr-leading-snug:   1.35;
+	--andr-leading-normal: 1.5;
+	--andr-leading-loose:  1.7;
+
+	--andr-fw-light:    300;
+	--andr-fw-normal:   400;
+	--andr-fw-medium:   500;
+	--andr-fw-semibold: 600;
+	--andr-fw-bold:     700;
+
+	/* Radius */
+	--andr-radius-xs:   4px;
+	--andr-radius-sm:   8px;
+	--andr-radius-md:   16px;
+	--andr-radius-lg:   24px;
+	--andr-radius-pill: 999px;
+
+	/* Shadows */
+	--andr-shadow-xs: 0 1px 1px rgba(29, 32, 35, 0.04);
+	--andr-shadow-sm: 0 1px 2px rgba(29, 32, 35, 0.06);
+	--andr-shadow-md: 0 4px 12px rgba(29, 32, 35, 0.08);
+	--andr-shadow-lg: 0 12px 32px rgba(29, 32, 35, 0.12);
+	--andr-shadow-xl: 0 24px 48px rgba(29, 32, 35, 0.16);
+
+	/* Z-index (max 300, para coexistir con WP admin sin guerra de z-index) */
+	--andr-z-base:           1;
+	--andr-z-sticky:         10;
+	--andr-z-dropdown:       50;
+	--andr-z-modal-backdrop: 100;
+	--andr-z-modal:          200;
+	--andr-z-toast:          300;
+
+	--andr-transition-fast: 120ms ease;
+	--andr-transition-base: 200ms ease;
+	--andr-transition-slow: 320ms ease;
+
+	--andr-container-max: 1280px;
+	--andr-bp-sm: 480px;
+	--andr-bp-md: 768px;
+	--andr-bp-lg: 1024px;
+	--andr-bp-xl: 1280px;
+}

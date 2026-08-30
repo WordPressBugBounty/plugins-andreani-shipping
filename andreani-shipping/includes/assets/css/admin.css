@@ -1,0 +1,2605 @@
+/* ==========================================================================
+   Andreani Shipping - Admin Styles
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   CSS Variables
+   -------------------------------------------------------------------------- */
+:root {
+  --andreani-primary: #e31e24;
+  --andreani-primary-dark: #c41a1f;
+  --andreani-primary-darker: #a31519;
+  --andreani-primary-hover: #c71a1f;
+  --andreani-success: #00a32a;
+  --andreani-success-bg: #d4edda;
+  --andreani-warning: #dba617;
+  --andreani-warning-bg: #fff3cd;
+  --andreani-error: #d63638;
+  --andreani-error-bg: #f8d7da;
+  --andreani-pending: #996800;
+  --andreani-pending-bg: #fcf0e3;
+  --andreani-corpo: #0073aa;
+  --andreani-corpo-bg: #e7f3ff;
+  --andreani-pyme-color: #9a4e00;
+  --andreani-gray: #646970;
+  --andreani-gray-dark: #1d2327;
+  --andreani-gray-medium: #667085;
+  --andreani-gray-light: #f0f0f1;
+  --andreani-gray-lighter: #f8f9fa;
+  --andreani-border: #c3c4c7;
+  --andreani-border-light: #e0e0e0;
+  --andreani-border-input: #d0d5dd;
+  --andreani-radius: 4px;
+  --andreani-radius-md: 6px;
+  --andreani-radius-lg: 8px;
+  --andreani-transition: 0.2s ease;
+  --andreani-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --andreani-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --andreani-shadow-primary: 0 2px 6px rgba(227, 30, 36, 0.3);
+}
+
+/* --------------------------------------------------------------------------
+   Settings Layout
+   -------------------------------------------------------------------------- */
+.andreani-settings-wrapper {
+  max-width: 800px;
+}
+
+.andreani-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0;
+  padding: 15px 25px;
+  background: linear-gradient(135deg, var(--andreani-primary) 0%, var(--andreani-primary-dark) 100%);
+  border-radius: var(--andreani-radius-lg) var(--andreani-radius-lg) 0 0;
+  box-shadow: var(--andreani-shadow-primary);
+}
+
+.andreani-settings-header__title {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.andreani-settings-header__logo {
+  height: 28px;
+  filter: brightness(0) invert(1);
+}
+
+/* --------------------------------------------------------------------------
+   Settings Cards
+   -------------------------------------------------------------------------- */
+.andreani-settings-card {
+  background-color: #fff;
+  border-radius: 0;
+  border: 1px solid var(--andreani-border-light);
+  border-top: none;
+  box-shadow: var(--andreani-shadow-md);
+  overflow: hidden;
+}
+
+.andreani-settings-card:not(:last-of-type) {
+  border-bottom: 1px solid var(--andreani-border-light);
+}
+
+.andreani-settings-card:last-of-type {
+  border-radius: 0;
+  border-bottom: none;
+}
+
+.andreani-settings-card__header {
+  background-color: var(--andreani-gray-lighter);
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--andreani-border-light);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 60px;
+}
+
+.andreani-settings-card__icon {
+  width: 32px;
+  height: 32px;
+  background-color: var(--andreani-primary);
+  border-radius: var(--andreani-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.andreani-settings-card__icon svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.andreani-settings-card__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--andreani-gray-dark);
+  flex-grow: 1;
+}
+
+.andreani-settings-card__body {
+  padding: 25px;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+/* Card Collapsible States */
+.andreani-settings-card--collapsible .andreani-settings-card__header {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--andreani-transition);
+}
+
+.andreani-settings-card--collapsible .andreani-settings-card__header:hover {
+  background-color: var(--andreani-gray-light);
+}
+
+.andreani-settings-card__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-left: 8px;
+  background: transparent;
+  border: none;
+  border-radius: var(--andreani-radius);
+  color: var(--andreani-gray-medium);
+  cursor: pointer;
+  transition: all var(--andreani-transition);
+  flex-shrink: 0;
+}
+
+.andreani-settings-card__toggle:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--andreani-gray-dark);
+}
+
+.andreani-settings-card__toggle svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+  transition: transform 0.3s ease;
+}
+
+.andreani-settings-card--collapsed .andreani-settings-card__toggle svg {
+  transform: rotate(-90deg);
+}
+
+.andreani-settings-card--collapsed .andreani-settings-card__body {
+  padding: 0 25px;
+  max-height: 0;
+  opacity: 0;
+}
+
+.andreani-settings-card--expanded .andreani-settings-card__body {
+  max-height: 2000px;
+  opacity: 1;
+}
+
+/* Card Contratos */
+.andreani-settings-card--contratos {
+  border-top: 0.5px solid var(--andreani-border-light);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.andreani-settings-card--hidden {
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Email Field (read-only above credential)
+   -------------------------------------------------------------------------- */
+.andreani-email-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  padding: 10px 14px;
+  margin-bottom: 15px;
+  background-color: var(--andreani-gray-lighter);
+  border: 1px solid var(--andreani-border-light);
+  border-radius: var(--andreani-radius-md);
+  transition: opacity 0.3s ease, max-height 0.3s ease;
+}
+
+.andreani-email-field__icon {
+  fill: var(--andreani-gray-medium);
+  flex-shrink: 0;
+}
+
+.andreani-email-field__label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--andreani-gray-medium);
+}
+
+.andreani-email-field__value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--andreani-gray-dark);
+  font-family: monospace;
+  letter-spacing: 0.3px;
+}
+
+.andreani-email-field.andreani-cliente-info--hidden {
+  opacity: 0;
+  max-height: 0;
+  padding: 0 16px;
+  margin-bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   Credentials
+   -------------------------------------------------------------------------- */
+.andreani-credential-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.andreani-credential-wrapper input[type="text"],
+.andreani-credential-wrapper input[type="password"] {
+  width: 350px;
+  max-width: 100%;
+}
+
+.andreani-credential-toggle {
+  cursor: pointer;
+  color: #666;
+  font-size: 20px;
+}
+
+.andreani-credential-toggle:hover {
+  color: #d4001a;
+}
+
+.andreani-credential-wrapper + .andreani-cancel-edit {
+  display: block;
+  margin-top: 8px;
+  margin-left: 0;
+  text-align: left;
+}
+
+/* --------------------------------------------------------------------------
+   CP Origen Validation
+   -------------------------------------------------------------------------- */
+.andreani-cp-status {
+  display: none;
+  margin-top: 8px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  clear: both;
+  width: 100%;
+}
+
+.andreani-cp-status--success {
+  color: #00a32a;
+}
+
+.andreani-cp-status--error {
+  color: #dc3232;
+}
+
+.andreani-field-success {
+  border-color: #00a32a !important;
+  box-shadow: 0 0 0 3px rgba(0, 163, 42, 0.15) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Badges
+   -------------------------------------------------------------------------- */
+.andreani-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  height: 28px;
+  box-sizing: border-box;
+  line-height: 1;
+}
+
+.andreani-badge svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.andreani-badge--corpo {
+  background: #0066a1;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 102, 161, 0.3);
+}
+
+.andreani-badge--pyme {
+  background: #dc2626;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
+}
+
+.andreani-badge--delivery {
+  background: #e0e0e0;
+  color: #5a5a5a;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #aaa;
+}
+
+.andreani-badge--hidden {
+  opacity: 0;
+  transform: scale(0.8);
+  pointer-events: none;
+}
+
+/* Cliente info (badge + email) */
+.andreani-cliente-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.andreani-settings-card__header .andreani-cliente-info {
+  margin-left: auto;
+  margin-right: 8px;
+  gap: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.andreani-settings-card__header .andreani-email-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  margin: 0;
+  border-radius: 20px;
+  border: 1px solid var(--andreani-border-input);
+  background: #fff;
+  font-size: 11px;
+  color: var(--andreani-gray-dark);
+  height: 28px;
+  box-sizing: border-box;
+  line-height: 1;
+}
+
+.andreani-settings-card__header .andreani-email-field__icon {
+  width: 14px;
+  height: 14px;
+  fill: var(--andreani-gray-medium);
+  flex-shrink: 0;
+}
+
+.andreani-settings-card__header .andreani-email-field__value {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.andreani-settings-card__header .andreani-email-toggle {
+  padding: 0;
+  margin-left: 2px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.andreani-settings-card__header .andreani-email-toggle svg {
+  width: 14px;
+  height: 14px;
+  fill: var(--andreani-gray-medium);
+}
+
+.andreani-settings-card__header .andreani-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 4px 10px;
+  font-size: 11px;
+  line-height: 1;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+}
+
+.andreani-cliente-info--hidden {
+  opacity: 0;
+  transform: scale(0.8);
+  pointer-events: none;
+}
+
+.andreani-cliente-email {
+  font-size: 12px;
+  color: var(--andreani-gray-medium);
+  font-weight: 500;
+}
+
+.andreani-badge--info {
+  background: var(--andreani-gray-light);
+  color: #50575e;
+  font-size: 11px;
+  padding: 4px 10px;
+}
+
+/* --------------------------------------------------------------------------
+   Cancel Edit Button
+   -------------------------------------------------------------------------- */
+.andreani-cancel-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: var(--andreani-gray-light);
+  border: 1px solid var(--andreani-border-input);
+  border-radius: var(--andreani-radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--andreani-gray-medium);
+  cursor: pointer;
+  transition: all var(--andreani-transition);
+}
+
+.andreani-cancel-edit:hover {
+  background-color: #fff;
+  border-color: var(--andreani-primary);
+  color: var(--andreani-primary);
+}
+
+.andreani-cancel-edit svg {
+  width: 14px;
+  height: 14px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+  fill: currentColor;
+}
+
+/* --------------------------------------------------------------------------
+   Form Tables
+   -------------------------------------------------------------------------- */
+.andreani-settings-card .form-table {
+  margin: 0;
+}
+
+.andreani-settings-card .form-table th {
+  padding: 15px 10px 15px 0;
+  width: 200px;
+  font-weight: 500;
+  color: var(--andreani-gray-dark);
+  vertical-align: top;
+}
+
+.andreani-settings-card .form-table td {
+  padding: 15px 0;
+}
+
+.andreani-settings-card .form-table tr {
+  border-bottom: 1px solid var(--andreani-gray-light);
+}
+
+.andreani-settings-card .form-table tr:last-child {
+  border-bottom: none;
+}
+
+.andreani-settings-card input[type="text"],
+.andreani-settings-card input[type="number"] {
+  border: 1px solid var(--andreani-border-input);
+  border-radius: var(--andreani-radius-md);
+  padding: 8px 12px;
+  font-size: 14px;
+  transition: border-color var(--andreani-transition), box-shadow var(--andreani-transition);
+  width: 350px;
+  max-width: 100%;
+  height: 38px;
+  box-sizing: border-box;
+}
+
+.andreani-settings-card select {
+  border: 1px solid var(--andreani-border-input);
+  border-radius: var(--andreani-radius-md);
+  padding: 0 12px;
+  font-size: 14px;
+  transition: border-color var(--andreani-transition), box-shadow var(--andreani-transition);
+  width: 350px;
+  max-width: 100%;
+  height: 38px;
+  box-sizing: border-box;
+  line-height: 38px;
+}
+
+.andreani-settings-card input[type="text"]:focus,
+.andreani-settings-card input[type="number"]:focus,
+.andreani-settings-card select:focus {
+  border-color: #2271b1;
+  box-shadow: 0 0 0 1px #2271b1;
+  outline: none;
+}
+
+.andreani-settings-card input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--andreani-radius);
+  cursor: pointer;
+  accent-color: var(--andreani-primary);
+}
+
+.andreani-settings-card .description {
+  color: var(--andreani-gray-medium);
+  font-size: 13px;
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+.andreani-field-error {
+  border-color: #dc3232 !important;
+  box-shadow: 0 0 0 3px rgba(220, 50, 50, 0.15) !important;
+}
+
+.andreani-field-error:focus,
+.andreani-field-success:focus {
+  border-color: #2271b1 !important;
+  box-shadow: 0 0 0 1px #2271b1 !important;
+}
+
+/* --------------------------------------------------------------------------
+   Products Warning Notice
+   -------------------------------------------------------------------------- */
+.andreani-products-warning {
+  max-width: 800px;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  background-color: var(--andreani-warning-bg);
+  border: 1px solid var(--andreani-warning);
+  border-left: 4px solid var(--andreani-warning);
+  border-radius: var(--andreani-radius-lg);
+  overflow: hidden;
+}
+
+.andreani-products-warning__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--andreani-transition);
+}
+
+.andreani-products-warning__header:hover {
+  background-color: rgba(219, 166, 23, 0.1);
+}
+
+.andreani-products-warning__icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--andreani-warning);
+  flex-shrink: 0;
+}
+
+.andreani-products-warning__icon svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+.andreani-products-warning__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--andreani-gray-dark);
+  flex-grow: 1;
+}
+
+.andreani-products-warning__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  border-radius: var(--andreani-radius);
+  color: var(--andreani-gray-medium);
+  cursor: pointer;
+  transition: all var(--andreani-transition);
+  flex-shrink: 0;
+}
+
+.andreani-products-warning__toggle:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--andreani-gray-dark);
+}
+
+.andreani-products-warning__toggle svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+  transition: transform 0.3s ease;
+}
+
+.andreani-products-warning--collapsed .andreani-products-warning__toggle svg {
+  transform: rotate(-90deg);
+}
+
+.andreani-products-warning__body {
+  padding: 0 20px 16px;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.andreani-products-warning--collapsed .andreani-products-warning__body {
+  max-height: 0;
+  padding: 0 20px;
+  opacity: 0;
+}
+
+.andreani-products-warning--expanded .andreani-products-warning__body {
+  max-height: 1000px;
+  opacity: 1;
+}
+
+.andreani-products-warning__desc {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--andreani-gray);
+  line-height: 1.5;
+}
+
+.andreani-products-warning__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.andreani-products-warning__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(219, 166, 23, 0.2);
+  font-size: 13px;
+}
+
+.andreani-products-warning__item:last-child {
+  border-bottom: none;
+}
+
+.andreani-products-warning__product-name {
+  color: var(--andreani-gray-dark);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.andreani-products-warning__edit-link {
+  color: var(--andreani-primary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 12px;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+.andreani-products-warning__edit-link:hover {
+  text-decoration: underline;
+}
+
+.andreani-products-warning__more {
+  margin: 8px 0 0;
+  padding: 0 12px;
+  font-size: 13px;
+  color: var(--andreani-gray);
+  font-style: italic;
+}
+
+/* --------------------------------------------------------------------------
+   Settings Footer
+   -------------------------------------------------------------------------- */
+.andreani-settings-footer {
+  margin-top: 0;
+  padding: 10px 20px;
+  background-color: var(--andreani-gray-lighter);
+  border-radius: 0 0 var(--andreani-radius-lg) var(--andreani-radius-lg);
+  border: 1px solid var(--andreani-border-light);
+  border-top: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.andreani-settings-footer__icon {
+  color: var(--andreani-gray-medium);
+}
+
+.andreani-settings-footer__icon svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.andreani-settings-footer__text {
+  color: var(--andreani-gray-medium);
+  font-size: 12px;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.andreani-settings-footer__text a {
+  color: var(--andreani-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.andreani-settings-footer__text a:hover {
+  text-decoration: underline;
+}
+
+/* --------------------------------------------------------------------------
+   Save Button
+   -------------------------------------------------------------------------- */
+.andreani-settings-card + p.submit {
+  margin-top: 20px;
+}
+
+.andreani-settings-card + p.submit .woocommerce-save-button {
+  background: linear-gradient(135deg, var(--andreani-primary) 0%, var(--andreani-primary-dark) 100%) !important;
+  border: none !important;
+  border-radius: var(--andreani-radius-md) !important;
+  padding: 10px 24px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #fff !important;
+  cursor: pointer !important;
+  transition: all var(--andreani-transition) !important;
+  box-shadow: var(--andreani-shadow-primary) !important;
+}
+
+.andreani-settings-card + p.submit .woocommerce-save-button:hover {
+  background: linear-gradient(135deg, var(--andreani-primary-dark) 0%, var(--andreani-primary-darker) 100%) !important;
+  box-shadow: 0 4px 8px rgba(227, 30, 36, 0.4) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Contratos
+   -------------------------------------------------------------------------- */
+.andreani-contratos-description {
+  margin: 0 0 16px 0;
+  color: var(--andreani-gray-medium);
+  font-size: 13px;
+}
+
+.andreani-contratos-stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--andreani-gray-medium);
+  background: var(--andreani-gray-light);
+  padding: 4px 10px;
+  border-radius: var(--andreani-radius);
+}
+
+.andreani-contratos-stats__count {
+  font-weight: 600;
+  color: var(--andreani-gray-dark);
+}
+
+.andreani-contratos-list {
+  display: grid;
+  gap: 12px;
+}
+
+.andreani-contratos-list--toggleable {
+  display: grid;
+  gap: 10px;
+}
+
+.andreani-contratos-list--pyme {
+  grid-template-columns: 1fr;
+  max-width: 300px;
+}
+
+.andreani-contrato-item {
+  background-color: var(--andreani-gray-lighter);
+  border: 1px solid var(--andreani-border-light);
+  border-radius: var(--andreani-radius-md);
+  padding: 12px 16px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.andreani-contrato-item--toggleable {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all var(--andreani-transition);
+}
+
+.andreani-contrato-item--toggleable:hover {
+  background-color: var(--andreani-gray-light);
+  border-color: var(--andreani-border);
+}
+
+.andreani-contrato-item--disabled {
+  opacity: 0.5;
+  background-color: #fafafa;
+}
+
+.andreani-contrato-item--disabled:hover {
+  background-color: #f5f5f5;
+}
+
+.andreani-contrato-item--pyme {
+  padding: 12px 16px;
+}
+
+.andreani-contrato-item--pyme .andreani-contrato-item__content {
+  display: block;
+}
+
+.andreani-contrato-item__row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.andreani-contrato-item__label {
+  font-size: 11px;
+  color: var(--andreani-gray-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.andreani-contrato-item__value {
+  font-size: 14px;
+  color: var(--andreani-gray-dark);
+  font-weight: 500;
+}
+
+.andreani-contrato-item__value--code {
+  font-family: monospace;
+  background-color: #fff;
+  padding: 2px 6px;
+  border-radius: var(--andreani-radius);
+  border: 1px solid var(--andreani-border-light);
+  display: inline-block;
+}
+
+.andreani-contrato-item__toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.andreani-contrato-item__toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.andreani-contrato-item__toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--andreani-border);
+  border-radius: 24px;
+  transition: all 0.3s ease;
+}
+
+.andreani-contrato-item__toggle-slider::before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.andreani-contrato-item__toggle input:checked + .andreani-contrato-item__toggle-slider {
+  background-color: var(--andreani-primary);
+}
+
+.andreani-contrato-item__toggle input:checked + .andreani-contrato-item__toggle-slider::before {
+  transform: translateX(20px);
+}
+
+.andreani-contrato-item__toggle input:focus + .andreani-contrato-item__toggle-slider {
+  box-shadow: 0 0 0 3px rgba(227, 30, 36, 0.2);
+}
+
+.andreani-contrato-item__content {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.andreani-contrato-item__mode-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--andreani-gray-dark);
+}
+
+.andreani-contrato-item--disabled .andreani-contrato-item__mode-name {
+  text-decoration: line-through;
+  color: var(--andreani-gray-medium);
+}
+
+/* --------------------------------------------------------------------------
+   Contrato Rows (filas horizontales con toggle + campos)
+   -------------------------------------------------------------------------- */
+.andreani-contratos-list--rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.andreani-contrato-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: var(--andreani-gray-lighter);
+  border: 1px solid var(--andreani-border-light);
+  border-radius: var(--andreani-radius-md);
+  transition: all var(--andreani-transition);
+}
+
+.andreani-contrato-row:hover {
+  border-color: var(--andreani-border);
+}
+
+.andreani-contrato-row--disabled {
+  opacity: 0.6;
+  background-color: #fafafa;
+}
+
+.andreani-contrato-row--disabled .andreani-contrato-row__toggle {
+  opacity: 1;
+}
+
+/* Toggle en fila */
+.andreani-contrato-row__toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.andreani-contrato-row__toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.andreani-contrato-row__slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--andreani-border);
+  border-radius: 24px;
+  transition: all 0.3s ease;
+}
+
+.andreani-contrato-row__slider::before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.andreani-contrato-row__toggle input:checked + .andreani-contrato-row__slider {
+  background-color: var(--andreani-primary);
+}
+
+.andreani-contrato-row__toggle input:checked + .andreani-contrato-row__slider::before {
+  transform: translateX(20px);
+}
+
+.andreani-contrato-row__toggle input:focus + .andreani-contrato-row__slider {
+  box-shadow: 0 0 0 3px rgba(227, 30, 36, 0.2);
+}
+
+/* Info del contrato */
+.andreani-contrato-row__info {
+  flex: 1;
+  min-width: 120px;
+}
+
+.andreani-contrato-row__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--andreani-gray-dark);
+  display: block;
+}
+
+.andreani-contrato-row__detail {
+  font-size: 11px;
+  color: var(--andreani-gray-medium);
+  display: block;
+  margin-top: 2px;
+}
+
+.andreani-contrato-row--disabled .andreani-contrato-row__name {
+  text-decoration: line-through;
+  color: var(--andreani-gray-medium);
+}
+
+/* Campos a la derecha */
+.andreani-contrato-row__fields {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.andreani-contrato-row__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.andreani-contrato-row__field label {
+  font-size: 10px;
+  color: var(--andreani-gray-medium);
+  white-space: nowrap;
+}
+
+.andreani-input-prefix {
+  display: inline-flex;
+  align-items: stretch;
+  flex-shrink: 0;
+}
+
+.andreani-input-prefix span {
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  background: #fff;
+  border: 1px solid var(--andreani-border-input);
+  border-right: none;
+  border-radius: var(--andreani-radius) 0 0 var(--andreani-radius);
+  color: var(--andreani-gray-medium);
+  font-size: 12px;
+  height: 32px;
+  box-sizing: border-box;
+}
+
+.andreani-input-prefix .andreani-costo-input {
+  border-radius: 0 var(--andreani-radius) var(--andreani-radius) 0 !important;
+}
+
+.andreani-contrato-row__field .andreani-costo-input {
+  width: 75px !important;
+  min-width: 75px !important;
+  max-width: 75px !important;
+}
+
+
+.andreani-contrato-row__field input[type="number"] {
+  padding: 6px 6px !important;
+  border: 1px solid var(--andreani-border-input) !important;
+  border-radius: var(--andreani-radius) !important;
+  font-size: 13px !important;
+  height: 32px !important;
+  box-sizing: border-box !important;
+  text-align: right;
+}
+
+.andreani-costo-input:focus,
+.andreani-dias-input:focus {
+  border-color: #2271b1;
+  box-shadow: 0 0 0 1px #2271b1;
+  outline: none;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+  .andreani-contrato-row {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .andreani-contrato-row__info {
+    flex: 1 1 calc(100% - 60px);
+  }
+
+  .andreani-contrato-row__fields {
+    flex: 1 1 100%;
+    margin-left: 60px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Modo Cards (config unificada por modo/contrato - expandibles)
+   -------------------------------------------------------------------------- */
+.andreani-modos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.andreani-modo-card {
+  background: #fff;
+  border: 1px solid var(--andreani-border-light);
+  border-radius: var(--andreani-radius-md);
+  overflow: hidden;
+  transition: all var(--andreani-transition);
+}
+
+.andreani-modo-card:hover {
+  border-color: var(--andreani-border);
+}
+
+.andreani-modo-card--disabled {
+  opacity: 0.6;
+}
+
+.andreani-modo-card--disabled .andreani-modo-card__toggle {
+  opacity: 1;
+}
+
+.andreani-modo-card--disabled .andreani-modo-card__name {
+  text-decoration: line-through;
+  color: var(--andreani-gray-medium);
+}
+
+/* Header - siempre visible */
+.andreani-modo-card__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--andreani-gray-lighter);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--andreani-transition);
+}
+
+.andreani-modo-card__header:hover {
+  background: var(--andreani-gray-light);
+}
+
+/* Toggle switch */
+.andreani-modo-card__toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.andreani-modo-card__toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.andreani-modo-card__slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--andreani-border);
+  border-radius: 24px;
+  transition: all 0.3s ease;
+}
+
+.andreani-modo-card__slider::before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.andreani-modo-card__toggle input:checked + .andreani-modo-card__slider {
+  background-color: var(--andreani-primary);
+}
+
+.andreani-modo-card__toggle input:checked + .andreani-modo-card__slider::before {
+  transform: translateX(20px);
+}
+
+.andreani-modo-card__toggle input:focus + .andreani-modo-card__slider {
+  box-shadow: 0 0 0 3px rgba(227, 30, 36, 0.2);
+}
+
+/* Info */
+.andreani-modo-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.andreani-modo-card__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--andreani-gray-dark);
+  display: block;
+}
+
+.andreani-modo-card__detail {
+  font-size: 11px;
+  color: var(--andreani-gray-medium);
+  display: block;
+  margin-top: 2px;
+}
+
+/* Expand button */
+.andreani-modo-card__expand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--andreani-radius);
+  color: var(--andreani-gray-medium);
+  cursor: pointer;
+  transition: all var(--andreani-transition);
+  flex-shrink: 0;
+}
+
+.andreani-modo-card__expand:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--andreani-gray-dark);
+}
+
+.andreani-modo-card__expand svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+  transition: transform 0.3s ease;
+}
+
+.andreani-modo-card--collapsed .andreani-modo-card__expand svg {
+  transform: rotate(-90deg);
+}
+
+/* Body - colapsable */
+.andreani-modo-card__body {
+  border-top: 1px solid var(--andreani-border-light);
+  padding: 20px;
+  background: #fff;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.andreani-modo-card--collapsed .andreani-modo-card__body {
+  max-height: 0;
+  padding: 0 20px;
+  opacity: 0;
+  border-top: none;
+}
+
+.andreani-modo-card--expanded .andreani-modo-card__body {
+  max-height: 500px;
+  opacity: 1;
+}
+
+/* Form inside body */
+.andreani-modo-card__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Row para campos en línea */
+.andreani-modo-card__row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.andreani-modo-card__row .andreani-modo-card__field--motivo {
+  flex: 1;
+}
+
+.andreani-modo-card__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.andreani-modo-card__field > label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--andreani-gray-dark);
+}
+
+.andreani-modo-card__field--checkbox > label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.andreani-modo-card__hint {
+  font-size: 11px;
+  color: var(--andreani-gray-medium);
+  margin-top: 2px;
+}
+
+/* Inputs */
+.andreani-modo-costo,
+.andreani-modo-monto {
+  width: 120px !important;
+  padding: 8px 10px !important;
+  border: 1px solid var(--andreani-border-input) !important;
+  border-radius: 0 var(--andreani-radius) var(--andreani-radius) 0 !important;
+  font-size: 14px !important;
+  height: 38px !important;
+  box-sizing: border-box !important;
+  text-align: right;
+}
+
+.andreani-modo-motivo {
+  width: 100% !important;
+  max-width: 350px !important;
+  padding: 8px 12px !important;
+  border: 1px solid var(--andreani-border-input) !important;
+  border-radius: var(--andreani-radius) !important;
+  font-size: 14px !important;
+  height: 38px !important;
+  box-sizing: border-box !important;
+}
+
+.andreani-modo-motivo:focus,
+.andreani-modo-costo:focus,
+.andreani-modo-monto:focus {
+  border-color: #2271b1 !important;
+  box-shadow: 0 0 0 1px #2271b1 !important;
+  outline: none;
+}
+
+.andreani-modo-gratis {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--andreani-primary);
+  cursor: pointer;
+}
+
+/* Input prefix */
+.andreani-modo-card__field .andreani-input-prefix {
+  display: inline-flex;
+  align-items: stretch;
+  width: fit-content;
+}
+
+.andreani-modo-card__field .andreani-input-prefix span {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  background: var(--andreani-gray-lighter);
+  border: 1px solid var(--andreani-border-input);
+  border-right: none;
+  border-radius: var(--andreani-radius) 0 0 var(--andreani-radius);
+  color: var(--andreani-gray-medium);
+  font-size: 14px;
+  height: 38px;
+  box-sizing: border-box;
+}
+
+/* Utility class */
+.andreani-hidden {
+  display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Cotizador Config Field (checkbox + opciones)
+   -------------------------------------------------------------------------- */
+.andreani-cotizador-config {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.andreani-cotizador-config__toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--andreani-gray-dark);
+}
+
+.andreani-cotizador-config__toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--andreani-radius);
+  cursor: pointer;
+  accent-color: var(--andreani-primary);
+}
+
+.andreani-cotizador-config .description {
+  margin: 0 0 0 26px;
+  color: var(--andreani-gray-medium);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.andreani-cotizador-config__options {
+  margin-left: 26px;
+  margin-top: 12px;
+  padding: 16px;
+  background: var(--andreani-gray-lighter);
+  border: 1px solid var(--andreani-border-light);
+  border-radius: var(--andreani-radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 500px;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.3s ease, margin-top 0.3s ease;
+}
+
+.andreani-cotizador-config__options.andreani-hidden {
+  display: flex !important;
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+  border-color: transparent;
+  pointer-events: none;
+}
+
+.andreani-cotizador-config__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.andreani-cotizador-config__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.andreani-cotizador-config__field--full {
+  flex: 1 1 100%;
+}
+
+.andreani-cotizador-config__field label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--andreani-gray-dark);
+  white-space: nowrap;
+}
+
+.andreani-cotizador-config__field select {
+  width: auto !important;
+  min-width: 140px !important;
+  padding: 6px 10px;
+  border: 1px solid var(--andreani-border-input);
+  border-radius: var(--andreani-radius);
+  font-size: 13px;
+  height: auto;
+  background-color: #fff;
+}
+
+.andreani-cotizador-config__field select:focus {
+  border-color: #2271b1;
+  outline: none;
+  box-shadow: 0 0 0 1px #2271b1;
+}
+
+.andreani-cotizador-config__field select.andreani-cotizador-posicion {
+  min-width: 340px !important;
+  max-width: 400px;
+}
+
+@media (max-width: 782px) {
+  .andreani-cotizador-config__row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .andreani-cotizador-config__field {
+    width: 100%;
+  }
+
+  .andreani-cotizador-config__field select {
+    width: 100% !important;
+    min-width: unset !important;
+    max-width: 100%;
+  }
+
+  .andreani-cotizador-config__field select.andreani-cotizador-posicion {
+    min-width: unset !important;
+    max-width: 100%;
+  }
+}
+
+.andreani-cotizador-config__checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--andreani-gray-dark);
+  cursor: pointer;
+}
+
+.andreani-cotizador-config__checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--andreani-radius);
+  cursor: pointer;
+  accent-color: var(--andreani-primary);
+}
+
+.andreani-cotizador-config__shortcode {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px dashed var(--andreani-border);
+  border-radius: var(--andreani-radius);
+  max-height: 100px;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.25s ease;
+}
+
+.andreani-cotizador-config__shortcode.andreani-hidden {
+  display: flex !important;
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-color: transparent;
+  pointer-events: none;
+}
+
+.andreani-cotizador-config__posicion {
+  max-height: 100px;
+  opacity: 1;
+  overflow: visible;
+  transition: max-height 0.25s ease, opacity 0.2s ease;
+}
+
+.andreani-cotizador-config__posicion.andreani-hidden {
+  display: flex !important;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.andreani-cotizador-config__shortcode-label {
+  font-size: 12px;
+  color: var(--andreani-gray-medium);
+}
+
+.andreani-cotizador-config__shortcode-code {
+  font-family: monospace;
+  font-size: 13px;
+  background: var(--andreani-gray-light);
+  padding: 4px 10px;
+  border-radius: var(--andreani-radius);
+  color: var(--andreani-primary-dark);
+  user-select: all;
+}
+
+/* Legacy tema field - mantener por compatibilidad */
+.andreani-cotizador-config__tema {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 26px;
+  padding: 10px 14px;
+  background: var(--andreani-gray-lighter);
+  border: 1px solid var(--andreani-border-light);
+  border-radius: var(--andreani-radius-md);
+  width: fit-content;
+}
+
+.andreani-cotizador-config__tema label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--andreani-gray-dark);
+  white-space: nowrap;
+}
+
+.andreani-cotizador-config__tema select.andreani-cotizador-tema {
+  width: 90px !important;
+  min-width: 90px !important;
+  max-width: 90px !important;
+  padding: 5px 8px;
+  border: 1px solid var(--andreani-border-input);
+  border-radius: var(--andreani-radius);
+  font-size: 13px;
+  height: auto;
+  background-color: #fff;
+}
+
+.andreani-cotizador-config__tema select.andreani-cotizador-tema:focus {
+  border-color: #2271b1;
+  outline: none;
+  box-shadow: 0 0 0 1px #2271b1;
+}
+
+@media screen and (max-width: 782px) {
+  .andreani-cotizador-config__options {
+    margin-left: 0;
+  }
+
+  .andreani-cotizador-config__row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .andreani-cotizador-config__field select {
+    width: 100% !important;
+  }
+
+  .andreani-cotizador-config__tema {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-left: 0;
+  }
+
+  .andreani-cotizador-config__tema select {
+    width: 100% !important;
+  }
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+  .andreani-modo-card__header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .andreani-modo-card__info {
+    flex: 1 1 calc(100% - 90px);
+  }
+
+  .andreani-modo-card__expand {
+    margin-left: auto;
+  }
+
+  .andreani-modo-card__row {
+    flex-direction: column;
+  }
+
+  .andreani-modo-motivo {
+    max-width: 100% !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Refresh Contratos Button
+   -------------------------------------------------------------------------- */
+.andreani-refresh-contratos {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding: 6px 12px;
+  background-color: #fff;
+  border: 1px solid var(--andreani-border-input);
+  border-radius: var(--andreani-radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--andreani-gray-medium);
+  cursor: pointer;
+  transition: all var(--andreani-transition);
+}
+
+.andreani-refresh-contratos:hover {
+  background-color: var(--andreani-gray-lighter);
+  border-color: var(--andreani-primary);
+  color: var(--andreani-primary);
+}
+
+.andreani-refresh-contratos:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.andreani-refresh-contratos svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.andreani-refresh-contratos--loading svg {
+  animation: andreani-spin 1s linear infinite;
+}
+
+/* --------------------------------------------------------------------------
+   Admin Notices
+   -------------------------------------------------------------------------- */
+.andreani-admin-notice {
+  border-left-color: var(--andreani-primary) !important;
+}
+
+.andreani-admin-notice.notice-error {
+  border-left-color: #dc3232 !important;
+}
+
+.andreani-admin-notice.notice-success {
+  border-left-color: #46b450 !important;
+}
+
+/* --------------------------------------------------------------------------
+   Copy Number & Interactions
+   -------------------------------------------------------------------------- */
+.andreani-copy-number {
+  cursor: pointer;
+  transition: all var(--andreani-transition);
+  user-select: none;
+}
+
+.andreani-copy-number:hover {
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.andreani-copy-number:active {
+  transform: translateY(0);
+}
+
+.andreani-copy-number.copied {
+  animation: andreani-copy-success 0.6s ease;
+}
+
+.andreani-inline-copied {
+  display: inline-block;
+  margin-left: 8px;
+  color: var(--andreani-success);
+  font-size: 11px;
+  font-weight: 600;
+  vertical-align: middle;
+  animation: andreani-fade-in 0.3s ease;
+}
+
+/* --------------------------------------------------------------------------
+   Status Badges
+   -------------------------------------------------------------------------- */
+.andreani-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.andreani-status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.andreani-status--success {
+  background: var(--andreani-success-bg);
+  color: #155724;
+}
+
+.andreani-status--pending {
+  background: var(--andreani-warning-bg);
+  color: #856404;
+}
+
+.andreani-status--error {
+  background: var(--andreani-error-bg);
+  color: #721c24;
+}
+
+.andreani-status--none {
+  background: #e2e3e5;
+  color: #6c757d;
+}
+
+/* --------------------------------------------------------------------------
+   Tracking
+   -------------------------------------------------------------------------- */
+.andreani-tracking-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.andreani-tracking-code {
+  display: inline-block;
+  max-width: 140px;
+  font-size: 12px;
+  font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.andreani-tracking-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: #fff;
+  border: 1px solid var(--andreani-border);
+  border-radius: var(--andreani-radius);
+  cursor: pointer;
+  transition: all var(--andreani-transition);
+  flex-shrink: 0;
+}
+
+.andreani-tracking-copy:hover {
+  background: var(--andreani-gray-light);
+  border-color: var(--andreani-primary);
+  color: var(--andreani-primary);
+}
+
+.andreani-tracking-copy svg {
+  width: 14px;
+  height: 14px;
+}
+
+.andreani-tracking-copy.copied {
+  background: var(--andreani-success-bg);
+  border-color: var(--andreani-success);
+  color: var(--andreani-success);
+}
+
+.andreani-tracking-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: #fff;
+  border: 1px solid var(--andreani-border);
+  border-radius: var(--andreani-radius);
+  color: var(--andreani-gray);
+  text-decoration: none;
+  transition: all var(--andreani-transition);
+  flex-shrink: 0;
+}
+
+.andreani-tracking-link:hover {
+  background: var(--andreani-gray-light);
+  border-color: var(--andreani-primary);
+  color: var(--andreani-primary);
+}
+
+.andreani-tracking-link .dashicons {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+}
+
+.andreani-tracking-link svg {
+  width: 14px;
+  height: 14px;
+}
+
+.andreani-tracking--empty {
+  color: var(--andreani-gray);
+}
+
+/* --------------------------------------------------------------------------
+   Action Buttons
+   -------------------------------------------------------------------------- */
+.andreani-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.andreani-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: #fff;
+  border: 1px solid var(--andreani-border);
+  border-radius: 50%;
+  color: var(--andreani-gray);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--andreani-transition);
+  flex-shrink: 0;
+}
+
+.andreani-action-btn:hover {
+  background: var(--andreani-gray-light);
+  border-color: var(--andreani-primary);
+  color: var(--andreani-primary);
+}
+
+.andreani-action-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.andreani-action-btn--tracking {
+  color: var(--andreani-primary);
+  border-color: var(--andreani-primary);
+}
+
+.andreani-action-btn--tracking:hover {
+  background: var(--andreani-primary);
+  color: #fff;
+}
+
+.andreani-actions .button {
+  border-radius: 50% !important;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.andreani-actions .button .dashicons {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  line-height: 1;
+}
+
+.andreani-actions .button:hover,
+.andreani-actions .button:focus {
+  border-color: var(--andreani-primary) !important;
+  color: var(--andreani-primary);
+}
+
+.andreani-action-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Loading state for action buttons */
+.andreani-actions .button:disabled,
+.andreani-actions .andreani-action-btn:disabled {
+  opacity: 1;
+  cursor: wait;
+  background: var(--andreani-gray-lighter);
+  border-color: var(--andreani-primary);
+}
+
+.andreani-actions .button:disabled .dashicons,
+.andreani-actions .button:disabled .andreani-spin {
+  color: var(--andreani-primary) !important;
+}
+
+.andreani-spin {
+  animation: andreani-spin 1s linear infinite;
+  color: var(--andreani-primary) !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --------------------------------------------------------------------------
+   Inline Confirm (Corpo shipped)
+   -------------------------------------------------------------------------- */
+.andreani-inline-confirm {
+  display: inline-flex;
+  gap: 4px;
+  animation: andreani-fade-in 0.2s ease;
+}
+
+.andreani-inline-confirm button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: #fff;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--andreani-transition);
+}
+
+.andreani-inline-confirm button svg {
+  width: 14px;
+  height: 14px;
+}
+
+.andreani-confirm-yes {
+  border: 2px solid var(--andreani-success);
+  color: var(--andreani-success);
+}
+
+.andreani-confirm-yes:hover {
+  background: var(--andreani-success);
+  color: #fff;
+}
+
+.andreani-confirm-no {
+  border: 2px solid var(--andreani-error);
+  color: var(--andreani-error);
+}
+
+.andreani-confirm-no:hover {
+  background: var(--andreani-error);
+  color: #fff;
+}
+
+/* --------------------------------------------------------------------------
+   Shipments Table
+   -------------------------------------------------------------------------- */
+.andreani-shipments-wrap {
+  max-width: 100%;
+  margin-right: 20px;
+}
+
+.andreani-shipments-wrap .wp-list-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.andreani-shipments-wrap .column-cb {
+  width: 35px;
+}
+
+.andreani-shipments-wrap .column-order_number {
+  width: 70px;
+}
+
+.andreani-shipments-wrap .column-customer {
+  width: 14%;
+}
+
+.andreani-shipments-wrap .column-destination {
+  width: 12%;
+}
+
+.andreani-shipments-wrap .column-products {
+  width: 18%;
+}
+
+.andreani-shipments-wrap .column-client_type {
+  width: 70px;
+  text-align: center;
+}
+
+.andreani-shipments-wrap .column-status {
+  width: 110px;
+  text-align: center;
+  padding-right: 12px !important;
+}
+
+.andreani-shipments-wrap .column-delivery_mode {
+  width: 90px;
+}
+
+.andreani-shipments-wrap .column-tracking {
+  width: 20%;
+  padding-left: 8px !important;
+}
+
+.andreani-shipments-wrap .column-date {
+  width: 90px;
+}
+
+.andreani-shipments-wrap .column-actions {
+  width: 120px;
+  text-align: center;
+}
+
+.andreani-shipments-wrap td.column-actions {
+  white-space: nowrap;
+}
+
+.andreani-shipments-wrap .wp-list-table thead th {
+  text-align: center;
+}
+
+.andreani-shipments-wrap .wp-list-table thead th.column-cb {
+  text-align: left;
+}
+
+.andreani-shipments-wrap td {
+  vertical-align: middle;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* --------------------------------------------------------------------------
+   Animations
+   -------------------------------------------------------------------------- */
+@keyframes andreani-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes andreani-copy-success {
+  0% {
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(40, 167, 69, 0.5);
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+    transform: scale(1);
+  }
+}
+
+@keyframes andreani-fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Error Display - Metabox
+   -------------------------------------------------------------------------- */
+.andreani-metabox__error {
+  background: var(--andreani-error-bg);
+  border: 1px solid var(--andreani-error);
+  border-radius: var(--andreani-radius);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.andreani-metabox__error-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  color: #721c24;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.andreani-metabox__error-toggle:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.andreani-metabox__error-toggle .dashicons-warning {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  color: var(--andreani-error);
+}
+
+.andreani-metabox__error-arrow {
+  margin-left: auto;
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  transition: transform var(--andreani-transition);
+}
+
+.andreani-metabox__error--collapsed .andreani-metabox__error-body {
+  display: none;
+}
+
+.andreani-metabox__error--expanded .andreani-metabox__error-arrow {
+  transform: rotate(180deg);
+}
+
+.andreani-metabox__error-body {
+  padding: 0 10px 10px;
+}
+
+.andreani-metabox__error-message {
+  display: block;
+  font-size: 11px;
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 6px 8px;
+  border-radius: 3px;
+  word-break: break-word;
+  white-space: pre-wrap;
+  color: #721c24;
+  margin-bottom: 8px;
+}
+
+.andreani-metabox__error-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fff;
+  border: 1px solid var(--andreani-error);
+  border-radius: var(--andreani-radius);
+  color: #721c24;
+  font-size: 11px;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all var(--andreani-transition);
+}
+
+.andreani-metabox__error-copy:hover {
+  background: var(--andreani-error);
+  color: #fff;
+}
+
+.andreani-metabox__error-copy .dashicons {
+  font-size: 12px;
+  width: 12px;
+  height: 12px;
+}
+
+.andreani-metabox__error-copy.copied {
+  background: var(--andreani-success);
+  border-color: var(--andreani-success);
+  color: #fff;
+}
+
+/* --------------------------------------------------------------------------
+   Error Display - Grid Tooltip
+   -------------------------------------------------------------------------- */
+.andreani-error-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--andreani-error);
+  cursor: pointer;
+  padding: 2px;
+  vertical-align: middle;
+  margin-left: 2px;
+}
+
+.andreani-error-trigger .dashicons {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+.andreani-error-trigger:hover {
+  color: #721c24;
+}
+
+.andreani-error-tooltip {
+  position: absolute;
+  z-index: 100;
+  background: #fff;
+  color: var(--andreani-gray-dark);
+  border: 1px solid var(--andreani-border);
+  border-radius: var(--andreani-radius-md);
+  padding: 10px 12px;
+  max-width: 350px;
+  min-width: 200px;
+  box-shadow: var(--andreani-shadow-md);
+  margin-top: 4px;
+  right: 0;
+}
+
+.andreani-error-tooltip__content code {
+  display: block;
+  font-size: 11px;
+  font-family: monospace;
+  color: #721c24;
+  background: var(--andreani-error-bg);
+  padding: 6px 8px;
+  border-radius: 3px;
+  word-break: break-word;
+  white-space: pre-wrap;
+  margin-bottom: 8px;
+}
+
+.andreani-error-tooltip__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fff;
+  border: 1px solid var(--andreani-border);
+  border-radius: var(--andreani-radius);
+  color: var(--andreani-gray-dark);
+  font-size: 11px;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all var(--andreani-transition);
+}
+
+.andreani-error-tooltip__copy:hover {
+  background: var(--andreani-gray-light);
+  border-color: var(--andreani-gray);
+}
+
+.andreani-error-tooltip__copy.copied {
+  background: var(--andreani-success-bg);
+  border-color: var(--andreani-success);
+  color: var(--andreani-success);
+}
+
+.andreani-error-tooltip__body-section {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--andreani-border);
+}
+
+.andreani-error-tooltip__body-section strong {
+  display: block;
+  font-size: 11px;
+  color: var(--andreani-gray-dark);
+  margin-bottom: 4px;
+}
+
+.andreani-error-tooltip__body-json {
+  background: var(--andreani-gray-light);
+  border: 1px solid var(--andreani-border);
+  border-radius: 3px;
+  padding: 8px;
+  font-size: 11px;
+  font-family: monospace;
+  line-height: 1.4;
+  max-height: 200px;
+  overflow: auto;
+  white-space: pre;
+  word-break: break-all;
+  margin: 4px 0 6px;
+}
+
+.andreani-shipments-wrap .column-status {
+  position: relative;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive - Tablet (max-width: 1200px)
+   -------------------------------------------------------------------------- */
+@media screen and (max-width: 1200px) {
+  .andreani-tracking-code {
+    max-width: 100px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Responsive - Small Tablet (max-width: 960px)
+   -------------------------------------------------------------------------- */
+@media screen and (max-width: 960px) {
+  .andreani-tracking-code {
+    max-width: 70px;
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+
+  .andreani-tracking-copy,
+  .andreani-tracking-link {
+    width: 24px;
+    height: 24px;
+  }
+
+  .andreani-tracking-copy svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .andreani-tracking-link .dashicons {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Responsive - Mobile (max-width: 782px)
+   -------------------------------------------------------------------------- */
+@media screen and (max-width: 782px) {
+  /* Settings Header */
+  .andreani-settings-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+
+  /* Settings Card Header */
+  .andreani-settings-card__header {
+    flex-wrap: wrap;
+  }
+
+  .andreani-settings-card__title {
+    flex-basis: calc(100% - 52px);
+  }
+
+  /* Badges in header */
+  .andreani-badge {
+    flex-basis: 100%;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
+  /* Form Tables */
+  .andreani-settings-card .form-table th {
+    display: block;
+    width: 100%;
+    padding-bottom: 5px;
+  }
+
+  .andreani-settings-card .form-table td {
+    display: block;
+    padding-top: 0;
+  }
+
+  .andreani-settings-card input[type="text"],
+  .andreani-settings-card input[type="number"],
+  .andreani-settings-card select {
+    min-width: 100%;
+    width: 100%;
+  }
+
+  /* Contratos */
+  .andreani-contrato-item {
+    grid-template-columns: 1fr;
+  }
+
+  .andreani-contrato-item__content {
+    grid-template-columns: 1fr;
+  }
+
+  /* Tracking */
+  .andreani-tracking-wrapper {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .andreani-tracking-code {
+    max-width: 100%;
+    flex: 1 1 auto;
+  }
+
+  /* Shipments Table */
+  .andreani-shipments-wrap {
+    margin-right: 10px;
+  }
+
+  .andreani-shipments-wrap .wp-list-table {
+    table-layout: auto;
+  }
+
+  .andreani-shipments-wrap .wp-list-table td {
+    padding: 8px 10px;
+  }
+
+  .andreani-shipments-wrap .wp-list-table td.column-client_type,
+  .andreani-shipments-wrap .wp-list-table td.column-delivery_mode,
+  .andreani-shipments-wrap .wp-list-table td.column-status {
+    text-align: right;
+  }
+
+  .andreani-shipments-wrap .andreani-badge {
+    padding: 4px 8px;
+    font-size: 10px;
+    display: inline-flex;
+  }
+
+  .andreani-shipments-wrap .andreani-status {
+    padding: 3px 8px;
+    font-size: 10px;
+    display: inline-flex;
+  }
+
+  .andreani-shipments-wrap .andreani-tracking-code {
+    max-width: 100px;
+    font-size: 11px;
+  }
+
+  .andreani-shipments-wrap .andreani-tracking-copy,
+  .andreani-shipments-wrap .andreani-tracking-link {
+    width: 24px;
+    height: 24px;
+  }
+
+  .andreani-shipments-wrap .wp-list-table td.column-actions {
+    text-align: right;
+  }
+
+  .andreani-shipments-wrap .andreani-actions {
+    display: inline-flex;
+    gap: 4px;
+  }
+
+  .andreani-shipments-wrap .andreani-actions {
+    display: inline-flex;
+    gap: 4px;
+  }
+
+  .andreani-shipments-wrap .andreani-actions .button {
+    padding: 0 6px;
+    min-height: 28px;
+  }
+
+  .andreani-shipments-wrap .andreani-actions .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}

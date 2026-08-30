@@ -1,0 +1,64 @@
+/**
+ * Vista: Checkout (frontend) — branch selection (sucursales) + DNI shortcode + sucursal details.
+ * Selectores legacy `.andreani-sucursales-*` y `.andreani-sucursal-*` son contrato público del JS de checkout (1.5.0+).
+ * Depende de: andreani-core-base
+ */
+
+.andreani-sucursales-row select {
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+.andreani-sucursales-row td {
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+}
+
+.andreani-sucursales-select {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.andreani-sucursal-details {
+	margin-top: var(--andr-sp-2);
+	font-size: 0.9em;
+	line-height: var(--andr-leading-normal);
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+}
+
+.andreani-sucursal-info strong {
+	display: block;
+	margin-bottom: var(--andr-sp-1);
+}
+
+/* Wrapper para [andreani_sucursales] fuera del review-order. */
+.andreani-sucursales-standalone {
+	margin: 1em 0;
+	padding: 0.75em 0;
+}
+
+/* Color y tipografía heredados del tema — el cliente puede sobreescribirlos
+ * con una regla más específica desde su CSS custom si los necesita distintos. */
+.andreani-sucursales-standalone .andreani-sucursales-details {
+	margin-top: 0.5em;
+	font-size: 0.9em;
+}
+
+.andreani-dni-field-shortcode {
+	margin: 1em 0;
+	width: 100%;
+}
+
+/* Label del DNI — display:block para que quede arriba del input.
+ * Peso de fuente y color heredados del tema. */
+.andreani-dni-field-shortcode label {
+	display: block;
+	margin-bottom: 0.25em;
+}
+
+.andreani-dni-field-shortcode input[type="text"] {
+	width: 100%;
+	box-sizing: border-box;
+}

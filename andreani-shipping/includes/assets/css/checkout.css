@@ -1,0 +1,23 @@
+.andreani-sucursales-row select {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.andreani-sucursal-details {
+  margin-top: 8px;
+  font-size: 0.9em;
+  line-height: 1.5;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.andreani-sucursal-info strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.andreani-sucursales-row td {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}

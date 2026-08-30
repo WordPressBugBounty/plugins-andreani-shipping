@@ -1,0 +1,1807 @@
+/**
+ * Andreani Shipments Table
+ */
+
+/* ==========================================================================
+   1. DESIGN TOKENS
+   ========================================================================== */
+:root {
+	/* Brand */
+	--an-brand: #e31e24;
+	--an-brand-dark: #c41a1f;
+	--an-brand-light: #fef2f2;
+	--an-brand-subtle: rgba(227, 30, 36, 0.08);
+
+	/* Status */
+	--an-success: #059669;
+	--an-success-light: #d1fae5;
+	--an-info: #0284c7;
+	--an-info-light: #e0f2fe;
+	--an-warning: #d97706;
+	--an-warning-light: #fef3c7;
+	--an-warning-dark: #92400e;
+	--an-warning-border: #fcd34d;
+	--an-error: #dc2626;
+	--an-error-light: #fee2e2;
+
+	/* Semantic badges */
+	--an-pyme-bg: #fef3c7;
+	--an-pyme-text: #92400e;
+	--an-corpo-bg: #dbeafe;
+	--an-corpo-text: #1e40af;
+
+	/* Neutrals */
+	--an-900: #111827;
+	--an-700: #374151;
+	--an-600: #4b5563;
+	--an-500: #6b7280;
+	--an-400: #9ca3af;
+	--an-300: #d1d5db;
+	--an-200: #e5e7eb;
+	--an-100: #f3f4f6;
+	--an-50: #f9fafb;
+	--an-white: #ffffff;
+
+	/* Spacing */
+	--an-sp-1: 4px;
+	--an-sp-2: 8px;
+	--an-sp-3: 12px;
+	--an-sp-4: 16px;
+	--an-sp-5: 20px;
+	--an-sp-6: 24px;
+
+	/* Typography */
+	--an-text-xs: 10px;
+	--an-text-sm: 11px;
+	--an-text-base: 12px;
+	--an-text-md: 13px;
+	--an-text-lg: 14px;
+	--an-font-mono: 'SF Mono', Monaco, Consolas, monospace;
+
+	/* Radius */
+	--an-radius-sm: 4px;
+	--an-radius-md: 6px;
+	--an-radius-lg: 8px;
+	--an-radius-xl: 12px;
+	--an-radius-full: 9999px;
+
+	/* Shadows */
+	--an-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+	--an-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+	--an-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+	--an-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+
+	/* Transitions */
+	--an-transition: all 0.15s ease;
+}
+
+/* ==========================================================================
+   2. LAYOUT
+   ========================================================================== */
+.andreani-shipments-wrap {
+	padding-right: var(--an-sp-5);
+}
+
+.andreani-header-logo {
+	height: 26px;
+	vertical-align: middle;
+}
+
+/* ==========================================================================
+   3. TOOLBAR
+   ========================================================================== */
+.andreani-search-row {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	gap: var(--an-sp-2);
+	margin-bottom: var(--an-sp-3);
+}
+
+.andreani-search-row .search-box {
+	margin: 0;
+}
+
+.andreani-search-row .search-box input[type="search"] {
+	height: 34px !important;
+	min-height: 34px;
+	border-radius: var(--an-radius-md);
+	border: 1px solid var(--an-brand);
+	padding: 0 12px;
+	font-size: var(--an-text-md);
+}
+
+.andreani-search-row .search-box input[type="search"]:focus {
+	border-color: var(--an-brand);
+	box-shadow: 0 0 0 2px var(--an-brand-subtle);
+	outline: none;
+}
+
+.andreani-search-row .search-box input[type="submit"] {
+	height: 34px !important;
+	min-height: 34px;
+	width: 34px !important;
+	min-width: 34px !important;
+	padding: 0 !important;
+	border: 1px solid var(--an-brand) !important;
+	border-radius: var(--an-radius-md) !important;
+	background: var(--an-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23e31e24' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat center center !important;
+	background-size: 16px 16px !important;
+	color: transparent !important;
+	font-size: 0 !important;
+	cursor: pointer;
+	transition: var(--an-transition);
+	margin-right: var(--an-sp-2);
+}
+
+.andreani-search-row .search-box input[type="submit"]:hover {
+	background-color: var(--an-brand-light) !important;
+	border-color: var(--an-brand-dark) !important;
+}
+
+/* ==========================================================================
+   3.1 TABLENAV BUTTONS & FILTERS
+   ========================================================================== */
+.andreani-shipments-wrap .tablenav .actions .button {
+	height: 34px !important;
+	min-height: 34px;
+	padding: 0 16px !important;
+	border: 1px solid var(--an-brand) !important;
+	border-radius: var(--an-radius-md) !important;
+	background: var(--an-white) !important;
+	color: var(--an-brand) !important;
+	font-size: var(--an-text-md);
+	font-weight: 500;
+	cursor: pointer;
+	transition: var(--an-transition);
+	line-height: 32px !important;
+}
+
+.andreani-shipments-wrap .tablenav .actions .button:hover {
+	background: var(--an-brand-light) !important;
+	border-color: var(--an-brand-dark) !important;
+}
+
+.andreani-shipments-wrap .tablenav .actions select {
+	height: 34px !important;
+	min-height: 34px;
+	min-width: 140px;
+	padding: 0 28px 0 10px !important;
+	border: 1px solid var(--an-300) !important;
+	border-radius: var(--an-radius-md) !important;
+	background-color: var(--an-white) !important;
+	background-position: right 8px center !important;
+	font-size: var(--an-text-md);
+	color: var(--an-700);
+	cursor: pointer;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
+	background-repeat: no-repeat !important;
+	background-size: 12px !important;
+}
+
+.andreani-shipments-wrap .tablenav .actions select:focus {
+	border-color: var(--an-brand) !important;
+	box-shadow: 0 0 0 2px var(--an-brand-subtle);
+	outline: none;
+}
+
+.andreani-shipments-wrap .tablenav .bulkactions select {
+	min-width: 160px;
+}
+
+/* Toolbar icon buttons */
+.andreani-toolbar-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px !important;
+	height: 34px !important;
+	min-height: 34px;
+	min-width: 34px;
+	padding: 0 !important;
+	border-radius: var(--an-radius-md) !important;
+	border: 1px solid var(--an-300) !important;
+	background: var(--an-white) !important;
+	color: var(--an-500) !important;
+	transition: var(--an-transition);
+}
+
+.andreani-toolbar-btn:hover {
+	border-color: var(--an-brand) !important;
+	color: var(--an-brand) !important;
+	background: var(--an-brand-light) !important;
+}
+
+.andreani-toolbar-btn svg,
+.andreani-toolbar-btn .dashicons {
+	width: 18px;
+	height: 18px;
+	font-size: 18px;
+	color: inherit;
+}
+
+.andreani-toolbar-btn--primary {
+	border-color: var(--an-brand) !important;
+	color: var(--an-brand) !important;
+}
+
+.andreani-historial-btn.button,
+.andreani-export-btn.button,
+.andreani-logs-btn.button,
+.andreani-refresh-btn.button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px !important;
+	height: 34px !important;
+	min-height: 34px;
+	min-width: 34px;
+	padding: 0 !important;
+	border-radius: var(--an-radius-md) !important;
+	border: 1px solid var(--an-300) !important;
+	background: var(--an-white) !important;
+	color: var(--an-500) !important;
+	transition: var(--an-transition);
+}
+
+.andreani-historial-btn.button:hover,
+.andreani-export-btn.button:hover,
+.andreani-logs-btn.button:hover,
+.andreani-refresh-btn.button:hover {
+	border-color: var(--an-brand) !important;
+	color: var(--an-brand) !important;
+	background: var(--an-brand-light) !important;
+}
+
+.andreani-historial-btn svg,
+.andreani-export-btn svg,
+.andreani-logs-btn svg,
+.andreani-refresh-btn .dashicons {
+	width: 18px;
+	height: 18px;
+	font-size: 18px;
+	color: inherit;
+}
+
+.andreani-historial-btn.button {
+	border-color: var(--an-brand) !important;
+	color: var(--an-brand) !important;
+}
+
+/* ==========================================================================
+   4. COLLAPSIBLE NOTICE
+   ========================================================================== */
+.andreani-notice {
+	border-radius: var(--an-radius-md);
+	margin: var(--an-sp-4) 0;
+	overflow: hidden;
+}
+
+.andreani-notice--warning {
+	background: var(--an-warning-light);
+	border: 1px solid var(--an-warning-border);
+	border-left: 3px solid var(--an-warning);
+}
+
+.andreani-notice--info {
+	background: var(--an-info-light);
+	border: 1px solid #93c5fd;
+	border-left: 3px solid var(--an-info);
+}
+
+.andreani-notice--error {
+	background: var(--an-error-light);
+	border: 1px solid #fca5a5;
+	border-left: 3px solid var(--an-error);
+}
+
+.andreani-notice__header {
+	display: flex;
+	align-items: center;
+	gap: var(--an-sp-2);
+	width: 100%;
+	padding: var(--an-sp-2) var(--an-sp-3);
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	text-align: left;
+}
+
+.andreani-notice__icon {
+	flex-shrink: 0;
+	width: 16px;
+	height: 16px;
+}
+
+.andreani-notice--warning .andreani-notice__icon {
+	color: var(--an-warning);
+}
+
+.andreani-notice--info .andreani-notice__icon {
+	color: var(--an-info);
+}
+
+.andreani-notice--error .andreani-notice__icon {
+	color: var(--an-error);
+}
+
+.andreani-notice__title {
+	flex: 1;
+	font-size: var(--an-text-base);
+	font-weight: 600;
+}
+
+.andreani-notice--warning .andreani-notice__title {
+	color: var(--an-warning-dark);
+}
+
+.andreani-notice--info .andreani-notice__title {
+	color: #1e40af;
+}
+
+.andreani-notice--error .andreani-notice__title {
+	color: #991b1b;
+}
+
+.andreani-notice__toggle {
+	flex-shrink: 0;
+	width: 20px;
+	height: 20px;
+	padding: 2px;
+	color: var(--an-400);
+	border-radius: var(--an-radius-sm);
+	transition: transform 0.2s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.andreani-notice__toggle:hover {
+	background: rgba(0, 0, 0, 0.08);
+	color: var(--an-600);
+}
+
+.andreani-notice--collapsed .andreani-notice__toggle {
+	transform: rotate(-90deg);
+}
+
+.andreani-notice__body {
+	padding: 0 var(--an-sp-4) var(--an-sp-3) calc(var(--an-sp-4) + 20px + var(--an-sp-3));
+	overflow: hidden;
+	transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.25s ease;
+}
+
+.andreani-notice--collapsed .andreani-notice__body {
+	max-height: 0 !important;
+	opacity: 0;
+	padding-top: 0;
+	padding-bottom: 0;
+}
+
+.andreani-notice__body p {
+	margin: 0;
+	font-size: var(--an-text-base);
+	line-height: 1.5;
+}
+
+.andreani-notice--warning .andreani-notice__body p {
+	color: #78350f;
+}
+
+.andreani-notice--warning .andreani-notice__body a {
+	color: #b45309;
+	font-weight: 600;
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+.andreani-notice--warning .andreani-notice__body a:hover {
+	color: var(--an-warning-dark);
+}
+
+.andreani-pyme-notice {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--an-sp-3);
+	background: var(--an-warning-light);
+	border: 1px solid var(--an-warning-border);
+	border-left: 3px solid var(--an-warning);
+	border-radius: var(--an-radius-md);
+	padding: var(--an-sp-3) var(--an-sp-4);
+	margin: var(--an-sp-4) 0;
+}
+
+.andreani-pyme-notice__icon {
+	flex-shrink: 0;
+	width: 20px;
+	height: 20px;
+	color: var(--an-warning);
+	margin-top: 2px;
+}
+
+.andreani-pyme-notice__content {
+	flex: 1;
+}
+
+.andreani-pyme-notice__content strong {
+	color: var(--an-warning-dark);
+	font-size: var(--an-text-md);
+	font-weight: 600;
+}
+
+.andreani-pyme-notice__content p {
+	margin: var(--an-sp-1) 0 0;
+	color: #78350f;
+	font-size: var(--an-text-base);
+	line-height: 1.5;
+}
+
+.andreani-pyme-notice__content a {
+	color: #b45309;
+	font-weight: 600;
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+.andreani-pyme-notice__content a:hover {
+	color: var(--an-warning-dark);
+}
+
+/* ==========================================================================
+   5. TABLE CONTAINER
+   ========================================================================== */
+.andreani-shipments-wrap .wp-list-table {
+	border: 1px solid var(--an-200);
+	border-radius: var(--an-radius-lg);
+	border-collapse: separate;
+	border-spacing: 0;
+	overflow: hidden;
+	background: var(--an-white);
+	box-shadow: var(--an-shadow-xs);
+}
+
+.andreani-shipments-wrap .wp-list-table tfoot {
+	display: none;
+}
+
+/* ==========================================================================
+   6. TABLE HEADER
+   ========================================================================== */
+.andreani-shipments-wrap .wp-list-table thead th {
+	background: var(--an-50);
+	border-bottom: 1px solid var(--an-200);
+	padding: var(--an-sp-3) var(--an-sp-3);
+	font-size: var(--an-text-xs);
+	font-weight: 600;
+	color: var(--an-500);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.andreani-shipments-wrap .wp-list-table thead th:first-child {
+	border-top-left-radius: var(--an-radius-lg);
+}
+
+.andreani-shipments-wrap .wp-list-table thead th:last-child {
+	border-top-right-radius: var(--an-radius-lg);
+}
+
+.andreani-shipments-wrap .wp-list-table th.sortable a,
+.andreani-shipments-wrap .wp-list-table th.sorted a {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--an-sp-1);
+	color: inherit;
+	text-decoration: none;
+}
+
+.andreani-shipments-wrap .wp-list-table th.sorted {
+	color: var(--an-brand);
+}
+
+.andreani-shipments-wrap .wp-list-table th.sortable a span,
+.andreani-shipments-wrap .wp-list-table th.sorted a span {
+	float: none !important;
+}
+
+/* ==========================================================================
+   7. TABLE ROWS
+   ========================================================================== */
+.andreani-shipments-wrap .wp-list-table tbody tr {
+	transition: background 0.1s ease;
+}
+
+.andreani-shipments-wrap .wp-list-table tbody tr:hover {
+	background: var(--an-50);
+}
+
+.andreani-shipments-wrap .wp-list-table tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.andreani-shipments-wrap .wp-list-table tbody tr:last-child td:first-child {
+	border-bottom-left-radius: var(--an-radius-lg);
+}
+
+.andreani-shipments-wrap .wp-list-table tbody tr:last-child td:last-child {
+	border-bottom-right-radius: var(--an-radius-lg);
+}
+
+.andreani-shipments-wrap .wp-list-table td {
+	padding: var(--an-sp-3) var(--an-sp-3);
+	border-bottom: 1px solid var(--an-100);
+	font-size: var(--an-text-base);
+	color: var(--an-700);
+	vertical-align: middle;
+}
+
+/* ==========================================================================
+   8. COLUMN WIDTHS
+   ========================================================================== */
+.andreani-shipments-wrap .column-cb { width: 36px; }
+.andreani-shipments-wrap .column-order_number { width: 70px; }
+.andreani-shipments-wrap .column-customer { width: 130px; }
+.andreani-shipments-wrap .column-destination { width: 110px; }
+.andreani-shipments-wrap .column-products { width: 150px; }
+.andreani-shipments-wrap .column-client_type { width: 70px; text-align: center; }
+.andreani-shipments-wrap .column-delivery_mode { width: 80px; }
+.andreani-shipments-wrap .column-status { width: 95px; }
+.andreani-shipments-wrap .column-andreani_id { width: 145px; }
+.andreani-shipments-wrap .column-tracking { width: 120px; }
+.andreani-shipments-wrap .column-date { width: 85px; }
+.andreani-shipments-wrap .column-actions { width: 80px; text-align: center; }
+
+/* ==========================================================================
+   9. ORDER NUMBER
+   ========================================================================== */
+.andreani-shipments-wrap .wp-list-table td.column-order_number a {
+	color: var(--an-brand);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.andreani-shipments-wrap .wp-list-table td.column-order_number a:hover {
+	text-decoration: underline;
+}
+
+/* ==========================================================================
+   10. CUSTOMER CELL
+   ========================================================================== */
+.andreani-shipments-wrap .wp-list-table td.column-customer {
+	font-size: var(--an-text-md);
+	font-weight: 500;
+	color: var(--an-900);
+}
+
+.andreani-shipments-wrap .wp-list-table td.column-customer small {
+	display: block;
+	font-size: var(--an-text-xs);
+	font-weight: 400;
+	color: var(--an-500);
+	margin-top: 2px;
+}
+
+/* ==========================================================================
+   11. TYPE BADGES (PYME/CORPO)
+   ========================================================================== */
+.andreani-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 3px 8px;
+	font-size: var(--an-text-xs);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.3px;
+	border-radius: var(--an-radius-sm);
+	line-height: 1;
+}
+
+.andreani-badge--pyme {
+	background: var(--an-pyme-bg);
+	color: var(--an-pyme-text);
+}
+
+.andreani-badge--corpo {
+	background: var(--an-corpo-bg);
+	color: var(--an-corpo-text);
+}
+
+/* ==========================================================================
+   12. STATUS PILLS
+   ========================================================================== */
+.andreani-status {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 10px;
+	font-size: var(--an-text-sm);
+	font-weight: 500;
+	border-radius: var(--an-radius-full);
+	white-space: nowrap;
+	cursor: default;
+}
+
+.andreani-status::before {
+	content: "";
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+/* Pending - Neutral */
+.andreani-status--pending {
+	background: var(--an-100);
+	color: var(--an-500);
+}
+.andreani-status--pending::before {
+	background: var(--an-400);
+}
+
+/* Ready/Generated - Blue */
+.andreani-status--ready {
+	background: var(--an-info-light);
+	color: var(--an-info);
+}
+.andreani-status--ready::before {
+	background: var(--an-info);
+}
+
+/* Awaiting - Warning (Pyme needs payment) */
+.andreani-status--awaiting {
+	background: var(--an-warning-light);
+	color: var(--an-warning);
+}
+.andreani-status--awaiting::before {
+	background: var(--an-warning);
+}
+
+/* Shipped - Green (Final state) */
+.andreani-status--shipped {
+	background: var(--an-success-light);
+	color: var(--an-success);
+}
+.andreani-status--shipped::before {
+	background: var(--an-success);
+}
+
+/* Error - Red */
+.andreani-status--error {
+	background: var(--an-error-light);
+	color: var(--an-error);
+}
+.andreani-status--error::before {
+	background: var(--an-error);
+}
+
+/* ==========================================================================
+   13. TRACKING & ID CODES
+   ========================================================================== */
+.andreani-tracking-code {
+	display: inline-block;
+	max-width: 110px;
+	padding: 3px 6px;
+	font-family: var(--an-font-mono);
+	font-size: var(--an-text-xs);
+	color: var(--an-700);
+	background: var(--an-100);
+	border-radius: var(--an-radius-sm);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	cursor: pointer;
+	transition: var(--an-transition);
+}
+
+.andreani-tracking-code:hover,
+.andreani-copy-click:hover {
+	background: var(--an-brand-light);
+	color: var(--an-brand);
+}
+
+.andreani-tracking-code.copied,
+.andreani-copy-click.copied {
+	background: var(--an-success-light);
+	color: var(--an-success);
+}
+
+.andreani-cell--empty,
+.andreani-tracking--empty,
+.andreani-destination--empty,
+.andreani-products--empty,
+.andreani-delivery-mode--empty,
+.andreani-actions--empty {
+	color: var(--an-400);
+	font-size: var(--an-text-sm);
+}
+
+/* ==========================================================================
+   14. CONTENT CELLS
+   ========================================================================== */
+.andreani-destination,
+.andreani-products,
+.andreani-delivery-mode {
+	font-size: var(--an-text-sm);
+	color: var(--an-600);
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.andreani-products-more {
+	color: var(--an-400);
+	font-size: var(--an-text-xs);
+}
+
+/* ==========================================================================
+   15. ACTION BUTTONS
+   ========================================================================== */
+.andreani-actions {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--an-sp-1);
+	position: relative;
+}
+
+.andreani-actions .button,
+.andreani-action-btn {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	width: 28px !important;
+	height: 28px !important;
+	min-height: 28px !important;
+	padding: 0 !important;
+	border-radius: var(--an-radius-md) !important;
+	border: 1px solid var(--an-300) !important;
+	background: var(--an-white) !important;
+	color: var(--an-500) !important;
+	cursor: pointer;
+	transition: var(--an-transition);
+	box-shadow: none !important;
+	text-decoration: none;
+}
+
+.andreani-actions .button:hover,
+.andreani-action-btn:hover {
+	border-color: var(--an-brand) !important;
+	color: var(--an-brand) !important;
+	background: var(--an-brand-light) !important;
+}
+
+.andreani-actions .button .dashicons,
+.andreani-action-btn .dashicons {
+	width: 16px !important;
+	height: 16px !important;
+	font-size: 16px !important;
+	line-height: 16px !important;
+	color: inherit !important;
+}
+
+.andreani-actions .button svg,
+.andreani-action-btn svg {
+	width: 16px !important;
+	height: 16px !important;
+	color: inherit !important;
+	stroke: currentColor !important;
+	fill: none !important;
+}
+
+.andreani-action-btn--primary {
+	border-color: var(--an-brand) !important;
+	color: var(--an-brand) !important;
+}
+
+.andreani-action-btn--primary:hover,
+.andreani-action-btn--tracking:hover {
+	background: var(--an-brand) !important;
+	color: var(--an-white) !important;
+}
+
+.andreani-action-btn--tracking {
+	border-color: var(--an-brand) !important;
+	color: var(--an-brand) !important;
+}
+
+.andreani-actions .button:disabled {
+	opacity: 0.7;
+	cursor: wait;
+}
+
+.andreani-spin {
+	animation: an-spin 0.8s linear infinite;
+}
+
+/* ==========================================================================
+   16. INLINE CONFIRM
+   ========================================================================== */
+.andreani-inline-confirm {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--an-sp-2);
+	position: absolute;
+	right: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	background: var(--an-white);
+	padding: var(--an-sp-1) var(--an-sp-2) var(--an-sp-1) var(--an-sp-3);
+	border-radius: var(--an-radius-full);
+	box-shadow: var(--an-shadow-md);
+	z-index: 10;
+	animation: an-fade-in 0.15s ease;
+}
+
+.andreani-inline-confirm__text {
+	font-size: var(--an-text-sm);
+	font-weight: 500;
+	color: var(--an-600);
+	white-space: nowrap;
+}
+
+/* Confirm buttons base */
+.andreani-confirm-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	border-radius: var(--an-radius-md);
+	cursor: pointer;
+	transition: var(--an-transition);
+	border: 1.5px solid;
+	background: var(--an-white);
+}
+
+.andreani-confirm-btn svg {
+	width: 12px;
+	height: 12px;
+	stroke: currentColor;
+	stroke-width: 2.5;
+}
+
+.andreani-confirm-btn--yes {
+	border-color: var(--an-brand);
+	color: var(--an-brand);
+}
+
+.andreani-confirm-btn--yes:hover {
+	background: var(--an-brand);
+	color: var(--an-white);
+}
+
+.andreani-confirm-btn--no {
+	border-color: var(--an-400);
+	color: var(--an-400);
+}
+
+.andreani-confirm-btn--no:hover {
+	background: var(--an-400);
+	color: var(--an-white);
+}
+
+.andreani-inline-confirm button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	border-radius: var(--an-radius-md);
+	cursor: pointer;
+	transition: var(--an-transition);
+	border: 1.5px solid;
+	background: var(--an-white);
+}
+
+.andreani-inline-confirm button svg {
+	width: 12px;
+	height: 12px;
+	stroke: currentColor;
+	stroke-width: 2.5;
+}
+
+.andreani-confirm-yes {
+	border-color: var(--an-brand);
+	color: var(--an-brand);
+}
+
+.andreani-confirm-yes:hover {
+	background: var(--an-brand);
+	color: var(--an-white);
+}
+
+.andreani-confirm-yes:hover svg {
+	stroke: var(--an-white);
+}
+
+.andreani-confirm-no {
+	border-color: var(--an-400);
+	color: var(--an-400);
+}
+
+.andreani-confirm-no:hover {
+	background: var(--an-400);
+	color: var(--an-white);
+}
+
+.andreani-confirm-no:hover svg {
+	stroke: var(--an-white);
+}
+
+/* ==========================================================================
+   17. TABLENAV (Pagination)
+   ========================================================================== */
+.andreani-shipments-wrap .tablenav {
+	margin: var(--an-sp-3) 0;
+}
+
+.andreani-shipments-wrap .tablenav-pages {
+	color: var(--an-500);
+}
+
+.andreani-shipments-wrap .tablenav-pages .displaying-num {
+	color: var(--an-500);
+	font-size: var(--an-text-sm);
+}
+
+.andreani-shipments-wrap .tablenav-pages a,
+.andreani-shipments-wrap .tablenav-pages span.tablenav-pages-navspan {
+	border-radius: var(--an-radius-sm);
+}
+
+.andreani-shipments-wrap .tablenav-pages a:hover {
+	border-color: var(--an-brand);
+	color: var(--an-brand);
+}
+
+/* ==========================================================================
+   18. LOADER
+   ========================================================================== */
+.andreani-table-loader {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 80px 20px;
+	background: var(--an-50);
+	border: 1px solid var(--an-200);
+	border-radius: var(--an-radius-xl);
+	margin-top: var(--an-sp-4);
+}
+
+.andreani-table-loader__spinner {
+	width: 64px;
+	height: 64px;
+	position: relative;
+}
+
+.andreani-table-loader__logo {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.andreani-table-loader__logo--bg {
+	opacity: 0.2;
+}
+
+.andreani-table-loader__logo--fill {
+	clip-path: inset(100% 0 0 0);
+	animation: an-fill-loading 1.5s ease-in-out infinite;
+}
+
+.andreani-table-error {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 60px 20px;
+	background: var(--an-error-light);
+	border: 1px solid var(--an-error);
+	border-radius: var(--an-radius-xl);
+	margin-top: var(--an-sp-4);
+}
+
+.andreani-table-error__icon {
+	width: 40px;
+	height: 40px;
+	color: var(--an-error);
+	margin-bottom: var(--an-sp-4);
+}
+
+.andreani-table-error__message {
+	font-size: var(--an-text-md);
+	color: #991b1b;
+	margin-bottom: var(--an-sp-4);
+}
+
+.andreani-table-error__retry {
+	background: var(--an-brand);
+	color: var(--an-white);
+	border: none;
+	padding: 8px 20px;
+	border-radius: var(--an-radius-md);
+	font-size: var(--an-text-md);
+	font-weight: 500;
+	cursor: pointer;
+	transition: var(--an-transition);
+}
+
+.andreani-table-error__retry:hover {
+	background: var(--an-brand-dark);
+}
+
+/* ==========================================================================
+   19. ANIMATIONS
+   ========================================================================== */
+@keyframes an-spin {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
+}
+
+@keyframes an-fade-in {
+	from { opacity: 0; transform: translateY(-50%) scale(0.95); }
+	to { opacity: 1; transform: translateY(-50%) scale(1); }
+}
+
+@keyframes an-fill-loading {
+	0% { clip-path: inset(100% 0 0 0); }
+	50% { clip-path: inset(30% 0 0 0); }
+	100% { clip-path: inset(100% 0 0 0); }
+}
+
+@keyframes an-fill-complete {
+	from { clip-path: inset(100% 0 0 0); }
+	to { clip-path: inset(0 0 0 0); }
+}
+
+.andreani-table-loader--complete .andreani-table-loader__logo--fill {
+	animation: an-fill-complete 0.5s ease-out forwards;
+}
+
+/* ==========================================================================
+   20. REFRESH BUTTON
+   ========================================================================== */
+.andreani-refresh-btn--loading .dashicons {
+	animation: an-spin 0.8s linear infinite;
+}
+
+/* ==========================================================================
+   21. RESPONSIVE
+   ========================================================================== */
+@media screen and (max-width: 1280px) {
+	.andreani-shipments-wrap .column-products {
+		display: none;
+	}
+}
+
+@media screen and (max-width: 1100px) {
+	.andreani-shipments-wrap .column-destination {
+		display: none;
+	}
+}
+
+@media screen and (max-width: 960px) {
+	.andreani-shipments-wrap .column-delivery_mode,
+	.andreani-shipments-wrap .column-andreani_id {
+		display: none;
+	}
+
+	.andreani-tracking-code {
+		max-width: 80px;
+	}
+}
+
+@media screen and (max-width: 782px) {
+	/* ==========================================
+	   MOBILE STYLES - ANDREANI SHIPMENTS
+	   ========================================== */
+
+	/* Layout */
+	.andreani-shipments-wrap {
+		padding-right: 0;
+	}
+
+	/* Search */
+	.andreani-search-row {
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.andreani-search-row .search-box {
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.andreani-search-row .search-box input[type="search"],
+	.andreani-search-row .search-box input[type="submit"] {
+		width: 100% !important;
+	}
+
+	/* Filters */
+	.andreani-shipments-wrap .tablenav .actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.andreani-shipments-wrap .tablenav .actions select {
+		min-width: 130px !important;
+		flex: 1;
+	}
+
+	.andreani-shipments-wrap .tablenav .bulkactions {
+		width: 100%;
+		display: flex;
+		gap: 8px;
+	}
+
+	.andreani-shipments-wrap .tablenav .bulkactions select {
+		flex: 1;
+	}
+
+	/* Table base */
+	.andreani-shipments-wrap .wp-list-table {
+		border: none !important;
+		box-shadow: none !important;
+		background: transparent !important;
+	}
+
+	.andreani-shipments-wrap .wp-list-table thead {
+		display: none !important;
+	}
+
+	/* Each row as a card */
+	.andreani-shipments-wrap .wp-list-table tbody tr {
+		display: block !important;
+		position: relative;
+		margin-bottom: 12px;
+		border: 1px solid #e5e7eb !important;
+		border-radius: 8px !important;
+		background: #fff !important;
+		overflow: hidden;
+	}
+
+	/* All cells hidden by default */
+	.andreani-shipments-wrap .wp-list-table tbody td {
+		display: none !important;
+		padding: 12px 16px !important;
+		border: none !important;
+		border-bottom: 1px solid #f3f4f6 !important;
+		text-align: left !important;
+		background: #fff !important;
+		/* Flexbox para separar label y valor */
+		flex-direction: column !important;
+		align-items: flex-start !important;
+	}
+
+	/* Reset any text decoration */
+	.andreani-shipments-wrap .wp-list-table tbody td,
+	.andreani-shipments-wrap .wp-list-table tbody td * {
+		text-decoration: none !important;
+	}
+
+	/* Contenido de celda en bloque */
+	.andreani-shipments-wrap .wp-list-table tbody td > * {
+		display: block !important;
+	}
+
+	/* Checkbox - always visible, positioned */
+	.andreani-shipments-wrap .wp-list-table tbody td.check-column {
+		display: block !important;
+		position: absolute !important;
+		top: 14px !important;
+		left: 12px !important;
+		padding: 0 !important;
+		border: none !important;
+		background: transparent !important;
+		width: 20px !important;
+		z-index: 5;
+	}
+
+	/* Order number - always visible */
+	.andreani-shipments-wrap .wp-list-table tbody td.column-order_number {
+		display: block !important;
+		padding: 16px 60px 16px 44px !important;
+		background: #f9fafb !important;
+		border-bottom: 1px solid #e5e7eb !important;
+		font-weight: 600 !important;
+		font-size: 15px !important;
+	}
+
+	.andreani-shipments-wrap .wp-list-table tbody td.column-order_number a {
+		color: #e31e24 !important;
+		text-decoration: none !important;
+	}
+
+	/* Toggle button */
+	.andreani-shipments-wrap .wp-list-table .toggle-row {
+		position: absolute !important;
+		top: 14px !important;
+		right: 12px !important;
+		left: auto !important;
+		width: 28px !important;
+		height: 28px !important;
+		min-width: 28px !important;
+		min-height: 28px !important;
+		padding: 0 !important;
+		margin: 0 !important;
+		border: 1px solid #e31e24 !important;
+		border-radius: 6px !important;
+		background: #fff !important;
+		outline: none !important;
+		box-shadow: none !important;
+		cursor: pointer !important;
+		z-index: 10;
+		font-size: 0 !important;
+		line-height: 0 !important;
+		text-indent: -9999px !important;
+	}
+
+	/* Flecha con CSS */
+	.andreani-shipments-wrap .wp-list-table .toggle-row::after {
+		content: "" !important;
+		position: absolute !important;
+		top: 50% !important;
+		left: 50% !important;
+		width: 8px !important;
+		height: 8px !important;
+		border: solid #e31e24 !important;
+		border-width: 0 2px 2px 0 !important;
+		transform: translate(-50%, -65%) rotate(45deg) !important;
+		transition: transform 0.2s ease !important;
+	}
+
+	.andreani-shipments-wrap .wp-list-table .toggle-row:hover {
+		background: #fef2f2 !important;
+	}
+
+	/* Flecha rotada cuando está expandido */
+	.andreani-shipments-wrap .wp-list-table tr.is-expanded .toggle-row::after {
+		transform: translate(-50%, -35%) rotate(-135deg) !important;
+	}
+
+	/* Expanded state - show cells */
+	.andreani-shipments-wrap .wp-list-table tbody tr.is-expanded td {
+		display: block !important;
+	}
+
+	.andreani-shipments-wrap .wp-list-table tbody tr.is-expanded td.check-column {
+		display: block !important;
+		position: absolute !important;
+	}
+
+	.andreani-shipments-wrap .wp-list-table tbody tr.is-expanded td.column-order_number {
+		display: block !important;
+	}
+
+	/* Hide some columns even when expanded */
+	.andreani-shipments-wrap .wp-list-table tbody tr.is-expanded td.column-client_type,
+	.andreani-shipments-wrap .wp-list-table tbody tr.is-expanded td.column-andreani_id,
+	.andreani-shipments-wrap .wp-list-table tbody tr.is-expanded td.column-delivery_mode {
+		display: none !important;
+	}
+
+	/* Column labels - NO usar ::before, dejar limpio */
+	.andreani-shipments-wrap .wp-list-table tbody td::before {
+		display: none !important;
+		content: "" !important;
+	}
+
+	/* Status badge - no full width */
+	.andreani-shipments-wrap .wp-list-table tbody td.column-status {
+		display: block !important;
+	}
+
+	.andreani-shipments-wrap .wp-list-table tbody td.column-status .andreani-status {
+		display: inline-flex !important;
+		width: auto !important;
+	}
+
+	/* Actions row */
+	.andreani-shipments-wrap .wp-list-table tbody tr.is-expanded td.column-actions {
+		display: flex !important;
+		flex-direction: row !important;
+		gap: 8px !important;
+		padding: 12px 16px !important;
+		background: #f9fafb !important;
+		border-top: 1px solid #e5e7eb !important;
+		border-bottom: none !important;
+	}
+
+	/* Collapsible notice */
+	.andreani-notice__body {
+		padding-left: var(--an-sp-4);
+	}
+
+	.andreani-pyme-notice {
+		flex-direction: column;
+		padding: 12px;
+	}
+
+	.andreani-pyme-notice__icon {
+		align-self: flex-start;
+	}
+}
+
+/* ==========================================================================
+   22. TRACKING WRAPPER & LINKS
+   ========================================================================== */
+.andreani-tracking-wrapper {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--an-sp-1);
+	width: 100%;
+}
+
+.andreani-tracking-link {
+	flex-shrink: 0;
+}
+
+.andreani-tracking-link svg {
+	width: 14px;
+	height: 14px;
+	color: var(--an-brand);
+	vertical-align: middle;
+}
+
+/* Expandir ID Andreani en hover */
+.andreani-shipments-wrap .wp-list-table td.column-andreani_id {
+	position: relative;
+}
+
+.andreani-shipments-wrap .wp-list-table td.column-andreani_id:hover {
+	overflow: visible;
+}
+
+.andreani-shipments-wrap .wp-list-table td.column-andreani_id:hover .andreani-tracking-code {
+	max-width: none;
+	padding: 4px 8px;
+	box-shadow: var(--an-shadow-md);
+	position: absolute;
+	left: 8px;
+	top: 50%;
+	transform: translateY(-50%);
+	z-index: 100;
+	background: var(--an-white);
+}
+
+/* ==========================================================================
+   23. MODALS
+   ========================================================================== */
+.andreani-modal {
+	position: fixed;
+	inset: 0;
+	z-index: 100100;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+}
+
+.andreani-modal__backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.08);
+	z-index: 1;
+	pointer-events: auto;
+}
+
+.andreani-modal__container {
+	z-index: 2;
+	position: relative;
+	background: var(--an-white);
+	border: 2px solid var(--an-brand);
+	border-radius: var(--an-radius-xl);
+	box-shadow: var(--an-shadow-lg), 0 0 0 1px var(--an-brand-subtle);
+	width: 540px;
+	max-width: calc(100vw - 32px);
+	animation: an-modal-appear 0.2s ease-out;
+	pointer-events: auto;
+}
+
+.andreani-modal__container--dragging {
+	user-select: none;
+	cursor: grabbing !important;
+	box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+}
+
+.andreani-modal__container--wide {
+	width: 580px;
+	max-height: 70vh;
+	display: flex;
+	flex-direction: column;
+}
+
+.andreani-modal__container--wide .andreani-modal__body {
+	overflow-y: auto;
+	max-height: calc(70vh - 120px);
+}
+
+.andreani-modal__container--single {
+	width: 540px;
+}
+
+@keyframes an-modal-appear {
+	from { opacity: 0; transform: scale(0.96) translateY(-8px); }
+	to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.andreani-modal__header {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: var(--an-sp-3) var(--an-sp-4);
+	border-bottom: 1px solid var(--an-100);
+	cursor: grab;
+	border-radius: 10px 10px 0 0;
+	background: var(--an-50);
+}
+
+.andreani-modal__header:active {
+	cursor: grabbing;
+}
+
+.andreani-modal__logo {
+	width: 24px;
+	height: 24px;
+	flex-shrink: 0;
+}
+
+.andreani-modal__header h3 {
+	margin: 0;
+	flex: 1;
+	font-size: var(--an-text-md);
+	font-weight: 600;
+	color: var(--an-900);
+	line-height: 1.3;
+}
+
+.andreani-modal__close {
+	background: none;
+	border: none;
+	font-size: 18px;
+	color: var(--an-400);
+	cursor: pointer;
+	padding: 0;
+	width: 28px;
+	height: 28px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--an-radius-md);
+	transition: var(--an-transition);
+	flex-shrink: 0;
+}
+
+.andreani-modal__close:hover {
+	background: var(--an-brand-light);
+	color: var(--an-brand);
+}
+
+.andreani-modal__body {
+	padding: var(--an-sp-4);
+}
+
+.andreani-modal__order {
+	margin: 0 0 var(--an-sp-3);
+	font-size: var(--an-text-md);
+	color: var(--an-600);
+}
+
+.andreani-modal__order strong {
+	color: var(--an-900);
+	font-weight: 600;
+}
+
+.andreani-modal__hint {
+	margin: var(--an-sp-3) 0 0;
+	font-size: var(--an-text-base);
+	color: var(--an-500);
+	line-height: 1.5;
+}
+
+.andreani-modal__footer {
+	display: flex;
+	gap: var(--an-sp-2);
+	padding: var(--an-sp-3) var(--an-sp-4) var(--an-sp-4);
+}
+
+.andreani-modal__cancel {
+	flex: 1;
+	padding: 10px 16px;
+	background: var(--an-white);
+	border: 1px solid var(--an-300);
+	border-radius: var(--an-radius-md);
+	font-size: var(--an-text-md);
+	font-weight: 500;
+	color: var(--an-600);
+	cursor: pointer;
+	transition: var(--an-transition);
+}
+
+.andreani-modal__cancel:hover {
+	background: var(--an-50);
+	border-color: var(--an-400);
+}
+
+.andreani-modal__btn {
+	flex: 1;
+	padding: 10px 16px;
+	border-radius: var(--an-radius-md);
+	font-size: var(--an-text-md);
+	font-weight: 600;
+	cursor: pointer;
+	transition: var(--an-transition);
+}
+
+.andreani-modal__btn--outline {
+	background: var(--an-white);
+	border: 1px solid var(--an-brand);
+	color: var(--an-brand);
+}
+
+.andreani-modal__btn--outline:hover {
+	background: var(--an-brand-light);
+}
+
+.andreani-modal__btn--primary {
+	background: var(--an-brand);
+	border: none;
+	color: var(--an-white);
+}
+
+.andreani-modal__btn--primary:hover:not(:disabled) {
+	background: var(--an-brand-dark);
+}
+
+.andreani-modal__btn:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.andreani-modal__btn--primary:disabled {
+	background: var(--an-300);
+}
+
+#andreani-confirm-shipped {
+	flex: 1;
+	padding: 10px 16px;
+	border-radius: var(--an-radius-md);
+	font-size: var(--an-text-md);
+	font-weight: 600;
+	cursor: pointer;
+	transition: var(--an-transition);
+	background: var(--an-white);
+	border: 1px solid var(--an-brand);
+	color: var(--an-brand);
+}
+
+#andreani-confirm-shipped:hover {
+	background: var(--an-brand-light);
+}
+
+#andreani-confirm-shipped:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+/* ==========================================================================
+   24. UNMARK SECTION (Modal)
+   ========================================================================== */
+.andreani-modal__unmark-section {
+	margin-top: var(--an-sp-4);
+	padding-top: var(--an-sp-4);
+	border-top: 1px solid var(--an-100);
+	display: flex;
+	align-items: center;
+	gap: var(--an-sp-3);
+}
+
+.andreani-modal__unmark-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 0;
+	background: none;
+	border: none;
+	color: var(--an-500);
+	font-size: var(--an-text-md);
+	cursor: pointer;
+	transition: var(--an-transition);
+}
+
+.andreani-modal__unmark-link:hover {
+	color: var(--an-brand);
+}
+
+.andreani-modal__unmark-link .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	line-height: 16px;
+}
+
+.andreani-modal__unmark-confirm {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.andreani-modal__unmark-confirm-text {
+	font-size: var(--an-text-md);
+	color: var(--an-500);
+}
+
+.andreani-confirm-btn--sm {
+	width: 24px;
+	height: 24px;
+}
+
+.andreani-confirm-unmark-yes,
+.andreani-confirm-unmark-no {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border-radius: var(--an-radius-md);
+	cursor: pointer;
+	transition: var(--an-transition);
+	border: 1.5px solid;
+	background: var(--an-white);
+}
+
+.andreani-confirm-unmark-yes svg,
+.andreani-confirm-unmark-no svg {
+	width: 12px;
+	height: 12px;
+	stroke: currentColor;
+	stroke-width: 2.5;
+}
+
+.andreani-confirm-unmark-yes {
+	border-color: var(--an-brand);
+	color: var(--an-brand);
+}
+
+.andreani-confirm-unmark-yes:hover:not(:disabled) {
+	background: var(--an-brand);
+	color: var(--an-white);
+}
+
+.andreani-confirm-unmark-yes:hover:not(:disabled) svg {
+	stroke: var(--an-white);
+}
+
+.andreani-confirm-unmark-yes:disabled,
+.andreani-confirm-unmark-yes:disabled:hover {
+	background: var(--an-white) !important;
+	color: var(--an-brand) !important;
+	border-color: var(--an-brand) !important;
+	cursor: wait;
+	opacity: 1;
+	pointer-events: none;
+}
+
+.andreani-confirm-unmark-no {
+	border-color: var(--an-400);
+	color: var(--an-400);
+}
+
+.andreani-confirm-unmark-no:hover {
+	background: var(--an-400);
+	color: var(--an-white);
+}
+
+.andreani-confirm-unmark-no:hover svg {
+	stroke: var(--an-white);
+}
+
+/* ==========================================================================
+   26. CORPO INFO SECTION (Modal)
+   ========================================================================== */
+.andreani-modal__corpo-info {
+	background: var(--an-50);
+	border: 1px solid var(--an-200);
+	border-radius: var(--an-radius-lg);
+	overflow: hidden;
+}
+
+.andreani-corpo-info__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--an-sp-3) var(--an-sp-4);
+	background: #eff6ff;
+	border-bottom: 1px solid #bfdbfe;
+}
+
+.andreani-corpo-info__order {
+	font-weight: 700;
+	font-size: var(--an-text-lg);
+	color: var(--an-900);
+}
+
+.andreani-corpo-info__header .andreani-badge--corpo {
+	font-size: 9px;
+	padding: 2px 6px;
+}
+
+.andreani-corpo-info__details {
+	padding: var(--an-sp-3) var(--an-sp-4);
+}
+
+.andreani-corpo-info__row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--an-sp-2) 0;
+	border-bottom: 1px solid var(--an-100);
+}
+
+.andreani-corpo-info__row:last-child {
+	border-bottom: none;
+	padding-bottom: 0;
+}
+
+.andreani-corpo-info__row:first-child {
+	padding-top: 0;
+}
+
+.andreani-corpo-info__label {
+	font-size: var(--an-text-sm);
+	font-weight: 500;
+	color: var(--an-500);
+}
+
+.andreani-corpo-info__value {
+	font-size: var(--an-text-md);
+	font-weight: 500;
+	color: var(--an-900);
+	display: flex;
+	align-items: center;
+	gap: var(--an-sp-2);
+}
+
+.andreani-corpo-info__value .andreani-tracking-code {
+	max-width: none;
+	font-size: var(--an-text-sm);
+	padding: 4px 8px;
+}
+
+.andreani-corpo-info__track-link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border-radius: var(--an-radius-sm);
+	color: var(--an-brand);
+	transition: var(--an-transition);
+}
+
+.andreani-corpo-info__track-link:hover {
+	background: var(--an-brand-light);
+	color: var(--an-brand-dark);
+}
+
+.andreani-corpo-info__track-link svg {
+	width: 14px;
+	height: 14px;
+}
+
+.andreani-corpo-info__value .andreani-status {
+	font-size: var(--an-text-xs);
+	padding: 3px 8px;
+}

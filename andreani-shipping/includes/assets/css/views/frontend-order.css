@@ -1,0 +1,88 @@
+/**
+ * Vista: Order frontend (Mi cuenta + Thank you) — bloque "Envío Andreani" con sucursal, orden, tracking.
+ * Selectores legacy `.andreani-shipping-details`, `.andreani-details-list`, `.andreani-track-link`, `.andreani-address` no son hooks JS.
+ * Depende de: andreani-core-base
+ */
+
+.andreani-shipping-details {
+	margin-top: 2em;
+	padding-top: 2em;
+	border-top: 1px solid var(--andr-color-border);
+}
+
+.andreani-details-list {
+	margin: 0;
+	padding: 0;
+}
+
+.andreani-details-row {
+	display: flex;
+	flex-wrap: wrap;
+	padding: 0.75em 0;
+	border-bottom: 1px solid var(--andr-color-border);
+}
+
+.andreani-details-row:last-child {
+	border-bottom: none;
+}
+
+.andreani-details-list dt {
+	flex: 0 0 140px;
+	font-weight: var(--andr-fw-normal);
+	color: var(--andr-color-text-subtle);
+	margin: 0;
+}
+
+.andreani-details-list dd {
+	flex: 1;
+	margin: 0;
+}
+
+.andreani-details-list dd strong {
+	display: block;
+}
+
+.andreani-address {
+	color: var(--andr-color-text-subtle);
+	font-size: 0.9em;
+}
+
+.andreani-details-list code {
+	font-family: var(--andr-font-mono);
+	background: var(--andr-color-surface-subtle);
+	padding: 2px var(--andr-sp-2);
+	border-radius: var(--andr-radius-xs);
+	font-size: 0.9em;
+	color: var(--andr-color-text);
+}
+
+.andreani-track-link {
+	display: inline-flex;
+	align-items: center;
+	margin-left: 0.5em;
+	color: var(--andr-color-brand);
+	vertical-align: middle;
+	transition: color var(--andr-transition-base);
+}
+
+.andreani-track-link:hover {
+	color: var(--andr-color-brand-hover);
+}
+
+.andreani-track-link svg {
+	width: 18px;
+	height: 18px;
+}
+
+@media (max-width: 480px) {
+	.andreani-details-row {
+		flex-direction: column;
+		gap: 0.25em;
+	}
+
+	.andreani-details-list dt {
+		flex: none;
+		font-weight: var(--andr-fw-semibold);
+		color: inherit;
+	}
+}

@@ -1,0 +1,101 @@
+/**
+ * Componente: Badge — pill para tipos de cliente (Pyme/Corpo) y estados.
+ * Depende de: andreani-core-variables
+ */
+
+.andr-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--andr-sp-1);
+	padding: var(--andr-sp-1) var(--andr-sp-3);
+	font-family: var(--andr-font-body);
+	font-size: var(--andr-text-xs);
+	font-weight: var(--andr-fw-semibold);
+	line-height: 1.4;
+	letter-spacing: 0.02em;
+	border-radius: var(--andr-radius-pill);
+	background: var(--andr-color-surface-muted);
+	color: var(--andr-color-text-strong);
+	white-space: nowrap;
+	user-select: none;
+}
+
+.andr-badge svg,
+.andr-badge .dashicons {
+	width: 12px;
+	height: 12px;
+	fill: currentColor;
+	flex-shrink: 0;
+	display: block;
+}
+
+.andr-badge--pyme {
+	background: var(--andr-color-brand-subtle);
+	color: var(--andr-red-500);
+}
+
+.andr-badge--corpo {
+	background: var(--andr-color-info-subtle);
+	color: var(--andr-color-info-strong);
+}
+
+.andr-badge--mm {
+	background: var(--andr-color-mm-subtle);
+	color: var(--andr-color-mm-strong);
+}
+
+.andr-badge--success {
+	background: var(--andr-color-success-subtle);
+	color: var(--andr-color-success-strong);
+}
+
+.andr-badge--error {
+	background: var(--andr-color-error-subtle);
+	color: var(--andr-color-error-strong);
+}
+
+.andr-badge--warning {
+	background: var(--andr-color-warning-subtle);
+	color: var(--andr-color-warning-strong);
+}
+
+.andr-badge--info {
+	background: var(--andr-color-info-subtle);
+	color: var(--andr-color-info-strong);
+}
+
+.andr-badge--neutral {
+	background: var(--andr-color-surface-muted);
+	color: var(--andr-color-text-subtle);
+}
+
+.andr-badge--brand {
+	background: var(--andr-color-brand);
+	color: var(--andr-color-brand-on-brand);
+}
+
+.andr-badge--sm {
+	padding: 2px var(--andr-sp-2);
+	font-size: 10px;
+}
+
+.andr-badge--sm svg,
+.andr-badge--sm .dashicons {
+	width: 12px;
+	height: 12px;
+}
+
+.andr-badge--lg {
+	padding: var(--andr-sp-2) var(--andr-sp-4);
+	font-size: var(--andr-text-sm);
+}
+
+.andr-badge--outline {
+	background: transparent;
+	box-shadow: inset 0 0 0 1px currentColor;
+}
+
+.andr-badge--square {
+	border-radius: var(--andr-radius-xs);
+}

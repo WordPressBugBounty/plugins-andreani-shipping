@@ -1,0 +1,229 @@
+/**
+ * Componente: Modal — diálogo con backdrop, header arrastrable, body scrolleable y footer.
+ * Modifiers: __container--wide (720px) / --narrow (420px) / --dragging (sin transición durante drag).
+ * Depende de: andreani-core-variables
+ */
+
+.andr-modal {
+	position: fixed;
+	inset: 0;
+	z-index: var(--andr-z-modal);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--andr-sp-4);
+}
+
+.andr-modal[hidden] {
+	display: none;
+}
+
+.andr-modal__backdrop {
+	position: absolute;
+	inset: 0;
+	background: var(--andr-color-surface-overlay);
+	z-index: var(--andr-z-modal-backdrop);
+	animation: andr-modal-fade-in var(--andr-transition-base);
+}
+
+.andr-modal__container {
+	position: relative;
+	z-index: var(--andr-z-modal);
+	display: flex;
+	flex-direction: column;
+	background: var(--andr-color-surface);
+	border-radius: var(--andr-radius-md);
+	box-shadow: var(--andr-shadow-lg);
+	max-width: min(560px, 100%);
+	width: 100%;
+	max-height: 90vh;
+	overflow: hidden;
+	animation: andr-modal-zoom-in var(--andr-transition-base);
+}
+
+.andr-modal__container--wide {
+	max-width: min(720px, 100%);
+}
+
+.andr-modal__container--narrow {
+	max-width: min(420px, 100%);
+}
+
+.andr-modal__container--dragging {
+	transition: none;
+	animation: none;
+	user-select: none;
+}
+
+@keyframes andr-modal-fade-in {
+	from { opacity: 0; }
+	to   { opacity: 1; }
+}
+
+@keyframes andr-modal-zoom-in {
+	from { opacity: 0; transform: scale(0.96); }
+	to   { opacity: 1; transform: scale(1); }
+}
+
+.andr-modal__header {
+	display: flex;
+	align-items: center;
+	gap: var(--andr-sp-3);
+	padding: var(--andr-sp-4) var(--andr-sp-5);
+	border-bottom: 1px solid var(--andr-color-border);
+	cursor: grab;
+}
+
+.andr-modal__header:active {
+	cursor: grabbing;
+}
+
+.andr-modal__title {
+	flex: 1;
+	margin: 0;
+	font-family: var(--andr-font-display);
+	font-size: var(--andr-text-lg);
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-text-strong);
+	line-height: var(--andr-leading-tight);
+}
+
+.andr-modal__logo {
+	width: 28px;
+	height: 28px;
+	color: var(--andr-color-brand);
+	flex-shrink: 0;
+}
+
+.andr-modal__close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border: none;
+	background: transparent;
+	color: var(--andr-color-text-subtle);
+	border-radius: var(--andr-radius-sm);
+	cursor: pointer;
+	transition: background var(--andr-transition-fast), color var(--andr-transition-fast);
+}
+
+.andr-modal__close:hover {
+	background: var(--andr-color-surface-subtle);
+	color: var(--andr-color-text-strong);
+}
+
+.andr-modal__close:focus-visible {
+	outline: 2px solid var(--andr-color-border-focus);
+	outline-offset: 2px;
+}
+
+.andr-modal__body {
+	flex: 1;
+	padding: var(--andr-sp-5);
+	overflow-y: auto;
+	font-size: var(--andr-text-sm);
+	line-height: var(--andr-leading-normal);
+	color: var(--andr-color-text);
+}
+
+.andr-modal__body--compact {
+	padding: var(--andr-sp-4);
+}
+
+.andr-modal__hint {
+	margin: 0;
+	font-size: var(--andr-text-xs);
+	color: var(--andr-color-text-subtle);
+	line-height: var(--andr-leading-normal);
+}
+
+.andr-modal__footer {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--andr-sp-2);
+	padding: var(--andr-sp-3) var(--andr-sp-5);
+	border-top: 1px solid var(--andr-color-border);
+	background: var(--andr-color-surface-subtle);
+}
+
+.andr-modal__footer--start    { justify-content: flex-start; }
+.andr-modal__footer--center   { justify-content: center; }
+.andr-modal__footer--between  { justify-content: space-between; }
+
+/* Aplicar a body/html cuando el modal está abierto para bloquear scroll */
+.andr-modal-open {
+	overflow: hidden;
+}
+
+/* --- Configuración de impresión: radios de formato (reusado grilla + settings) --- */
+.andreani-print-settings__intro {
+	margin: 0 0 var(--andr-sp-4);
+}
+
+.andreani-print-settings__loader {
+	display: flex;
+	align-items: center;
+	gap: var(--andr-sp-2);
+	padding: var(--andr-sp-4) 0;
+	color: var(--andr-color-text-subtle);
+	font-size: var(--andr-text-sm);
+}
+
+.andreani-print-settings__loader .spinner {
+	float: none;
+	margin: 0;
+}
+
+.andreani-print-settings__options {
+	display: flex;
+	flex-direction: column;
+	gap: var(--andr-sp-2);
+	border: 0;
+	margin: 0;
+	padding: 0;
+}
+
+.andreani-print-option {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--andr-sp-3);
+	padding: var(--andr-sp-3) var(--andr-sp-4);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-sm);
+	cursor: pointer;
+	transition: border-color var(--andr-transition-fast), background var(--andr-transition-fast);
+}
+
+.andreani-print-option:hover {
+	border-color: var(--andr-color-border-strong);
+	background: var(--andr-color-surface-subtle);
+}
+
+.andreani-print-option__radio {
+	margin: 2px 0 0;
+	flex-shrink: 0;
+}
+
+.andreani-print-option:has(.andreani-print-option__radio:checked) {
+	border-color: var(--andr-color-brand);
+	background: var(--andr-color-brand-subtle);
+}
+
+.andreani-print-option__content {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.andreani-print-option__label {
+	font-weight: var(--andr-fw-medium);
+	color: var(--andr-color-text-strong);
+}
+
+.andreani-print-option__desc {
+	font-size: var(--andr-text-xs);
+	color: var(--andr-color-text-subtle);
+}

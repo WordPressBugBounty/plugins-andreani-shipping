@@ -1,0 +1,27 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "andreani/sucursal-selector",
+	"version": "1.6.4",
+	"title": "Sucursal Andreani",
+	"category": "woocommerce",
+	"description": "Selector de sucursal de retiro de Andreani en el checkout.",
+	"parent": [ "woocommerce/checkout-shipping-methods-block" ],
+	"attributes": {
+		"lock": {
+			"type": "object",
+			"default": {
+				"remove": true,
+				"move": true
+			}
+		}
+	},
+	"supports": {
+		"html": false,
+		"multiple": false,
+		"reusable": false,
+		"inserter": false
+	},
+	"textdomain": "andreani-shipping",
+	"editorScript": "andreani-blocks-sucursal-editor"
+}

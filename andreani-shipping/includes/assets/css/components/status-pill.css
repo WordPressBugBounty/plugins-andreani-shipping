@@ -1,0 +1,160 @@
+/**
+ * Componente: Status Pill — estados de envío y de orden (pending/processing/awaiting/shipped/delivered/error/cancelled).
+ * Modifiers: --dot (indicador), --solid (background pleno), --pulse (animado, requiere --dot).
+ * Depende de: andreani-core-variables
+ */
+
+.andr-status {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--andr-sp-1);
+	padding: var(--andr-sp-1) var(--andr-sp-3);
+	border-radius: var(--andr-radius-pill);
+	font-family: var(--andr-font-body);
+	font-size: var(--andr-text-xs);
+	font-weight: var(--andr-fw-semibold);
+	line-height: 1.4;
+	letter-spacing: 0.02em;
+	white-space: nowrap;
+	user-select: none;
+}
+
+.andr-status svg {
+	width: 12px;
+	height: 12px;
+	flex-shrink: 0;
+	display: block;
+}
+
+.andr-status--pending,
+.andr-status--neutral {
+	background: var(--andr-gray-100);
+	color: var(--andr-color-text-subtle);
+}
+
+.andr-status--processing,
+.andr-status--ready,
+.andr-status--info {
+	background: var(--andr-color-info-subtle);
+	color: var(--andr-color-info-strong);
+}
+
+.andr-status--awaiting,
+.andr-status--warning {
+	background: var(--andr-color-warning-subtle);
+	color: var(--andr-color-warning-strong);
+}
+
+.andr-status--shipped,
+.andr-status--delivered,
+.andr-status--success {
+	background: var(--andr-color-success-subtle);
+	color: var(--andr-color-success-strong);
+}
+
+.andr-status--error,
+.andr-status--cancelled {
+	background: var(--andr-color-error-subtle);
+	color: var(--andr-color-error-strong);
+}
+
+/* Estados de envío Andreani — alineados al flujo logístico real (TrackingStatus):
+ *   not-packaged → packaged → pending-entry → in-transit → ready-pickup (solo sucursal)
+ *   → delivered / not-delivered. */
+.andr-status--not-packaged {
+	background: var(--andr-color-warning-subtle);
+	color: var(--andr-color-warning-strong);
+}
+
+.andr-status--packaged {
+	background: var(--andr-color-info-subtle);
+	color: var(--andr-color-info-strong);
+}
+
+.andr-status--pending-entry {
+	background: var(--andr-color-info-subtle);
+	color: var(--andr-color-info-strong);
+}
+
+.andr-status--ready {
+	background: var(--andr-color-success-subtle);
+	color: var(--andr-color-success-strong);
+}
+
+.andr-status--in-transit {
+	background: var(--andr-color-warning-subtle);
+	color: var(--andr-color-warning-strong);
+}
+
+.andr-status--ready-pickup {
+	background: var(--andr-color-info-subtle);
+	color: var(--andr-color-info-strong);
+}
+
+.andr-status--not-delivered {
+	background: var(--andr-color-error-subtle);
+	color: var(--andr-color-error-strong);
+}
+
+.andr-status--sm {
+	padding: 2px var(--andr-sp-2);
+	font-size: 10px;
+}
+
+.andr-status--lg {
+	padding: var(--andr-sp-2) var(--andr-sp-4);
+	font-size: var(--andr-text-sm);
+	gap: var(--andr-sp-2);
+}
+
+.andr-status--dot::before {
+	content: "";
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: currentColor;
+	flex-shrink: 0;
+}
+
+.andr-status--dot.andr-status--sm::before {
+	width: 5px;
+	height: 5px;
+}
+
+.andr-status--dot.andr-status--lg::before {
+	width: 8px;
+	height: 8px;
+}
+
+.andr-status--solid.andr-status--success {
+	background: var(--andr-color-success);
+	color: var(--andr-color-text-inverse);
+}
+
+.andr-status--solid.andr-status--error {
+	background: var(--andr-color-error);
+	color: var(--andr-color-text-inverse);
+}
+
+.andr-status--solid.andr-status--warning {
+	background: var(--andr-color-warning);
+	color: var(--andr-color-text-inverse);
+}
+
+.andr-status--solid.andr-status--info {
+	background: var(--andr-color-info);
+	color: var(--andr-color-text-inverse);
+}
+
+.andr-status--solid.andr-status--dot::before {
+	background: rgba(255, 255, 255, 0.7);
+}
+
+.andr-status--pulse.andr-status--dot::before {
+	animation: andr-status-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes andr-status-pulse {
+	0%, 100% { opacity: 1; }
+	50%      { opacity: 0.4; }
+}

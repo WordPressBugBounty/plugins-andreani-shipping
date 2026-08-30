@@ -1,0 +1,86 @@
+/* ==========================================================================
+   Andreani Shipping - Order Page Styles
+   ========================================================================== */
+
+.andreani-shipping-details {
+  margin-top: 2em;
+  padding-top: 2em;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.andreani-details-list {
+  margin: 0;
+  padding: 0;
+}
+
+.andreani-details-row {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0.75em 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.andreani-details-row:last-child {
+  border-bottom: none;
+}
+
+.andreani-details-list dt {
+  flex: 0 0 140px;
+  font-weight: normal;
+  color: #666;
+  margin: 0;
+}
+
+.andreani-details-list dd {
+  flex: 1;
+  margin: 0;
+}
+
+.andreani-details-list dd strong {
+  display: block;
+}
+
+.andreani-address {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.andreani-details-list code {
+  font-family: monospace;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 0.9em;
+  color: #333;
+}
+
+.andreani-track-link {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.5em;
+  color: #e31e24;
+  vertical-align: middle;
+  transition: color 0.2s;
+}
+
+.andreani-track-link:hover {
+  color: #c41a1f;
+}
+
+.andreani-track-link svg {
+  width: 18px;
+  height: 18px;
+}
+
+@media (max-width: 480px) {
+  .andreani-details-row {
+    flex-direction: column;
+    gap: 0.25em;
+  }
+
+  .andreani-details-list dt {
+    flex: none;
+    font-weight: 600;
+    color: inherit;
+  }
+}

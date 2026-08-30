@@ -1,0 +1,442 @@
+/**
+ * Vista: Metabox lateral del pedido (Andreani).
+ * Sidebar angosto (~250-280px) con el sistema de diseño del plugin:
+ * andr-status / andr-badge / andr-btn + mini-timeline logístico.
+ * Depende de: andreani-core-base + componentes badge/button/status.
+ */
+
+.andreani-metabox {
+	margin: -6px -12px -12px;
+	padding: var(--andr-sp-3);
+	font-family: var(--andr-font-body);
+	border-top: 3px solid var(--andr-color-border-strong);
+}
+
+.andreani-metabox--success {
+	border-top-color: var(--andr-color-success);
+}
+
+.andreani-metabox--error {
+	border-top-color: var(--andr-color-error);
+}
+
+/* ----- API down: nota sutil ----- */
+.andreani-metabox__api-note {
+	display: flex;
+	align-items: center;
+	gap: var(--andr-sp-1);
+	margin: 0 0 var(--andr-sp-3);
+	font-size: var(--andr-text-xs);
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-metabox__api-note .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+}
+
+/* ----- STATUS ROW: estado logístico + (En línea · tipo de cliente) ----- */
+.andreani-metabox__status-row {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--andr-sp-2);
+	margin-bottom: var(--andr-sp-3);
+}
+
+.andreani-metabox__meta {
+	margin-left: auto;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--andr-sp-2);
+}
+
+.andreani-metabox__online {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	font-size: var(--andr-text-xs);
+	font-weight: var(--andr-fw-medium);
+	color: var(--andr-color-success-strong);
+	white-space: nowrap;
+}
+
+.andreani-metabox__online .dashicons {
+	font-size: 13px;
+	width: 13px;
+	height: 13px;
+}
+
+/* ----- MINI-TIMELINE: 4 pasos horizontales compactos ----- */
+.andreani-mini-timeline {
+	list-style: none;
+	margin: 0 0 var(--andr-sp-4);
+	padding: 0;
+	display: flex;
+	align-items: flex-start;
+}
+
+.andreani-mini-timeline__step {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	position: relative;
+	min-width: 0;
+}
+
+.andreani-mini-timeline__step:not(:last-child)::after {
+	content: "";
+	position: absolute;
+	top: 5px;
+	left: calc(50% + 7px);
+	right: calc(-50% + 7px);
+	height: 2px;
+	background: var(--andr-color-border);
+	z-index: 0;
+}
+
+.andreani-mini-timeline__step--done:not(:last-child)::after,
+.andreani-mini-timeline__step--active:not(:last-child)::after {
+	background: var(--andr-color-brand);
+}
+
+.andreani-mini-timeline__dot {
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background: var(--andr-color-surface);
+	border: 2px solid var(--andr-color-border);
+	position: relative;
+	z-index: 1;
+	margin-bottom: 4px;
+	transition: background var(--andr-transition-fast), border-color var(--andr-transition-fast), box-shadow var(--andr-transition-fast);
+}
+
+.andreani-mini-timeline__step--done .andreani-mini-timeline__dot {
+	background: var(--andr-color-brand);
+	border-color: var(--andr-color-brand);
+}
+
+.andreani-mini-timeline__step--active .andreani-mini-timeline__dot {
+	background: var(--andr-color-brand);
+	border-color: var(--andr-color-brand);
+	box-shadow: 0 0 0 3px var(--andr-color-brand-subtle);
+}
+
+.andreani-mini-timeline__step--failed .andreani-mini-timeline__dot {
+	background: var(--andr-color-error);
+	border-color: var(--andr-color-error);
+	box-shadow: 0 0 0 3px var(--andr-color-error-subtle);
+}
+
+.andreani-mini-timeline__label {
+	font-size: 10px;
+	line-height: 1.2;
+	color: var(--andr-color-text-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 100%;
+}
+
+.andreani-mini-timeline__step--active .andreani-mini-timeline__label {
+	color: var(--andr-color-text-strong);
+	font-weight: var(--andr-fw-semibold);
+}
+
+.andreani-mini-timeline__step--failed .andreani-mini-timeline__label {
+	color: var(--andr-color-error-strong);
+	font-weight: var(--andr-fw-semibold);
+}
+
+/* ----- SECCIONES: Seguimiento / Destino ----- */
+.andreani-metabox__section {
+	margin-bottom: var(--andr-sp-3);
+}
+
+.andreani-metabox__section-title {
+	display: block;
+	font-size: 10px;
+	font-weight: var(--andr-fw-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--andr-color-text-muted);
+	margin-bottom: var(--andr-sp-1);
+}
+
+.andreani-metabox__tracking {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--andr-sp-2);
+}
+
+.andreani-metabox__tracking code {
+	flex: 1;
+	min-width: 0;
+	background: var(--andr-color-surface-subtle);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-xs);
+	padding: var(--andr-sp-1) var(--andr-sp-2);
+	font-family: var(--andr-font-mono);
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text);
+	cursor: pointer;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	transition: color var(--andr-transition-fast), border-color var(--andr-transition-fast);
+}
+
+.andreani-metabox__tracking code:hover {
+	color: var(--andr-color-brand);
+	border-color: var(--andr-color-brand);
+}
+
+.andreani-metabox__tracking code.copied {
+	color: var(--andr-color-success-strong);
+	border-color: var(--andr-color-success);
+}
+
+.andreani-metabox__copy-hint {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	font-size: 10px;
+	color: var(--andr-color-text-muted);
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.andreani-metabox__copy-hint .dashicons {
+	font-size: 13px;
+	width: 13px;
+	height: 13px;
+}
+
+.andreani-metabox__track-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	margin-top: var(--andr-sp-1);
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-link);
+	text-decoration: none;
+}
+
+.andreani-metabox__track-link:hover {
+	color: var(--andr-color-text-link-hover);
+	text-decoration: underline;
+}
+
+.andreani-metabox__track-link .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+}
+
+.andreani-metabox__destination {
+	margin: 0;
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text);
+	word-break: break-word;
+}
+
+/* ----- ACCIONES: andr-btn ----- */
+.andreani-metabox__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--andr-sp-2);
+	margin: var(--andr-sp-3) 0;
+}
+
+.andreani-metabox__actions .andr-btn {
+	flex: 1 1 calc(50% - var(--andr-sp-1));
+	min-width: 0;
+}
+
+.andreani-metabox__actions .andr-btn .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+}
+
+/* ----- FOOTER ----- */
+.andreani-metabox__footer {
+	margin-top: var(--andr-sp-3);
+	padding-top: var(--andr-sp-2);
+	border-top: 1px solid var(--andr-color-border);
+	text-align: center;
+}
+
+.andreani-metabox__footer a {
+	font-size: var(--andr-text-sm);
+	text-decoration: none;
+	color: var(--andr-color-text-muted);
+}
+
+.andreani-metabox__footer a:hover {
+	color: var(--andr-color-text-link);
+}
+
+/* ----- COPY: feedback inline + spin (compartido con la grilla) ----- */
+.andreani-copy-number,
+.andreani-copy-click {
+	user-select: none;
+}
+
+.andreani-inline-copied {
+	display: inline-block;
+	margin-left: var(--andr-sp-2);
+	color: var(--andr-color-success);
+	font-size: var(--andr-text-xs);
+	font-weight: var(--andr-fw-semibold);
+	vertical-align: middle;
+	animation: andreani-metabox-fade-in 0.3s ease;
+}
+
+.andreani-spin {
+	animation: andreani-metabox-spin 1s linear infinite;
+	color: var(--andr-color-brand) !important;
+	display: inline-flex !important;
+	align-items: center;
+	justify-content: center;
+}
+
+/* ----- ERROR COLAPSABLE (debug del merchant) ----- */
+.andreani-metabox__error {
+	background: var(--andr-color-error-subtle);
+	border: 1px solid var(--andr-color-error);
+	border-radius: var(--andr-radius-xs);
+	margin-bottom: var(--andr-sp-3);
+	overflow: hidden;
+}
+
+.andreani-metabox__error-toggle {
+	display: flex;
+	align-items: center;
+	gap: var(--andr-sp-1);
+	width: 100%;
+	padding: var(--andr-sp-2) var(--andr-sp-2);
+	background: none;
+	border: none;
+	color: var(--andr-color-error-strong);
+	font-size: var(--andr-text-sm);
+	cursor: pointer;
+	text-align: left;
+}
+
+.andreani-metabox__error-toggle:hover {
+	background: rgba(29, 32, 35, 0.03);
+}
+
+.andreani-metabox__error-toggle .dashicons-warning {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+	color: var(--andr-color-error);
+}
+
+.andreani-metabox__error-arrow {
+	margin-left: auto;
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	transition: transform var(--andr-transition-base);
+}
+
+.andreani-metabox__error--collapsed .andreani-metabox__error-body {
+	display: none;
+}
+
+.andreani-metabox__error--expanded .andreani-metabox__error-arrow {
+	transform: rotate(180deg);
+}
+
+.andreani-metabox__error-body {
+	padding: 0 var(--andr-sp-2) var(--andr-sp-2);
+}
+
+.andreani-metabox__error-message {
+	display: block;
+	font-size: var(--andr-text-xs);
+	font-family: var(--andr-font-mono);
+	background: rgba(255, 255, 255, 0.6);
+	padding: var(--andr-sp-1) var(--andr-sp-2);
+	border-radius: var(--andr-radius-xs);
+	word-break: break-word;
+	white-space: pre-wrap;
+	color: var(--andr-color-error-strong);
+	margin-bottom: var(--andr-sp-2);
+}
+
+.andreani-metabox__error-copy {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--andr-sp-1);
+	background: var(--andr-color-surface);
+	border: 1px solid var(--andr-color-error);
+	border-radius: var(--andr-radius-xs);
+	color: var(--andr-color-error-strong);
+	font-size: var(--andr-text-xs);
+	padding: 3px var(--andr-sp-2);
+	cursor: pointer;
+	transition: all var(--andr-transition-base);
+}
+
+.andreani-metabox__error-copy:hover {
+	background: var(--andr-color-error);
+	color: var(--andr-color-text-inverse);
+}
+
+.andreani-metabox__error-copy .dashicons {
+	font-size: 12px;
+	width: 12px;
+	height: 12px;
+}
+
+.andreani-metabox__error-copy.copied {
+	background: var(--andr-color-success);
+	border-color: var(--andr-color-success);
+	color: var(--andr-color-text-inverse);
+}
+
+.andreani-metabox__error-body-section {
+	margin-top: var(--andr-sp-2);
+	padding-top: var(--andr-sp-2);
+	border-top: 1px dashed var(--andr-color-border-strong);
+}
+
+.andreani-metabox__error-body-section strong {
+	display: block;
+	font-size: var(--andr-text-xs);
+	color: var(--andr-color-text-muted);
+	margin-bottom: var(--andr-sp-1);
+}
+
+.andreani-metabox__error-body-json {
+	background: var(--andr-color-surface-subtle);
+	border: 1px solid var(--andr-color-border-strong);
+	border-radius: var(--andr-radius-xs);
+	padding: var(--andr-sp-2);
+	font-size: var(--andr-text-xs);
+	line-height: 1.4;
+	max-height: 200px;
+	overflow: auto;
+	white-space: pre;
+	word-break: break-all;
+	margin: var(--andr-sp-1) 0 var(--andr-sp-2);
+}
+
+@keyframes andreani-metabox-spin {
+	from { transform: rotate(0deg); }
+	to   { transform: rotate(360deg); }
+}
+
+@keyframes andreani-metabox-fade-in {
+	from { opacity: 0; transform: translateX(-5px); }
+	to   { opacity: 1; transform: translateX(0); }
+}

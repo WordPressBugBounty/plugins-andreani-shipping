@@ -1,0 +1,110 @@
+/**
+ * Componente: Card — contenedor con jerarquía visual (settings, cotizador, panels, secciones de detalle).
+ * Modifiers: --elevated (sin borde + shadow), --flat (full-width), --brand (borde superior color marca).
+ * Depende de: andreani-core-variables
+ */
+
+.andr-card {
+	display: flex;
+	flex-direction: column;
+	background: var(--andr-color-surface);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-md);
+	overflow: hidden;
+}
+
+.andr-card--elevated {
+	border-color: transparent;
+	box-shadow: var(--andr-shadow-md);
+}
+
+.andr-card--flat {
+	border-radius: 0;
+	border-left: 0;
+	border-right: 0;
+}
+
+.andr-card--brand {
+	border-top: 3px solid var(--andr-color-brand);
+}
+
+.andr-card__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--andr-sp-3);
+	padding: var(--andr-sp-4) var(--andr-sp-5);
+	border-bottom: 1px solid var(--andr-color-border);
+	background: var(--andr-color-surface);
+}
+
+.andr-card__header--subtle {
+	background: var(--andr-color-surface-subtle);
+}
+
+.andr-card__title {
+	margin: 0;
+	font-family: var(--andr-font-display);
+	font-size: var(--andr-text-md);
+	font-weight: var(--andr-fw-semibold);
+	color: var(--andr-color-text-strong);
+}
+
+.andr-card__subtitle {
+	margin: var(--andr-sp-1) 0 0;
+	font-size: var(--andr-text-xs);
+	font-weight: var(--andr-fw-normal);
+	color: var(--andr-color-text-subtle);
+	line-height: var(--andr-leading-normal);
+}
+
+.andr-card__actions {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--andr-sp-2);
+	flex-shrink: 0;
+}
+
+.andr-card__body {
+	flex: 1;
+	padding: var(--andr-sp-4) var(--andr-sp-5);
+	font-size: var(--andr-text-sm);
+	line-height: var(--andr-leading-normal);
+	color: var(--andr-color-text);
+}
+
+.andr-card__body--compact {
+	padding: var(--andr-sp-3) var(--andr-sp-4);
+}
+
+.andr-card__body--spacious {
+	padding: var(--andr-sp-5) var(--andr-sp-6);
+}
+
+.andr-card__body--no-padding {
+	padding: 0;
+}
+
+.andr-card__footer {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--andr-sp-2);
+	padding: var(--andr-sp-3) var(--andr-sp-5);
+	border-top: 1px solid var(--andr-color-border);
+	background: var(--andr-color-surface-subtle);
+}
+
+.andr-card__footer--start    { justify-content: flex-start; }
+.andr-card__footer--between  { justify-content: space-between; }
+
+.andr-card-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--andr-sp-3);
+}
+
+.andr-card-group--horizontal {
+	flex-direction: row;
+	flex-wrap: wrap;
+}
