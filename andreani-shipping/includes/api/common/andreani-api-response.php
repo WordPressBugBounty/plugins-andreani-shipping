@@ -312,6 +312,32 @@ class Andreani_Api_Response {
 			$raw_depth  = Andreani_Order_Mapper::convert_dimension_to_cm( $product_data->get_length() );
 
 			if ( $weight <= 0 || $raw_width <= 0 || $raw_height <= 0 || $raw_depth <= 0 ) {
+				$faltantes = array();
+				if ( $weight <= 0 ) {
+					$faltantes[] = 'peso';
+				}
+				if ( $raw_width <= 0 ) {
+					$faltantes[] = 'ancho';
+				}
+				if ( $raw_height <= 0 ) {
+					$faltantes[] = 'alto';
+				}
+				if ( $raw_depth <= 0 ) {
+					$faltantes[] = 'largo';
+				}
+
+				$sku = $product_data->get_sku();
+
+				Andreani_Utils::andreani_log(
+					sprintf(
+						'[COTIZACION] No se cotiza el carrito: al producto "%s"%s le falta %s. Cargalos en el producto para que Andreani pueda cotizar.',
+						$product_data->get_name(),
+						$sku ? ' (SKU ' . $sku . ')' : '',
+						implode( ', ', $faltantes )
+					),
+					'error'
+				);
+
 				return array();
 			}
 

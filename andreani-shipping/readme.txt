@@ -5,7 +5,7 @@ Copyright: 2025 Andreani.com
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.6.5
+Stable tag: 1.6.6
 Contributors: integracionandreani
 Donate link:
 Tags: woocommerce, shipping, andreani, envio, etiquetas
@@ -321,6 +321,11 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 
 == Changelog ==
 
+= 1.6.6 =
+* Fix: Andreani vuelve a aparecer en el checkout cuando el carrito mezcla un producto grande (Bigger) con uno de paquetería. Antes, agregar cualquier producto chico a un carrito que ya tenía uno voluminoso hacía desaparecer la opción de envío sin ningún aviso; ahora el carrito se cotiza completo, como un único envío Bigger
+* Mejora: El botón "Actualizar contratos" ya no aparece duplicado. Queda solo en la pestaña "Servicios", que es donde ves y configurás tus contratos
+* Mejora: Si un producto del carrito no tiene el peso o alguna medida cargada, Andreani no puede cotizar y ahora te lo dice: en WooCommerce > Estado > Registros aparece qué producto es y qué dato le falta. Antes la opción de envío simplemente no aparecía y no había forma de saber por qué
+
 = 1.6.5 =
 * Fix: Validación incorrecta en la configuración del plugin
 
@@ -454,6 +459,9 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * Versión inicial publicada en el repositorio de WordPress
 
 == Upgrade Notice ==
+
+= 1.6.6 =
+Si vendés productos grandes junto con otros más chicos, Andreani vuelve a cotizar cuando el comprador los mezcla en el mismo carrito. La actualización es transparente y no tenés que configurar nada.
 
 = 1.6.5 =
 Corrige una validación incorrecta en la configuración del plugin.

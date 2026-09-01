@@ -518,7 +518,6 @@ class Andreani_Shipping extends WC_Shipping_Method {
 	}
 
 	private function render_bloque_credencial( $ctx ) {
-		$tiene_credencial = ! empty( $ctx['hash_andreani'] );
 		?>
 		<div class="andreani-section">
 			<h3 class="andreani-section-heading andreani-section-heading--with-icon">
@@ -532,18 +531,6 @@ class Andreani_Shipping extends WC_Shipping_Method {
 			<table class="form-table andreani-credencial-fields">
 				<?php $this->generate_settings_html( $ctx['credencial_fields'] ); ?>
 			</table>
-
-			<?php
-			$type_info = $tiene_credencial ? Andreani_Client_Type::from_id( $ctx['tipo_cliente'] ) : null;
-			if ( $type_info && $type_info->supports_contract_refresh() ) :
-				?>
-				<div class="andreani-cuenta-card__acciones andreani-cliente-info">
-					<button type="button" class="andr-btn andr-btn--ghost andr-btn--sm andreani-refresh-contratos" data-nonce="<?php echo esc_attr( wp_create_nonce( 'andreani_refresh_contratos' ) ); ?>">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-						<?php esc_html_e( 'Actualizar contratos', 'andreani-shipping' ); ?>
-					</button>
-				</div>
-			<?php endif; ?>
 		</div>
 		<?php
 	}
@@ -1554,42 +1541,7 @@ class Andreani_Shipping extends WC_Shipping_Method {
 		return $habilitados;
 	}
 
-	private function is_mixed_cart( $package ) {
-		if ( empty( $package['contents'] ) ) {
-			return false;
-		}
-
-		$has_bigger   = false;
-		$has_standard = false;
-
-		foreach ( $package['contents'] as $values ) {
-			$product = $values['data'];
-
-			if ( ! $product->needs_shipping() ) {
-				continue;
-			}
-
-			$product_id = $product->get_id();
-			if ( Andreani_Product_Bultos::is_bigger_product( $product_id ) ) {
-				$has_bigger = true;
-			} else {
-				$has_standard = true;
-			}
-
-			if ( $has_bigger && $has_standard ) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 	public function calculate_shipping( $package = array() ) {
-		if ( $this->is_mixed_cart( $package ) ) {
-			Andreani_Utils::andreani_log( '[COTIZACION] Carrito mixto (Bigger + paquetería estándar) — no se cotiza.', 'warning' );
-			return;
-		}
-
 		if ( isset( $package['destination']['postcode'] ) ) {
 			$package['destination']['postcode'] = Andreani_Postcode::normalize( $package['destination']['postcode'] );
 		}
