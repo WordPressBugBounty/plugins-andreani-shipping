@@ -112,6 +112,8 @@ class Andreani_Plugin {
         // las meta keys involucradas se tocan desde checkout, order y AJAX admin —
         // centralizar aca evita esparcir delete_transient() por todo el plugin.
         if ( class_exists( 'Andreani_Shipments_List' ) || $this->try_load_shipments_list() ) {
+            Andreani_Shipments_List::register_query_scope();
+
             add_action( 'updated_post_meta', array( 'Andreani_Shipments_List', 'invalidate_stats_cache' ), 10, 4 );
             add_action( 'added_post_meta',   array( 'Andreani_Shipments_List', 'invalidate_stats_cache' ), 10, 4 );
             add_action( 'deleted_post_meta', array( 'Andreani_Shipments_List', 'invalidate_stats_cache' ), 10, 4 );

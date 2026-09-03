@@ -643,10 +643,101 @@ class Andreani_Shipments_List extends WP_List_Table {
 		return $args;
 	}
 
+	private static function order_tables() {
+		global $wpdb;
+
+		// Identificadores de tabla/columna de este whitelist, nunca de input => interpolarlos es seguro.
+		if ( class_exists( 'Automattic\WooCommerce\Utilities\OrderUtil' )
+			&& Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled() ) {
+			return array(
+				'orders'     => "{$wpdb->prefix}wc_orders",
+				'meta'       => "{$wpdb->prefix}wc_orders_meta",
+				'id_col'     => 'id',
+				'fk_col'     => 'order_id',
+				'type_col'   => 'type',
+				'status_col' => 'status',
+			);
+		}
+
+		return array(
+			'orders'     => $wpdb->posts,
+			'meta'       => $wpdb->postmeta,
+			'id_col'     => 'ID',
+			'fk_col'     => 'post_id',
+			'type_col'   => 'post_type',
+			'status_col' => 'post_status',
+		);
+	}
+
+	private static function andreani_exists_sql( $order_id_expr ) {
+		global $wpdb;
+
+		return $wpdb->prepare(
+			"EXISTS (SELECT 1 FROM {$wpdb->prefix}woocommerce_order_items oi
+			 INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta oim ON oim.order_item_id = oi.order_item_id AND oim.meta_key = 'method_id' AND ( oim.meta_value = %s OR oim.meta_value LIKE %s )
+			 WHERE oi.order_id = {$order_id_expr} AND oi.order_item_type = 'shipping')",
+			ANDREANI_SHIPPING_METHOD_ID,
+			$wpdb->esc_like( ANDREANI_SHIPPING_METHOD_ID ) . ':%'
+		);
+	}
+
+	private static function andreani_orders_from_sql() {
+		global $wpdb;
+
+		$t        = self::order_tables();
+		$statuses = array_keys( wc_get_order_statuses() );
+		$in       = implode( ', ', array_fill( 0, count( $statuses ), '%s' ) );
+
+		return $wpdb->prepare(
+			"FROM {$t['orders']} o WHERE o.{$t['type_col']} = 'shop_order' AND o.{$t['status_col']} IN ( {$in} ) AND ",
+			$statuses
+		) . self::andreani_exists_sql( "o.{$t['id_col']}" );
+	}
+
+	private static function meta_exists_sql( $meta_key, $value_sql = '', $value_args = array() ) {
+		global $wpdb;
+
+		$t = self::order_tables();
+
+		return $wpdb->prepare(
+			"EXISTS (SELECT 1 FROM {$t['meta']} m WHERE m.{$t['fk_col']} = o.{$t['id_col']} AND m.meta_key = %s{$value_sql})",
+			array_merge( array( $meta_key ), $value_args )
+		);
+	}
+
+	private static function count_andreani_orders_sql( $where_sql = '' ) {
+		return 'SELECT COUNT(*) ' . self::andreani_orders_from_sql() . $where_sql;
+	}
+
+	public static function register_query_scope() {
+		add_filter( 'posts_where', array( __CLASS__, 'scope_posts_where' ), 10, 2 );
+		add_filter( 'woocommerce_orders_table_query_clauses', array( __CLASS__, 'scope_orders_table_clauses' ), 10, 3 );
+	}
+
+	public static function scope_posts_where( $where, $query ) {
+		global $wpdb;
+
+		if ( ! $query instanceof WP_Query || ! $query->get( 'andreani_only' ) ) {
+			return $where;
+		}
+
+		return $where . ' AND ' . self::andreani_exists_sql( "{$wpdb->posts}.ID" );
+	}
+
+	public static function scope_orders_table_clauses( $clauses, $query, $args ) {
+		if ( empty( $args['andreani_only'] ) || ! isset( $clauses['where'] ) ) {
+			return $clauses;
+		}
+
+		$clauses['where'] .= ' AND ' . self::andreani_exists_sql( $query->get_table_name( 'orders' ) . '.id' );
+
+		return $clauses;
+	}
+
 	/**
 	 * Conteo agregado de envios por estado para la stats bar.
 	 *
-	 * Cachea el resultado en un transient (5 min) para evitar 5 queries por cada
+	 * Cachea el resultado en un transient (5 min) para evitar las queries por cada
 	 * render de la pagina. La invalidacion se centraliza en `invalidate_stats_cache()`
 	 * (hookeada a `updated_post_meta`/`added_post_meta`/`deleted_post_meta` para las
 	 * meta keys relevantes), de modo que cualquier cambio sobre el estado de un
@@ -665,6 +756,8 @@ class Andreani_Shipments_List extends WP_List_Table {
 			return $cached;
 		}
 
+		global $wpdb;
+
 		$stats = array(
 			'pending'  => 0,
 			'awaiting' => 0,
@@ -674,35 +767,28 @@ class Andreani_Shipments_List extends WP_List_Table {
 			'total'    => 0,
 		);
 
-		$base_args = array(
-			'type'            => 'shop_order',
-			'limit'           => -1,
-			'shipping_method' => ANDREANI_SHIPPING_METHOD_ID,
-			'return'          => 'ids',
+		$stats['total'] = (int) $wpdb->get_var( self::count_andreani_orders_sql() );
+
+		$shipped_conditions = array();
+		foreach ( Andreani_Client_Type::all_shipped_meta_keys() as $shipped_key ) {
+			$shipped_conditions[] = self::meta_exists_sql( $shipped_key, ' AND m.meta_value = %s', array( '1' ) );
+		}
+		$stats['shipped'] = (int) $wpdb->get_var(
+			self::count_andreani_orders_sql( ' AND ( ' . implode( ' OR ', $shipped_conditions ) . ' )' )
 		);
 
-		$total_ids      = wc_get_orders( $base_args );
-		$stats['total'] = count( $total_ids );
-
-		$shipped_meta_query = array( 'relation' => 'OR' );
-		foreach ( Andreani_Client_Type::all_shipped_meta_keys() as $shipped_key ) {
-			$shipped_meta_query[] = array( 'key' => $shipped_key, 'value' => '1' );
-		}
-		$shipped_args = array_merge( $base_args, array( 'meta_query' => $shipped_meta_query ) );
-		$stats['shipped'] = count( wc_get_orders( $shipped_args ) );
+		$created_sql = self::meta_exists_sql( '_order_andreani_created', ' AND m.meta_value = %s', array( '1' ) );
 
 		$awaiting_count = 0;
 		$ready_count    = 0;
 		foreach ( Andreani_Client_Type::all() as $type ) {
-			$type_args = array_merge( $base_args, array(
-				'meta_query' => array(
-					'relation' => 'AND',
-					array( 'key' => '_order_andreani_created', 'value' => '1' ),
-					array( 'key' => '_order_andreani_client_type', 'value' => $type->id() ),
-					array( 'key' => $type->shipped_meta_key(), 'compare' => 'NOT EXISTS' ),
-				),
-			) );
-			$type_count = count( wc_get_orders( $type_args ) );
+			$type_count = (int) $wpdb->get_var(
+				self::count_andreani_orders_sql(
+					' AND ' . $created_sql
+					. ' AND ' . self::meta_exists_sql( '_order_andreani_client_type', ' AND m.meta_value = %s', array( $type->id() ) )
+					. ' AND NOT ' . self::meta_exists_sql( $type->shipped_meta_key() )
+				)
+			);
 			if ( $type->has_payment_step() ) {
 				$awaiting_count += $type_count;
 			} else {
@@ -712,35 +798,12 @@ class Andreani_Shipments_List extends WP_List_Table {
 		$stats['awaiting'] = $awaiting_count;
 		$stats['ready']    = $ready_count;
 
-		// `wc_get_orders` no soporta NOT EXISTS combinado con value='1' en una sola clave,
-		// así que filtramos client-side los IDs con `_andreani_last_error` para excluir los
-		// que ya tienen `_order_andreani_created=1`.
-		$with_error_args = array_merge( $base_args, array(
-			'meta_query' => array(
-				array(
-					'key'     => '_andreani_last_error',
-					'compare' => 'EXISTS',
-				),
-				array(
-					'key'     => '_andreani_last_error',
-					'value'   => '',
-					'compare' => '!=',
-				),
-			),
-		) );
-		$with_error_ids = wc_get_orders( $with_error_args );
-
-		$failed = 0;
-		foreach ( $with_error_ids as $oid ) {
-			$order = wc_get_order( $oid );
-			if ( ! $order ) {
-				continue;
-			}
-			if ( empty( $order->get_meta( '_order_andreani_created', true ) ) ) {
-				$failed++;
-			}
-		}
-		$stats['failed'] = $failed;
+		$stats['failed'] = (int) $wpdb->get_var(
+			self::count_andreani_orders_sql(
+				' AND ' . self::meta_exists_sql( '_andreani_last_error', " AND m.meta_value <> ''" )
+				. ' AND NOT ' . self::meta_exists_sql( '_order_andreani_created', " AND m.meta_value NOT IN ( '', '0' )" )
+			)
+		);
 
 		$pending = $stats['total'] - ( $stats['awaiting'] + $stats['ready'] + $stats['shipped'] + $stats['failed'] );
 		$stats['pending'] = max( 0, $pending );
@@ -831,10 +894,10 @@ class Andreani_Shipments_List extends WP_List_Table {
 
 	private function get_shipments_data( $args ) {
 		$orders_args = array(
-			'type'            => 'shop_order',
-			'orderby'         => 'date',
-			'order'           => 'DESC',
-			'shipping_method' => ANDREANI_SHIPPING_METHOD_ID,
+			'type'     => 'shop_order',
+			'orderby'       => 'date',
+			'order'         => 'DESC',
+			'andreani_only' => true,
 		);
 
 		$meta_conditions = array();
@@ -843,9 +906,9 @@ class Andreani_Shipments_List extends WP_List_Table {
 			$search = trim( $args['search'] );
 
 			if ( preg_match( '/^#?(\d+)-/', $search, $matches ) ) {
-				$orders_args['id'] = absint( $matches[1] );
+				$orders_args['post__in'] = array( absint( $matches[1] ) );
 			} elseif ( ctype_digit( $search ) && strlen( $search ) <= 8 ) {
-				$orders_args['id'] = absint( $search );
+				$orders_args['post__in'] = array( absint( $search ) );
 			} elseif ( ctype_digit( $search ) && strlen( $search ) > 8 ) {
 				$tracking_or = array( 'relation' => 'OR' );
 				foreach ( Andreani_Client_Type::all() as $type ) {

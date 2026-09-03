@@ -69,11 +69,11 @@ class Andreani_Shipment_Exporter {
 
 	private function query_orders( $filters ) {
 		$args = array(
-			'type'            => 'shop_order',
-			'limit'           => self::QUERY_LIMIT,
-			'orderby'         => 'date',
-			'order'           => 'DESC',
-			'shipping_method' => ANDREANI_SHIPPING_METHOD_ID,
+			'type'          => 'shop_order',
+			'limit'         => self::QUERY_LIMIT,
+			'orderby'       => 'date',
+			'order'         => 'DESC',
+			'andreani_only' => true,
 		);
 
 		if ( '' !== $filters['date_from'] ) {
@@ -87,7 +87,7 @@ class Andreani_Shipment_Exporter {
 
 		if ( '' !== $filters['search'] ) {
 			if ( is_numeric( $filters['search'] ) ) {
-				$args['id'] = absint( $filters['search'] );
+				$args['post__in'] = array( absint( $filters['search'] ) );
 			} else {
 				$meta_conditions[] = array(
 					'relation' => 'OR',
