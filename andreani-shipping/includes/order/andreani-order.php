@@ -10,6 +10,10 @@ require_once ANDREANI_PLUGIN_DIR . 'includes/order/andreani-tracking-display.php
 
 class Andreani_Order {
 
+    const ORDER_LOCK_PREFIX = 'andreani_order_lock_';
+
+    const ORDER_LOCK_TTL = 300;
+
     private static $instance = null;
 
     private function __construct() {
@@ -45,13 +49,56 @@ class Andreani_Order {
             return;
         }
 
-        $response = Andreani_Api_Manager::create_orden( $order_id );
-        if ( is_wp_error( $response ) ) {
-            Andreani_Utils::andreani_log( "[ORDEN #{$order_id}] Error al crear envio: " . $response->get_error_message(), 'error' );
-            $order->update_meta_data( '_andreani_last_error', $response->get_error_message() );
-            $order->save();
+        if ( ! self::acquire_order_lock( $order_id ) ) {
+            Andreani_Utils::andreani_log( "[ORDEN #{$order_id}] Alta ya en curso en otro request, se omite", 'info' );
             return;
         }
+
+        try {
+            $order = wc_get_order( $order_id );
+            if ( ! $order || $order->get_meta( '_order_andreani_created', true ) ) {
+                return;
+            }
+
+            $response = Andreani_Api_Manager::create_orden( $order_id );
+            if ( is_wp_error( $response ) ) {
+                Andreani_Utils::andreani_log( "[ORDEN #{$order_id}] Error al crear envio: " . $response->get_error_message(), 'error' );
+                $order->update_meta_data( '_andreani_last_error', $response->get_error_message() );
+                $order->save();
+                return;
+            }
+        } finally {
+            self::release_order_lock( $order_id );
+        }
+    }
+
+    /**
+     * El alta NO es idempotente: dos ejecuciones de `woocommerce_thankyou` sobre la misma orden
+     * (recarga de la pagina de gracias, redirect de la pasarela, prefetch del link) daban de alta
+     * dos envios, porque `_order_andreani_created` recien se escribe DESPUES del POST.
+     * `add_option` es el unico lock atomico de WP: inserta contra el indice unico de `option_name`
+     * y devuelve false si otro request llego primero. Un transient NO sirve aca: `get`+`set` es el
+     * mismo check-then-act que se esta arreglando.
+     */
+    private static function acquire_order_lock( $order_id ) {
+        $lock_key = self::ORDER_LOCK_PREFIX . $order_id;
+
+        if ( add_option( $lock_key, time(), '', false ) ) {
+            return true;
+        }
+
+        $locked_at = (int) get_option( $lock_key );
+        if ( $locked_at > 0 && ( time() - $locked_at ) > self::ORDER_LOCK_TTL ) {
+            Andreani_Utils::andreani_log( "[ORDEN #{$order_id}] Lock de alta vencido, se retoma", 'info' );
+            update_option( $lock_key, time(), false );
+            return true;
+        }
+
+        return false;
+    }
+
+    private static function release_order_lock( $order_id ) {
+        delete_option( self::ORDER_LOCK_PREFIX . $order_id );
     }
 
     public function display_dni_in_admin( $order ) {

@@ -213,6 +213,13 @@ class Andreani_Admin_Assets {
 			'bigger_thresholds'    => class_exists( 'Andreani_Product_Bultos' )
 				? Andreani_Product_Bultos::get_bigger_thresholds()
 				: array( 'weight' => 50, 'sum_sides' => 300, 'max_side' => 165 ),
+			'units'                => array(
+				'weight'    => get_option( 'woocommerce_weight_unit', 'kg' ),
+				'dimension' => get_option( 'woocommerce_dimension_unit', 'cm' ),
+			),
+			'cm_factor'            => class_exists( 'Andreani_Order_Mapper' )
+				? (float) Andreani_Order_Mapper::convert_cm_to_dimension_unit( 1 )
+				: 1.0,
 			'logo_path'           => 'M1852 2575 c-35 -8 -75 -16 -90 -18 -87 -14 -331 -87 -407 -122 -190 -87 -263 -126 -368 -197 -318 -214 -521 -466 -571 -711 -29 -137 -18 -233 40 -352 73 -154 253 -283 470 -340 150 -39 469 -43 674 -9 459 77 963 364 1209 687 244 321 252 631 22 854 -41 40 -78 73 -83 73 -5 0 -26 11 -47 25 -48 32 -176 82 -261 101 -96 22 -504 29 -588 9z m498 -95 c215 -32 400 -150 477 -308 36 -73 38 -80 38 -176 0 -56 -6 -123 -14 -151 -37 -132 -133 -277 -274 -411 -87 -84 -127 -110 -150 -101 -16 6 -37 71 -92 282 -111 431 -180 661 -204 689 -21 24 -59 43 -101 51 -46 8 -56 -3 -161 -180 -180 -306 -670 -1077 -712 -1122 -27 -30 -81 -30 -150 -1 -186 78 -299 217 -320 393 -9 70 -7 91 11 163 62 243 254 463 567 647 52 30 96 55 99 55 2 0 34 14 69 30 36 17 69 30 74 30 4 0 20 6 35 14 42 22 201 66 333 92 104 21 140 23 265 19 80 -3 174 -9 210 -15z m-428 -573 c29 -118 76 -320 82 -354 l6 -33 -195 0 c-107 0 -195 3 -195 7 0 14 274 462 280 457 3 -3 13 -38 22 -77z m-26 -516 l150 -1 17 -72 c38 -172 33 -193 -56 -233 -67 -29 -248 -74 -362 -91 -22 -3 -51 -7 -64 -9 -61 -10 -192 -17 -215 -11 -51 13 -51 38 -1 134 25 48 72 130 103 182 l57 95 65 5 c36 3 85 4 110 4 25 -1 113 -2 196 -3z',
 			'i18n'                => array(
 				'retry_loading'      => __( 'Reintentando...', 'andreani-shipping' ),
@@ -222,6 +229,8 @@ class Andreani_Admin_Assets {
 				'label_success'      => __( 'Etiqueta descargada correctamente.', 'andreani-shipping' ),
 				'label_error'        => __( 'Error al obtener la etiqueta.', 'andreani-shipping' ),
 				'copy_success'       => __( 'Copiado!', 'andreani-shipping' ),
+				'bulto_name_label'       => __( 'Referencia del bulto', 'andreani-shipping' ),
+				'bulto_name_placeholder' => __( 'Ej. Base de somier', 'andreani-shipping' ),
 				'network_error'      => __( 'Error de red. Intenta nuevamente.', 'andreani-shipping' ),
 				'bulk_pay_label'           => __( 'Pagar', 'andreani-shipping' ),
 				'bulk_labels_label'        => __( 'Descargar etiquetas', 'andreani-shipping' ),

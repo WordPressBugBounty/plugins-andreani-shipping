@@ -10,6 +10,7 @@
  * @var array $bultos     Bultos adicionales existentes.
  * @var bool  $is_bigger  Si el producto califica como Bigger.
  * @var bool  $has_bultos Si hay bultos guardados.
+ * @var bool  $has_apilado Si el producto tiene apilado configurado.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -35,6 +36,10 @@ $wc_dimension_unit = get_option( 'woocommerce_dimension_unit', 'cm' );
 		</span>
 	</div>
 
+	<div class="andreani-apilado-notice" id="andreani-bultos-apilado-notice" <?php echo $has_apilado ? '' : 'style="display:none;"'; ?>>
+		<?php esc_html_e( 'Este producto está configurado como apilable. Si cargás bultos adicionales el apilado deja de aplicarse: un producto viaja en varios bultos o se apila, pero no las dos cosas.', 'andreani-shipping' ); ?>
+	</div>
+
 	<div class="andreani-bultos-toggle-field">
 		<label for="andreani-bultos-toggle">
 			<input type="checkbox" id="andreani-bultos-toggle" <?php checked( $has_bultos ); ?>>
@@ -51,18 +56,22 @@ $wc_dimension_unit = get_option( 'woocommerce_dimension_unit', 'cm' );
 			<?php if ( $has_bultos ) : ?>
 				<?php foreach ( $bultos as $i => $bulto ) : ?>
 					<div class="andreani-bulto-row" data-index="<?php echo esc_attr( $i ); ?>">
-						<span class="andreani-bulto-label"><?php printf( esc_html__( 'Bulto %d', 'andreani-shipping' ), $i + 1 ); ?></span>
-						<label>
-							<?php printf( esc_html__( 'Ancho (%s)', 'andreani-shipping' ), esc_html( $wc_dimension_unit ) ); ?>
-							<input type="number" name="andreani_bulto_width[]" value="<?php echo esc_attr( $bulto['width'] ); ?>" step="any" min="0">
+						<span class="andreani-bulto-label"><?php printf( esc_html__( 'Bulto %d', 'andreani-shipping' ), $i + 2 ); ?></span>
+						<label class="andreani-bulto-row__name">
+							<?php esc_html_e( 'Referencia del bulto', 'andreani-shipping' ); ?>
+							<input type="text" name="andreani_bulto_name[]" value="<?php echo esc_attr( $bulto['name'] ); ?>" placeholder="<?php esc_attr_e( 'Ej. Base de somier', 'andreani-shipping' ); ?>" maxlength="120">
 						</label>
 						<label>
 							<?php printf( esc_html__( 'Alto (%s)', 'andreani-shipping' ), esc_html( $wc_dimension_unit ) ); ?>
 							<input type="number" name="andreani_bulto_height[]" value="<?php echo esc_attr( $bulto['height'] ); ?>" step="any" min="0">
 						</label>
 						<label>
-							<?php printf( esc_html__( 'Largo (%s)', 'andreani-shipping' ), esc_html( $wc_dimension_unit ) ); ?>
-							<input type="number" name="andreani_bulto_length[]" value="<?php echo esc_attr( $bulto['length'] ); ?>" step="any" min="0">
+							<?php printf( esc_html__( 'Ancho (%s)', 'andreani-shipping' ), esc_html( $wc_dimension_unit ) ); ?>
+							<input type="number" name="andreani_bulto_width[]" value="<?php echo esc_attr( $bulto['width'] ); ?>" step="any" min="0">
+						</label>
+						<label>
+							<?php printf( esc_html__( 'Profundidad (%s)', 'andreani-shipping' ), esc_html( $wc_dimension_unit ) ); ?>
+							<input type="number" name="andreani_bulto_depth[]" value="<?php echo esc_attr( $bulto['depth'] ); ?>" step="any" min="0">
 						</label>
 						<label>
 							<?php printf( esc_html__( 'Peso (%s)', 'andreani-shipping' ), esc_html( $wc_weight_unit ) ); ?>
@@ -83,17 +92,21 @@ $wc_dimension_unit = get_option( 'woocommerce_dimension_unit', 'cm' );
 <script type="text/html" id="tmpl-andreani-bulto-row">
 	<div class="andreani-bulto-row" data-index="{{data.index}}">
 		<span class="andreani-bulto-label"><?php esc_html_e( 'Bulto', 'andreani-shipping' ); ?> {{data.number}}</span>
-		<label>
-			<?php printf( esc_html__( 'Ancho (%s)', 'andreani-shipping' ), esc_html( $wc_dimension_unit ) ); ?>
-			<input type="number" name="andreani_bulto_width[]" value="" step="any" min="0">
+		<label class="andreani-bulto-row__name">
+			<?php esc_html_e( 'Referencia del bulto', 'andreani-shipping' ); ?>
+			<input type="text" name="andreani_bulto_name[]" value="" placeholder="<?php esc_attr_e( 'Ej. Base de somier', 'andreani-shipping' ); ?>" maxlength="120">
 		</label>
 		<label>
 			<?php printf( esc_html__( 'Alto (%s)', 'andreani-shipping' ), esc_html( $wc_dimension_unit ) ); ?>
 			<input type="number" name="andreani_bulto_height[]" value="" step="any" min="0">
 		</label>
 		<label>
-			<?php printf( esc_html__( 'Largo (%s)', 'andreani-shipping' ), esc_html( $wc_dimension_unit ) ); ?>
-			<input type="number" name="andreani_bulto_length[]" value="" step="any" min="0">
+			<?php printf( esc_html__( 'Ancho (%s)', 'andreani-shipping' ), esc_html( $wc_dimension_unit ) ); ?>
+			<input type="number" name="andreani_bulto_width[]" value="" step="any" min="0">
+		</label>
+		<label>
+			<?php printf( esc_html__( 'Profundidad (%s)', 'andreani-shipping' ), esc_html( $wc_dimension_unit ) ); ?>
+			<input type="number" name="andreani_bulto_depth[]" value="" step="any" min="0">
 		</label>
 		<label>
 			<?php printf( esc_html__( 'Peso (%s)', 'andreani-shipping' ), esc_html( $wc_weight_unit ) ); ?>

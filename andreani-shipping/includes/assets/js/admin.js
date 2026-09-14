@@ -2847,6 +2847,11 @@
         if (!Array.isArray(bultos)) bultos = [];
         self.renderCards(bultos);
 
+        let apilado = $btn.attr('data-apilado-json');
+        try { apilado = apilado ? JSON.parse(apilado) : {}; } catch (e) { apilado = {}; }
+        if (!apilado || typeof apilado !== 'object' || Array.isArray(apilado)) apilado = {};
+        self.renderApilado(apilado);
+
         self.$modal.show();
       });
 
@@ -2868,23 +2873,38 @@
         '#andreani-edit-weight, #andreani-edit-length, #andreani-edit-width, #andreani-edit-height, .andreani-bulto-card input',
         () => self.recalcBadge());
 
+      this.$modal.on('change', '#andreani-edit-apilado-toggle', function() {
+        if (!this.checked) self.$modal.find('#andreani-edit-apilado-fields input').val('');
+        self.syncApilado();
+      });
+
+      this.$modal.on('input', '#andreani-edit-apilado-fields input', () => self.syncApilado());
+
       $('#andreani-product-edit-save').on('click', () => this.save());
     },
 
     cardHtml(index, b) {
       b = b || {};
       const v = (x) => (x === undefined || x === null) ? '' : x;
+      const u = this.config.units || { weight: 'kg', dimension: 'cm' };
+      const i18n = this.config.i18n || {};
+      const nameLabel = i18n.bulto_name_label || 'Referencia del bulto';
+      const namePlaceholder = i18n.bulto_name_placeholder || 'Ej. Base de somier';
       return ''
         + '<div class="andreani-bulto-card">'
         +   '<div class="andreani-bulto-card__head">'
-        +     '<span class="andreani-bulto-card__title">Bulto ' + (index + 1) + '</span>'
+        +     '<span class="andreani-bulto-card__title">Bulto ' + (index + 2) + '</span>'
         +     '<button type="button" class="andreani-bulto-card__remove" aria-label="Eliminar bulto">&times;</button>'
         +   '</div>'
+        +   '<label class="andreani-bulto-card__field andreani-bulto-card__field--name">'
+        +     '<span>' + escapeHtml(nameLabel) + '</span>'
+        +     '<input type="text" class="b-name" maxlength="120" placeholder="' + escapeAttr(namePlaceholder) + '" value="' + escapeAttr(v(b.name)) + '">'
+        +   '</label>'
         +   '<div class="andreani-bulto-card__grid">'
-        +     '<label class="andreani-bulto-card__field"><span>Peso (kg)</span><input type="number" class="b-weight" min="0" step="0.001" value="' + v(b.weight) + '"></label>'
-        +     '<label class="andreani-bulto-card__field"><span>Largo (cm)</span><input type="number" class="b-length" min="0" step="0.01" value="' + v(b.length) + '"></label>'
-        +     '<label class="andreani-bulto-card__field"><span>Ancho (cm)</span><input type="number" class="b-width" min="0" step="0.01" value="' + v(b.width) + '"></label>'
-        +     '<label class="andreani-bulto-card__field"><span>Alto (cm)</span><input type="number" class="b-height" min="0" step="0.01" value="' + v(b.height) + '"></label>'
+        +     '<label class="andreani-bulto-card__field"><span>Alto (' + escapeHtml(u.dimension) + ')</span><input type="number" class="b-height" min="0" step="0.01" value="' + v(b.height) + '"></label>'
+        +     '<label class="andreani-bulto-card__field"><span>Ancho (' + escapeHtml(u.dimension) + ')</span><input type="number" class="b-width" min="0" step="0.01" value="' + v(b.width) + '"></label>'
+        +     '<label class="andreani-bulto-card__field"><span>Profundidad (' + escapeHtml(u.dimension) + ')</span><input type="number" class="b-depth" min="0" step="0.01" value="' + v(b.depth) + '"></label>'
+        +     '<label class="andreani-bulto-card__field"><span>Peso (' + escapeHtml(u.weight) + ')</span><input type="number" class="b-weight" min="0" step="0.001" value="' + v(b.weight) + '"></label>'
         +   '</div>'
         + '</div>';
     },
@@ -2904,12 +2924,12 @@
 
     afterChange() {
       $('#andreani-bultos-cards .andreani-bulto-card').each(function(i) {
-        $(this).find('.andreani-bulto-card__title').text('Bulto ' + (i + 1));
+        $(this).find('.andreani-bulto-card__title').text('Bulto ' + (i + 2));
       });
       const n = $('#andreani-bultos-cards .andreani-bulto-card').length;
       $('#andreani-bultos-count').text(n);
       $('#andreani-bultos-minus').prop('disabled', n === 0);
-      this.recalcBadge();
+      this.syncApilado();
     },
 
     collectBultos() {
@@ -2917,13 +2937,54 @@
       $('#andreani-bultos-cards .andreani-bulto-card').each(function() {
         const $c = $(this);
         bultos.push({
-          length: parseFloat($c.find('.b-length').val()) || 0,
-          width:  parseFloat($c.find('.b-width').val())  || 0,
+          name:   ($c.find('.b-name').val() || '').trim(),
           height: parseFloat($c.find('.b-height').val()) || 0,
+          width:  parseFloat($c.find('.b-width').val())  || 0,
+          depth:  parseFloat($c.find('.b-depth').val())  || 0,
           weight: parseFloat($c.find('.b-weight').val()) || 0,
         });
       });
       return bultos;
+    },
+
+    renderApilado(apilado) {
+      const valid = this.isValidApilado(apilado);
+      $('#andreani-edit-apilado-toggle').prop('checked', valid);
+      $('#andreani-edit-apilado-max-units').val(valid ? apilado.maxStackableUnits : '');
+      $('#andreani-edit-apilado-inc-height').val(valid ? apilado.unitIncrementHeight : '');
+      $('#andreani-edit-apilado-inc-width').val(valid ? apilado.unitIncrementWidth : '');
+      $('#andreani-edit-apilado-inc-depth').val(valid ? apilado.unitIncrementDepth : '');
+      this.syncApilado();
+    },
+
+    isValidApilado(a) {
+      if (!a) return false;
+      const maxUnits = parseInt(a.maxStackableUnits, 10) || 0;
+      const incH = parseFloat(a.unitIncrementHeight) || 0;
+      const incW = parseFloat(a.unitIncrementWidth) || 0;
+      const incD = parseFloat(a.unitIncrementDepth) || 0;
+      return maxUnits >= 2 && (incH > 0 || incW > 0 || incD > 0);
+    },
+
+    collectApilado() {
+      if (!$('#andreani-edit-apilado-toggle').is(':checked')) return null;
+      const a = {
+        maxStackableUnits:   parseInt($('#andreani-edit-apilado-max-units').val(), 10) || 0,
+        unitIncrementHeight: parseFloat($('#andreani-edit-apilado-inc-height').val()) || 0,
+        unitIncrementWidth:  parseFloat($('#andreani-edit-apilado-inc-width').val()) || 0,
+        unitIncrementDepth:  parseFloat($('#andreani-edit-apilado-inc-depth').val()) || 0,
+      };
+      return this.isValidApilado(a) ? a : null;
+    },
+
+    syncApilado() {
+      const hasBultos = $('#andreani-bultos-cards .andreani-bulto-card').length > 0;
+      const checked = $('#andreani-edit-apilado-toggle').is(':checked');
+      $('#andreani-edit-apilado-lock').toggle(hasBultos);
+      $('#andreani-edit-apilado-toggle').prop('disabled', hasBultos);
+      $('#andreani-edit-apilado-fields').toggle(checked && !hasBultos)
+        .find('input').prop('disabled', hasBultos);
+      this.recalcBadge();
     },
 
     recalcBadge() {
@@ -2937,11 +2998,25 @@
         parseFloat($('#andreani-edit-width').val())  || 0,
         parseFloat($('#andreani-edit-height').val()) || 0
       );
-      this.collectBultos().forEach((b) => {
+      const bultos = this.collectBultos();
+      const apilado = bultos.length === 0 ? this.collectApilado() : null;
+
+      if (apilado) {
+        const extra = apilado.maxStackableUnits - 1;
+        const cmFactor = (this.config && this.config.cm_factor) || 1;
+        const pilaL = (parseFloat($('#andreani-edit-length').val()) || 0) + apilado.unitIncrementDepth * cmFactor * extra;
+        const pilaW = (parseFloat($('#andreani-edit-width').val()) || 0) + apilado.unitIncrementWidth * cmFactor * extra;
+        const pilaH = (parseFloat($('#andreani-edit-height').val()) || 0) + apilado.unitIncrementHeight * cmFactor * extra;
+        totalWeight = (parseFloat($('#andreani-edit-weight').val()) || 0) * apilado.maxStackableUnits;
+        maxSumSides = pilaL + pilaW + pilaH;
+        maxSide = Math.max(pilaL, pilaW, pilaH);
+      }
+
+      bultos.forEach((b) => {
         totalWeight += b.weight;
-        const sum = b.length + b.width + b.height;
+        const sum = b.depth + b.width + b.height;
         if (sum > maxSumSides) maxSumSides = sum;
-        const ms = Math.max(b.length, b.width, b.height);
+        const ms = Math.max(b.depth, b.width, b.height);
         if (ms > maxSide) maxSide = ms;
       });
       const isBigger = totalWeight > t.weight || maxSumSides > t.sum_sides || maxSide > t.max_side;
@@ -2969,6 +3044,7 @@
         width:       $('#andreani-edit-width').val(),
         height:      $('#andreani-edit-height').val(),
         bultos_json: JSON.stringify(this.collectBultos()),
+        apilado_json: JSON.stringify(this.collectApilado() || {}),
       })
         .done((res) => {
           if (res.success) {

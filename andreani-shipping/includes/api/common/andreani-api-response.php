@@ -341,10 +341,6 @@ class Andreani_Api_Response {
 				return array();
 			}
 
-			$width  = max( 1, (int) round( $raw_width ) );
-			$height = max( 1, (int) round( $raw_height ) );
-			$depth  = max( 1, (int) round( $raw_depth ) );
-
 			$price = $mostrar_sin_decimales ? round( floatval( $product_data->get_price() ) ) : floatval( $product_data->get_price() );
 
 			$product_id         = $product_data->get_id();
@@ -357,39 +353,44 @@ class Andreani_Api_Response {
 			$total_bultos    = 1 + count( $bultos_adicionales );
 			$price_per_bulto = (int) ( $price / $total_bultos );
 
-			$products[] = array(
-				'quantity'   => (int) $values['quantity'],
-				'price'      => $price_per_bulto,
-				'dimensions' => array(
-					'width'  => $width,
-					'height' => $height,
-					'depth'  => $depth,
-					'grams'  => Andreani_Order_Mapper::convert_weight_to_unit( $product_data->get_weight(), 'gr' ),
-				),
-			);
+			$apilado = Andreani_Package_Builder::resolve_apilado( $product_data );
+			$apila   = ! empty( $apilado );
+
+			foreach ( Andreani_Package_Builder::build( $product_data, (int) $values['quantity'] ) as $bulto ) {
+				$units = (int) $bulto['units'];
+
+				$products[] = array(
+					'quantity'   => $apila ? 1 : $units,
+					'price'      => $apila ? (int) ( $price_per_bulto * $units ) : $price_per_bulto,
+					'dimensions' => array(
+						'width'  => max( 1, (int) round( $bulto['width'] ) ),
+						'height' => max( 1, (int) round( $bulto['height'] ) ),
+						'depth'  => max( 1, (int) round( $bulto['depth'] ) ),
+						'grams'  => $apila
+							? $bulto['weight_kg'] * 1000
+							: Andreani_Order_Mapper::convert_weight_to_unit( $product_data->get_weight(), 'gr' ),
+					),
+				);
+			}
 
 			foreach ( $bultos_adicionales as $bulto ) {
-				$b_raw_width  = Andreani_Order_Mapper::convert_dimension_to_cm( $bulto['width'] );
-				$b_raw_height = Andreani_Order_Mapper::convert_dimension_to_cm( $bulto['height'] );
-				$b_raw_depth  = Andreani_Order_Mapper::convert_dimension_to_cm( $bulto['length'] );
-				$b_weight     = floatval( $bulto['weight'] );
+				$b_raw_width  = floatval( $bulto['width'] );
+				$b_raw_height = floatval( $bulto['height'] );
+				$b_raw_depth  = floatval( $bulto['depth'] );
+				$b_grams      = floatval( $bulto['weight'] );
 
-				if ( $b_raw_width <= 0 || $b_raw_height <= 0 || $b_raw_depth <= 0 || $b_weight <= 0 ) {
+				if ( $b_raw_width <= 0 || $b_raw_height <= 0 || $b_raw_depth <= 0 || $b_grams <= 0 ) {
 					continue;
 				}
-
-				$b_width  = max( 1, (int) round( $b_raw_width ) );
-				$b_height = max( 1, (int) round( $b_raw_height ) );
-				$b_depth  = max( 1, (int) round( $b_raw_depth ) );
 
 				$products[] = array(
 					'quantity'   => (int) $values['quantity'],
 					'price'      => $price_per_bulto,
 					'dimensions' => array(
-						'width'  => $b_width,
-						'height' => $b_height,
-						'depth'  => $b_depth,
-						'grams'  => Andreani_Order_Mapper::convert_weight_to_unit( $b_weight, 'gr' ),
+						'width'  => max( 1, (int) round( $b_raw_width ) ),
+						'height' => max( 1, (int) round( $b_raw_height ) ),
+						'depth'  => max( 1, (int) round( $b_raw_depth ) ),
+						'grams'  => $b_grams,
 					),
 				);
 			}

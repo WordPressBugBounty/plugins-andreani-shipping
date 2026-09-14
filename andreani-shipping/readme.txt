@@ -5,7 +5,7 @@ Copyright: 2025 Andreani.com
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.6.7
+Stable tag: 1.6.8
 Contributors: integracionandreani
 Donate link:
 Tags: woocommerce, shipping, andreani, envio, etiquetas
@@ -320,6 +320,13 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * El checkbox *Forzar carga de assets*: **sigue funcionando** pero casi nunca es necesario. Úsalo solo como último recurso.
 
 == Changelog ==
+
+= 1.6.8 =
+* Nuevo: Apilado de bultos. Si vendés productos que se encastran entre sí (sillas, macetas, cajones), ahora podés indicar hasta cuántas unidades entran en una pila y cuánto crece esa pila por cada unidad adicional. Cuando alguien compra varias, el envío se cotiza y se despacha como una sola pila en lugar de una unidad suelta por producto
+* Nuevo: Lo configurás en la ficha del producto, pestaña "Envío", o desde "Ver mis productos" si querés cargarlo variación por variación. Un producto se envía en varios bultos o se apila, pero no las dos cosas: si tiene bultos adicionales cargados, el panel te lo avisa y el apilado no se aplica
+* Mejora: La etiqueta "Bigger" ahora contempla la pila completa. Antes, un producto apilable que superaba los límites recién al apilarse figuraba como "Paquete común"
+* Fix: Un mismo pedido ya no puede generar dos envíos. Si el comprador recargaba la página de gracias, o la pasarela de pago avisaba dos veces, el pedido se daba de alta dos veces y quedaban dos números de seguimiento para la misma venta
+* Fix: Los clientes con cuenta corporativa vuelven a ver la opción Bigger en el checkout. Si el contrato Bigger se había dado de alta después de la última vez que la tienda se conectó con Andreani, el checkout mostraba el resto de las opciones pero nunca Bigger, sin ningún aviso. Ahora los contratos se interpretan en cada cotización, así que la opción aparece sin necesidad de volver a conectar la cuenta
 
 = 1.6.7 =
 * Fix: "Ver mis envíos" volvía a cargar muy lento, o directamente fallaba por tiempo, en tiendas con muchos pedidos. Las estadísticas y el listado ahora solo recorren los pedidos enviados con Andreani

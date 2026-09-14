@@ -110,6 +110,12 @@ class Andreani_Products_List {
 			? Andreani_Product_Bultos::get_bultos( $product_id )
 			: array();
 
+		$apilado = array();
+		if ( empty( $bultos_adicionales ) && class_exists( 'Andreani_Product_Apilado' ) ) {
+			$candidato = Andreani_Product_Apilado::get_apilado( $product_id );
+			$apilado   = Andreani_Product_Apilado::is_valid( $candidato ) ? $candidato : array();
+		}
+
 		$edit_url = $product->is_type( 'variation' )
 			? get_edit_post_link( $product->get_parent_id(), 'raw' )
 			: get_edit_post_link( $product_id, 'raw' );
@@ -130,7 +136,10 @@ class Andreani_Products_List {
 			'width'        => $width,
 			'height'       => $height,
 			'bultos'       => count( $bultos_adicionales ),
-			'bultos_data'  => array_values( $bultos_adicionales ),
+			'bultos_data'  => class_exists( 'Andreani_Product_Bultos' )
+				? Andreani_Product_Bultos::to_store_units( $bultos_adicionales )
+				: array(),
+			'apilado'      => $apilado,
 			'missing_dims'   => $missing_dims,
 			'missing_weight' => $missing_weight,
 			'is_bigger'      => $is_bigger,

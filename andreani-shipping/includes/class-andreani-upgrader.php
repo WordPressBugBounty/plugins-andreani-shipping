@@ -24,6 +24,7 @@ class Andreani_Upgrader {
 		'1.5.0' => 'upgrade_1_5_0',
 		'1.5.2' => 'upgrade_1_5_2',
 		'1.6.4' => 'upgrade_1_6_4',
+		'1.6.8' => 'upgrade_1_6_8',
 	);
 
 	public static function maybe_upgrade() {
@@ -649,5 +650,206 @@ class Andreani_Upgrader {
 			"Instancias revisadas: {$revisadas}, CP origen normalizados: {$normalizadas}",
 			'info'
 		);
+	}
+
+	/**
+	 * Migración v1.6.8: los bultos adicionales pasan al formato canónico del
+	 * maestro de productos — `length` se llama `depth`, cada bulto lleva una
+	 * referencia obligatoria y las medidas quedan en cm y gramos en vez de en la
+	 * unidad configurada en la tienda.
+	 *
+	 * Recorre `postmeta` directo: un `meta_query` sobre el CPT de productos satura
+	 * MySQL en tiendas grandes.
+	 *
+	 * 100% offline — no hace requests HTTP.
+	 */
+	private static function upgrade_1_6_8() {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT post_id, meta_value
+				FROM {$wpdb->postmeta}
+				WHERE meta_key = %s
+				AND meta_value != ''",
+				Andreani_Product_Bultos::META_KEY
+			)
+		);
+
+		if ( empty( $rows ) ) {
+			Andreani_Utils::andreani_log( '[UPGRADE 1.6.8] No se encontraron productos con bultos adicionales', 'info' );
+			return;
+		}
+
+		$factor_cm     = (float) Andreani_Order_Mapper::convert_dimension_to_cm( 1 );
+		$factor_gramos = (float) Andreani_Order_Mapper::convert_weight_to_unit( 1, 'gr' );
+
+		$migrados = 0;
+
+		foreach ( $rows as $row ) {
+			$canonicos = self::migrate_bultos_to_canonical( $row->meta_value, $factor_cm, $factor_gramos );
+
+			if ( null === $canonicos ) {
+				continue;
+			}
+
+			update_post_meta( (int) $row->post_id, Andreani_Product_Bultos::META_KEY, wp_slash( wp_json_encode( $canonicos ) ) );
+			$migrados++;
+		}
+
+		Andreani_Utils::andreani_log( "[UPGRADE 1.6.8] {$migrados} producto(s) con bultos adicionales migrados al formato canónico", 'info' );
+
+		self::migrate_apilado_keys();
+	}
+
+	/**
+	 * Pasa la configuración de apilado a los nombres del maestro de productos.
+	 *
+	 * El apilado nació y se renombró dentro de la misma versión, así que ninguna
+	 * tienda publicada tiene el formato viejo: esto existe para los entornos que
+	 * probaron la rama antes del renombre, donde el apilado dejaría de aplicarse
+	 * en silencio.
+	 */
+	private static function migrate_apilado_keys() {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT post_id, meta_value
+				FROM {$wpdb->postmeta}
+				WHERE meta_key = %s
+				AND meta_value != ''",
+				Andreani_Product_Apilado::META_KEY
+			)
+		);
+
+		if ( empty( $rows ) ) {
+			return;
+		}
+
+		$migrados = 0;
+
+		foreach ( $rows as $row ) {
+			$config = self::migrate_apilado_to_master_keys( $row->meta_value );
+
+			if ( null === $config ) {
+				continue;
+			}
+
+			update_post_meta( (int) $row->post_id, Andreani_Product_Apilado::META_KEY, wp_slash( wp_json_encode( $config ) ) );
+			$migrados++;
+		}
+
+		Andreani_Utils::andreani_log( "[UPGRADE 1.6.8] {$migrados} producto(s) con apilado migrados a los nombres del maestro", 'info' );
+	}
+
+	/**
+	 * Renombra las claves del apilado al contrato del maestro. Pura y sin
+	 * WordPress para poder testearla; devuelve null cuando no hay nada que
+	 * migrar, que es lo que sostiene la idempotencia.
+	 *
+	 * @param string $json Valor crudo de la meta de apilado.
+	 * @return array|null Config con los nombres nuevos, o null si no aplica.
+	 */
+	public static function migrate_apilado_to_master_keys( $json ) {
+		$config = json_decode( (string) $json, true );
+
+		if ( ! is_array( $config ) || empty( $config ) ) {
+			return null;
+		}
+
+		$mapa = array(
+			'max_units'  => 'maxStackableUnits',
+			'inc_height' => 'unitIncrementHeight',
+			'inc_width'  => 'unitIncrementWidth',
+			'inc_depth'  => 'unitIncrementDepth',
+		);
+
+		$migrado = array();
+
+		foreach ( $mapa as $viejo => $nuevo ) {
+			if ( isset( $config[ $nuevo ] ) ) {
+				$migrado[ $nuevo ] = $config[ $nuevo ];
+				continue;
+			}
+
+			if ( ! isset( $config[ $viejo ] ) ) {
+				return null;
+			}
+
+			$migrado[ $nuevo ] = $config[ $viejo ];
+		}
+
+		return $migrado === $config ? null : $migrado;
+	}
+
+	/**
+	 * Pasa los bultos adicionales de un producto al formato canónico. Es pura y
+	 * sin WordPress a propósito: recibe los factores de conversión ya resueltos
+	 * para que el upgrader la pueda testear sin levantar la tienda.
+	 *
+	 * @param string $json          Valor crudo de la meta de bultos adicionales.
+	 * @param float  $factor_cm     Centímetros que vale una unidad de dimensión de la tienda.
+	 * @param float  $factor_gramos Gramos que vale una unidad de peso de la tienda.
+	 * @return array|null Bultos canónicos, o null si no hay nada que migrar.
+	 */
+	public static function migrate_bultos_to_canonical( $json, $factor_cm, $factor_gramos ) {
+		$bultos = json_decode( (string) $json, true );
+
+		if ( ! is_array( $bultos ) || empty( $bultos ) ) {
+			return null;
+		}
+
+		$canonicos = array();
+		$cambio    = false;
+
+		foreach ( array_values( $bultos ) as $position => $bulto ) {
+			if ( ! is_array( $bulto ) ) {
+				$cambio = true;
+				continue;
+			}
+
+			// `depth` es la marca de que el bulto ya está en cm y gramos: sin este
+			// corte una corrida repetida lo multiplicaría por el factor otra vez.
+			$en_unidad_tienda = ! isset( $bulto['depth'] );
+
+			$height = isset( $bulto['height'] ) ? (float) $bulto['height'] : 0.0;
+			$width  = isset( $bulto['width'] ) ? (float) $bulto['width'] : 0.0;
+			$weight = isset( $bulto['weight'] ) ? (float) $bulto['weight'] : 0.0;
+			$depth  = $en_unidad_tienda
+				? ( isset( $bulto['length'] ) ? (float) $bulto['length'] : 0.0 )
+				: (float) $bulto['depth'];
+
+			if ( $en_unidad_tienda ) {
+				$height *= (float) $factor_cm;
+				$width  *= (float) $factor_cm;
+				$depth  *= (float) $factor_cm;
+				$weight *= (float) $factor_gramos;
+				$cambio  = true;
+			}
+
+			$name = isset( $bulto['name'] ) ? trim( (string) $bulto['name'] ) : '';
+
+			if ( '' === $name ) {
+				$name   = 'Bulto ' . ( $position + 2 );
+				$cambio = true;
+			}
+
+			$canonicos[] = array(
+				'name'   => $name,
+				'height' => $height,
+				'width'  => $width,
+				'depth'  => $depth,
+				'weight' => $weight,
+			);
+		}
+
+		if ( ! $cambio || empty( $canonicos ) ) {
+			return null;
+		}
+
+		return $canonicos;
 	}
 }

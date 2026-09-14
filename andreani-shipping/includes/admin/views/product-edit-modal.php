@@ -6,6 +6,9 @@
  */
 
 defined( 'ABSPATH' ) || exit;
+
+$wc_weight_unit    = get_option( 'woocommerce_weight_unit', 'kg' );
+$wc_dimension_unit = get_option( 'woocommerce_dimension_unit', 'cm' );
 ?>
 <div id="andreani-product-edit-modal" class="andr-modal andreani-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="andreani-product-edit-modal-title">
 	<div class="andr-modal__backdrop andreani-modal__backdrop"></div>
@@ -24,19 +27,19 @@ defined( 'ABSPATH' ) || exit;
 
 			<div class="andreani-product-dims">
 				<label class="andreani-product-dims__field">
-					<span class="andreani-product-dims__label"><?php esc_html_e( 'Peso (kg)', 'andreani-shipping' ); ?></span>
+					<span class="andreani-product-dims__label"><?php printf( esc_html__( 'Peso (%s)', 'andreani-shipping' ), esc_html( $wc_weight_unit ) ); ?></span>
 					<input type="number" id="andreani-edit-weight" class="regular-text" min="0" step="0.001" placeholder="0.000" />
 				</label>
 				<label class="andreani-product-dims__field">
-					<span class="andreani-product-dims__label"><?php esc_html_e( 'Largo (cm)', 'andreani-shipping' ); ?></span>
+					<span class="andreani-product-dims__label"><?php printf( esc_html__( 'Largo (%s)', 'andreani-shipping' ), esc_html( $wc_dimension_unit ) ); ?></span>
 					<input type="number" id="andreani-edit-length" class="regular-text" min="0" step="0.01" placeholder="0.00" />
 				</label>
 				<label class="andreani-product-dims__field">
-					<span class="andreani-product-dims__label"><?php esc_html_e( 'Ancho (cm)', 'andreani-shipping' ); ?></span>
+					<span class="andreani-product-dims__label"><?php printf( esc_html__( 'Ancho (%s)', 'andreani-shipping' ), esc_html( $wc_dimension_unit ) ); ?></span>
 					<input type="number" id="andreani-edit-width" class="regular-text" min="0" step="0.01" placeholder="0.00" />
 				</label>
 				<label class="andreani-product-dims__field">
-					<span class="andreani-product-dims__label"><?php esc_html_e( 'Alto (cm)', 'andreani-shipping' ); ?></span>
+					<span class="andreani-product-dims__label"><?php printf( esc_html__( 'Alto (%s)', 'andreani-shipping' ), esc_html( $wc_dimension_unit ) ); ?></span>
 					<input type="number" id="andreani-edit-height" class="regular-text" min="0" step="0.01" placeholder="0.00" />
 				</label>
 			</div>
@@ -54,6 +57,38 @@ defined( 'ABSPATH' ) || exit;
 					<span class="andreani-bultos-stepper__label"><?php esc_html_e( 'bultos adicionales', 'andreani-shipping' ); ?></span>
 				</div>
 				<div id="andreani-bultos-cards" class="andreani-bultos-cards"></div>
+			</div>
+
+			<div class="andreani-bultos-block andreani-apilado-block">
+				<div class="andreani-bultos-block__head">
+					<span class="andreani-bultos-block__title"><?php esc_html_e( 'Apilado de bultos', 'andreani-shipping' ); ?></span>
+				</div>
+				<div class="andr-badge andr-badge--warning andreani-apilado-block__lock" id="andreani-edit-apilado-lock" style="display:none;">
+					<?php esc_html_e( 'No se puede apilar mientras el producto tenga bultos adicionales.', 'andreani-shipping' ); ?>
+				</div>
+				<label class="andreani-apilado-block__toggle">
+					<input type="checkbox" id="andreani-edit-apilado-toggle" />
+					<span><?php esc_html_e( '¿Es un bulto apilable?', 'andreani-shipping' ); ?></span>
+				</label>
+				<div id="andreani-edit-apilado-fields" class="andreani-apilado-grid">
+					<label class="andreani-product-dims__field">
+						<span class="andreani-product-dims__label"><?php esc_html_e( 'Límite unidades apilables', 'andreani-shipping' ); ?></span>
+						<input type="number" id="andreani-edit-apilado-max-units" class="regular-text" min="2" step="1" placeholder="6" />
+					</label>
+					<label class="andreani-product-dims__field">
+						<span class="andreani-product-dims__label"><?php esc_html_e( 'Aumenta alto (cm)', 'andreani-shipping' ); ?></span>
+						<input type="number" id="andreani-edit-apilado-inc-height" class="regular-text" min="0" step="0.01" placeholder="0.00" />
+					</label>
+					<label class="andreani-product-dims__field">
+						<span class="andreani-product-dims__label"><?php esc_html_e( 'Aumenta ancho (cm)', 'andreani-shipping' ); ?></span>
+						<input type="number" id="andreani-edit-apilado-inc-width" class="regular-text" min="0" step="0.01" placeholder="0.00" />
+					</label>
+					<label class="andreani-product-dims__field">
+						<span class="andreani-product-dims__label"><?php esc_html_e( 'Aumenta profund. (cm)', 'andreani-shipping' ); ?></span>
+						<input type="number" id="andreani-edit-apilado-inc-depth" class="regular-text" min="0" step="0.01" placeholder="0.00" />
+					</label>
+				</div>
+				<p class="andreani-product-dims__hint"><?php esc_html_e( 'La primera unidad ocupa las medidas de arriba y cada unidad extra suma el incremento. Por ejemplo: una silla de 45 cm de alto que apila de a 6 sumando 15 cm por unidad, en un pedido de 4 unidades viaja como un solo bulto de 90 cm de alto.', 'andreani-shipping' ); ?></p>
 			</div>
 
 			<div id="andreani-edit-message" class="andreani-products-inline-msg" style="display:none;"></div>

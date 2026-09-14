@@ -42,6 +42,7 @@ class Andreani_Plugin {
             'includes/order/class-andreani-tracking-sync.php',
             'includes/cotizador/class-andreani-cotizador-widget.php',
             'includes/admin/class-andreani-product-bultos.php',
+            'includes/admin/class-andreani-product-apilado.php',
         );
 
         foreach ( $files as $file ) {
@@ -227,6 +228,10 @@ class Andreani_Plugin {
 
         if ( class_exists( 'Andreani_Product_Bultos' ) ) {
             Andreani_Product_Bultos::get_instance();
+        }
+
+        if ( class_exists( 'Andreani_Product_Apilado' ) ) {
+            Andreani_Product_Apilado::get_instance();
         }
     }
 

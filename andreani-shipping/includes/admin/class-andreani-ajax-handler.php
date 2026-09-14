@@ -536,7 +536,8 @@ class Andreani_Ajax_Handler {
 							data-width="<?php echo esc_attr( $item['width'] ); ?>"
 							data-height="<?php echo esc_attr( $item['height'] ); ?>"
 							data-bultos="<?php echo esc_attr( $item['bultos'] ); ?>"
-							data-bultos-json="<?php echo esc_attr( wp_json_encode( isset( $item['bultos_data'] ) ? $item['bultos_data'] : array() ) ); ?>">
+							data-bultos-json="<?php echo esc_attr( wp_json_encode( isset( $item['bultos_data'] ) ? $item['bultos_data'] : array() ) ); ?>"
+							data-apilado-json="<?php echo esc_attr( wp_json_encode( isset( $item['apilado'] ) ? $item['apilado'] : array() ) ); ?>">
 							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
 						</button>
 						<button type="button"
@@ -623,18 +624,48 @@ class Andreani_Ajax_Handler {
 					$bw = isset( $b['weight'] ) ? floatval( $b['weight'] ) : 0;
 					$bx = isset( $b['width'] )  ? floatval( $b['width'] )  : 0;
 					$by = isset( $b['height'] ) ? floatval( $b['height'] ) : 0;
-					$bz = isset( $b['length'] ) ? floatval( $b['length'] ) : 0;
+					$bz = isset( $b['depth'] )  ? floatval( $b['depth'] )  : 0;
 					if ( $bw > 0 && $bx > 0 && $by > 0 && $bz > 0 ) {
-						$bultos[] = array( 'weight' => $bw, 'width' => $bx, 'height' => $by, 'length' => $bz );
+						$bultos[] = Andreani_Product_Bultos::to_canonical_bulto(
+							isset( $b['name'] ) ? $b['name'] : '',
+							$by,
+							$bx,
+							$bz,
+							$bw,
+							count( $bultos )
+						);
 					}
 				}
 			}
 		}
 
 		if ( ! empty( $bultos ) ) {
-			update_post_meta( $product_id, Andreani_Product_Bultos::META_KEY, wp_json_encode( $bultos ) );
+			update_post_meta( $product_id, Andreani_Product_Bultos::META_KEY, wp_slash( wp_json_encode( $bultos ) ) );
 		} else {
 			delete_post_meta( $product_id, Andreani_Product_Bultos::META_KEY );
+		}
+
+		// Con bultos el apilado ya no aplica y el modal lo bloquea: no se toca su meta, borrarla acá la perdería sin que el usuario la haya cambiado.
+		if ( empty( $bultos ) && class_exists( 'Andreani_Product_Apilado' ) ) {
+			$apilado      = array();
+			$apilado_json = isset( $_POST['apilado_json'] ) ? sanitize_textarea_field( wp_unslash( $_POST['apilado_json'] ) ) : '';
+			if ( '' !== $apilado_json ) {
+				$decoded_apilado = json_decode( $apilado_json, true );
+				if ( is_array( $decoded_apilado ) ) {
+					$apilado = array(
+						'maxStackableUnits'   => isset( $decoded_apilado['maxStackableUnits'] ) ? absint( $decoded_apilado['maxStackableUnits'] ) : 0,
+						'unitIncrementHeight' => isset( $decoded_apilado['unitIncrementHeight'] ) ? floatval( $decoded_apilado['unitIncrementHeight'] ) : 0,
+						'unitIncrementWidth'  => isset( $decoded_apilado['unitIncrementWidth'] ) ? floatval( $decoded_apilado['unitIncrementWidth'] ) : 0,
+						'unitIncrementDepth'  => isset( $decoded_apilado['unitIncrementDepth'] ) ? floatval( $decoded_apilado['unitIncrementDepth'] ) : 0,
+					);
+				}
+			}
+
+			if ( Andreani_Product_Apilado::is_valid( $apilado ) ) {
+				update_post_meta( $product_id, Andreani_Product_Apilado::META_KEY, wp_json_encode( $apilado ) );
+			} else {
+				delete_post_meta( $product_id, Andreani_Product_Apilado::META_KEY );
+			}
 		}
 
 		wp_send_json_success( array(

@@ -41,7 +41,7 @@ class Andreani_Corpo_Api extends Andreani_Base_Api {
 			$body['branch_code_origin'] = $pin;
 		}
 
-		foreach ( $contratos as $contrato ) {
+		foreach ( Andreani_Contract_Normalizer::normalize_contratos( $contratos ) as $contrato ) {
 			$body['Contracts'][] = array(
 				'contract'      => $contrato['numeroDeContrato'],
 				'delivery_mode' => $contrato['modoDeEntregaNombre'],
@@ -151,38 +151,10 @@ class Andreani_Corpo_Api extends Andreani_Base_Api {
 				} )
 			);
 
-			foreach ( $data['contratos'] as &$contrato ) {
-				$tipo_envio = isset( $contrato['tipoDeEnvioNombre'] ) ? strtolower( $contrato['tipoDeEnvioNombre'] ) : '';
-				if ( 'bigger' === $tipo_envio ) {
-					$contrato['modoDeEntregaNombre'] = 'bigger';
-				} elseif ( isset( $contrato['modoDeEntregaNombre'] ) ) {
-					$contrato['modoDeEntregaNombre'] = $this->normalize_modo_entrega_nombre(
-						$contrato['modoDeEntregaNombre']
-					);
-				}
-			}
+			$data['contratos'] = Andreani_Contract_Normalizer::normalize_contratos( $data['contratos'] );
 		}
 
 		update_option( self::CLIENT_INFO_OPTION, $data );
 	}
 
-	/**
-	 * Convierte nombres de la API ('A domicilio', 'A sucursal', etc.) a nombres internos del plugin.
-	 *
-	 * @param string $modo_entrega_nombre Nombre desde la API
-	 * @return string Nombre normalizado
-	 */
-	private function normalize_modo_entrega_nombre( $modo_entrega_nombre ) {
-		$delivery_mode_mapping = array(
-			'A domicilio' => 'estándar',
-			'A sucursal'  => 'sucursal',
-			'Llega hoy'   => 'llega hoy',
-		);
-
-		if ( isset( $delivery_mode_mapping[ $modo_entrega_nombre ] ) ) {
-			return $delivery_mode_mapping[ $modo_entrega_nombre ];
-		}
-
-		return strtolower( $modo_entrega_nombre );
-	}
 }

@@ -27,6 +27,12 @@
 		var $list    = $('#andreani-bultos-list');
 		var $badge   = $section.find('.andreani-bultos-badge');
 
+		var cmFactor        = config.cm_factor || 1;
+		var $apiladoSection = $('.andreani-apilado-section');
+		var $apiladoToggle  = $('#andreani-apilado-toggle');
+		var $apiladoContent = $('#andreani-apilado-content');
+		var $apiladoInputs  = $apiladoSection.find('input[type="number"]');
+
 		var tmpl = null;
 		if ( typeof window.wp !== 'undefined' && window.wp.template ) {
 			try {
@@ -36,23 +42,54 @@
 			}
 		}
 
+		function apiladoConfig() {
+			if ( ! $apiladoToggle.length || ! $apiladoToggle.is(':checked') ) {
+				return null;
+			}
+
+			var maxUnits = parseInt( $('#andreani-apilado-max-units').val(), 10 ) || 0;
+			var incH     = parseFloat( $('#andreani-apilado-inc-height').val() ) || 0;
+			var incW     = parseFloat( $('#andreani-apilado-inc-width').val() )  || 0;
+			var incD     = parseFloat( $('#andreani-apilado-inc-depth').val() )  || 0;
+
+			if ( maxUnits < 2 || ( incH <= 0 && incW <= 0 && incD <= 0 ) ) {
+				return null;
+			}
+
+			return { maxUnits: maxUnits, incH: incH, incW: incW, incD: incD };
+		}
+
 		function evaluateBigger() {
-			var totalWeight = parseFloat( $('input[name="_weight"]').val() ) || 0;
-			var maxSumSides = ( parseFloat( $('input[name="_width"]').val() ) || 0 )
-			                + ( parseFloat( $('input[name="_height"]').val() ) || 0 )
-			                + ( parseFloat( $('input[name="_length"]').val() ) || 0 );
-			var maxSide     = Math.max(
-				parseFloat( $('input[name="_width"]').val() ) || 0,
-				parseFloat( $('input[name="_height"]').val() ) || 0,
-				parseFloat( $('input[name="_length"]').val() ) || 0
-			);
+			var weight = parseFloat( $('input[name="_weight"]').val() ) || 0;
+			var width  = parseFloat( $('input[name="_width"]').val() )  || 0;
+			var height = parseFloat( $('input[name="_height"]').val() ) || 0;
+			var length = parseFloat( $('input[name="_length"]').val() ) || 0;
+
+			var totalWeight = weight;
+			var maxSumSides = width + height + length;
+			var maxSide     = Math.max( width, height, length );
+
+			if ( $list.find('.andreani-bulto-row').length === 0 ) {
+				var apilado = apiladoConfig();
+
+				if ( apilado ) {
+					var extra = apilado.maxUnits - 1;
+					var pilaW = width  + apilado.incW * cmFactor * extra;
+					var pilaH = height + apilado.incH * cmFactor * extra;
+					var pilaL = length + apilado.incD * cmFactor * extra;
+
+					totalWeight = weight * apilado.maxUnits;
+					maxSumSides = pilaW + pilaH + pilaL;
+					maxSide     = Math.max( pilaW, pilaH, pilaL );
+				}
+			}
 
 			$list.find('.andreani-bulto-row').each(function () {
 				var $row = $(this);
 				var bW = parseFloat( $row.find('input[name="andreani_bulto_weight[]"]').val() ) || 0;
 				var bX = parseFloat( $row.find('input[name="andreani_bulto_width[]"]').val() )  || 0;
 				var bY = parseFloat( $row.find('input[name="andreani_bulto_height[]"]').val() ) || 0;
-				var bZ = parseFloat( $row.find('input[name="andreani_bulto_length[]"]').val() ) || 0;
+				var bZ = parseFloat( $row.find('input[name="andreani_bulto_depth[]"]').val() ) || 0;
 
 				totalWeight += bW;
 				var bultoSumSides = bX + bY + bZ;
@@ -103,7 +140,7 @@
 		function reindex() {
 			$list.find('.andreani-bulto-row').each(function (i) {
 				$(this).attr('data-index', i);
-				$(this).find('.andreani-bulto-label').text('Bulto ' + (i + 1));
+				$(this).find('.andreani-bulto-label').text('Bulto ' + (i + 2));
 			});
 		}
 
@@ -112,7 +149,7 @@
 				return;
 			}
 			var count = $list.find('.andreani-bulto-row').length;
-			var html = tmpl({ index: count, number: count + 1 });
+			var html = tmpl({ index: count, number: count + 2 });
 			$list.append(html);
 		});
 
@@ -126,6 +163,47 @@
 			}
 		});
 
+		function syncExclusion() {
+			var hasBultos  = $list.find('.andreani-bulto-row').length > 0;
+			var hasApilado = !! apiladoConfig();
+
+			$apiladoSection.toggleClass('andreani-apilado-section--locked', hasBultos);
+			$('#andreani-apilado-notice').toggle( hasBultos );
+			$apiladoToggle.prop('disabled', hasBultos);
+			$apiladoInputs.prop('readonly', hasBultos);
+			$('#andreani-bultos-apilado-notice').toggle( hasApilado && ! hasBultos );
+			$('#andreani-apilado-invalid').toggle( $apiladoToggle.is(':checked') && ! hasApilado );
+		}
+
+		$apiladoToggle.on('change', function () {
+			if (this.checked) {
+				$apiladoContent.addClass('active');
+
+				var $maxUnits = $('#andreani-apilado-max-units');
+				if ( ! $maxUnits.val() ) {
+					$maxUnits.val( $maxUnits.attr('min') );
+				}
+			} else {
+				$apiladoContent.removeClass('active');
+			}
+			syncExclusion();
+			updateBadge();
+		});
+
+		$(document).on('input.andreaniApilado change.andreaniApilado',
+			'.andreani-apilado-section input[type="number"]',
+			function () {
+				syncExclusion();
+				updateBadge();
+			});
+
+		$(document).on('input.andreaniBultos change.andreaniBultos click.andreaniBultos',
+			BULTO_INPUTS_SELECTOR + ', #andreani-bultos-toggle, .andreani-bultos-section .andreani-remove-bulto, #andreani-add-bulto',
+			function () {
+				window.setTimeout(syncExclusion, 0);
+			});
+
+		syncExclusion();
 		updateBadge();
 	});
 

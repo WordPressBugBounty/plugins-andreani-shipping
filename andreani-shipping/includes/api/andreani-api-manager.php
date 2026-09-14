@@ -13,6 +13,8 @@ require_once ANDREANI_PLUGIN_DIR . 'includes/api/common/andreani-client-type.php
 require_once ANDREANI_PLUGIN_DIR . 'includes/api/common/andreani-contract.php';
 require_once ANDREANI_PLUGIN_DIR . 'includes/api/common/andreani-postcode.php';
 require_once ANDREANI_PLUGIN_DIR . 'includes/api/common/andreani-order-mapper.php';
+require_once ANDREANI_PLUGIN_DIR . 'includes/api/common/class-andreani-package-builder.php';
+require_once ANDREANI_PLUGIN_DIR . 'includes/api/common/class-andreani-contract-normalizer.php';
 require_once ANDREANI_PLUGIN_DIR . 'includes/api/common/andreani-api-response.php';
 require_once ANDREANI_PLUGIN_DIR . 'includes/api/common/andreani-base-api.php';
 require_once ANDREANI_PLUGIN_DIR . 'includes/api/common/andreani-api-utils.php';

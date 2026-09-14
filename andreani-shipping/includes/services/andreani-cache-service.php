@@ -273,10 +273,19 @@ class Andreani_Cache_Service {
 		if ( isset( $package['contents'] ) ) {
 			$items = array();
 			foreach ( $package['contents'] as $item ) {
-				$items[] = array(
+				$entry = array(
 					'id'  => isset( $item['product_id'] ) ? $item['product_id'] : 0,
 					'qty' => isset( $item['quantity'] ) ? $item['quantity'] : 1,
 				);
+
+				// La clave se hace sobre los bultos que se van a declarar, no sobre el id:
+				// si dependiera del id, editar medidas, bultos o apilado dejaría sirviendo
+				// la cotización vieja hasta que venciera el TTL.
+				if ( isset( $item['data'] ) && class_exists( 'Andreani_Package_Builder' ) ) {
+					$entry['bultos'] = Andreani_Package_Builder::build( $item['data'], $entry['qty'] );
+				}
+
+				$items[] = $entry;
 			}
 			usort( $items, function( $a, $b ) {
 				return $a['id'] - $b['id'];

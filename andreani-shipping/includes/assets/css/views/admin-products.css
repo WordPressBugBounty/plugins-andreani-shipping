@@ -525,6 +525,10 @@
 	gap: var(--andr-sp-2);
 }
 
+.andreani-bulto-card__field--name {
+	margin-bottom: var(--andr-sp-2);
+}
+
 .andreani-bulto-card__field {
 	display: flex;
 	flex-direction: column;
@@ -690,4 +694,42 @@
 	font-size: var(--andr-text-sm);
 	max-width: 300px;
 	line-height: 1.4;
+}
+
+/* ===========================================================
+   Modal: bloque de apilado (excluyente con bultos adicionales)
+   =========================================================== */
+
+.andreani-apilado-block__lock {
+    display: block;
+    margin-bottom: var(--andr-sp-2);
+    line-height: 1.45;
+    white-space: normal;
+}
+
+.andreani-apilado-block__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--andr-sp-2);
+    margin: var(--andr-sp-2) 0;
+    font-weight: var(--andr-fw-semibold);
+    color: var(--andr-color-text);
+    cursor: pointer;
+}
+
+.andreani-apilado-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--andr-sp-2);
+    margin-bottom: var(--andr-sp-2);
+}
+
+.andreani-apilado-grid input[type="number"] {
+    width: 100%;
+}
+
+@media (max-width: 600px) {
+    .andreani-apilado-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }

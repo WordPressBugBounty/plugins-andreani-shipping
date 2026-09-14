@@ -270,6 +270,11 @@ abstract class Andreani_Base_Api implements Andreani_API_Interface {
 			);
 		}
 
+		Andreani_Utils::andreani_log(
+			'[COTIZACION] Bultos declarados: ' . wp_json_encode( $body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ),
+			'info'
+		);
+
 		$response = Andreani_Utils::make_request( 'POST', $this->api_endpoints['cotizacion'], $body, $headers );
 		$response = Andreani_Api_Response::decode( $response );
 		$result   = Andreani_Api_Response::process_cotizacion( $response );
@@ -392,7 +397,10 @@ abstract class Andreani_Base_Api implements Andreani_API_Interface {
 			'X-Auth-Token'  => $this->info_cliente['accessToken'],
 		);
 
-		$response = Andreani_Utils::make_request( 'POST', $this->api_endpoints['orden'], $andreani_data, $headers, 3 );
+		// Sin reintentos automaticos: el alta CREA un envio y no es idempotente. Si el POST llego a
+		// destino y la respuesta se perdio (timeout), reintentar da de alta un segundo envio real.
+		// El reintento queda del lado del comerciante, con el boton "Reintentar" de la orden.
+		$response = Andreani_Utils::make_request( 'POST', $this->api_endpoints['orden'], $andreani_data, $headers, 0 );
 
 		$body_json = wp_json_encode( $andreani_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
 

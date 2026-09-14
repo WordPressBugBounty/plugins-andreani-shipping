@@ -156,10 +156,6 @@ class Andreani_Order_Mapper {
 			}
 
 			$quantity = $item->get_quantity();
-			$width    = self::convert_dimension_to_cm( $product->get_width() ) ?: 1;
-			$height   = self::convert_dimension_to_cm( $product->get_height() ) ?: 1;
-			$depth    = self::convert_dimension_to_cm( $product->get_length() ) ?: 1;
-			$weight   = $product->get_weight() ?: 1;
 			$price    = $mostrar_sin_decimales ? round( floatval( $product->get_price() ) ) : floatval( $product->get_price() );
 
 			if ( ! $product->get_weight() ) {
@@ -188,25 +184,32 @@ class Andreani_Order_Mapper {
 			$total_bultos    = 1 + count( $bultos_adicionales );
 			$price_per_bulto = floatval( $price ) / $total_bultos;
 
-			$products[] = array(
-				'price'    => floatval( $price_per_bulto ),
-				'quantity' => intval( $quantity ),
-				'kgrams'   => floatval( self::convert_weight_to_unit( $weight, 'kg' ) ),
-				'width'    => floatval( $width ),
-				'depth'    => floatval( $depth ),
-				'height'   => floatval( $height ),
-			);
+			$apilado = Andreani_Package_Builder::resolve_apilado( $product );
+			$apila   = ! empty( $apilado );
+
+			foreach ( Andreani_Package_Builder::build( $product, $quantity ) as $bulto ) {
+				$units = (int) $bulto['units'];
+
+				$products[] = array(
+					'price'    => floatval( $apila ? $price_per_bulto * $units : $price_per_bulto ),
+					'quantity' => $apila ? 1 : intval( $units ),
+					'kgrams'   => floatval( $bulto['weight_kg'] ),
+					'width'    => floatval( $bulto['width'] ),
+					'depth'    => floatval( $bulto['depth'] ),
+					'height'   => floatval( $bulto['height'] ),
+				);
+			}
 
 			foreach ( $bultos_adicionales as $bulto ) {
-				$b_width  = self::convert_dimension_to_cm( $bulto['width'] ) ?: 1;
-				$b_height = self::convert_dimension_to_cm( $bulto['height'] ) ?: 1;
-				$b_depth  = self::convert_dimension_to_cm( $bulto['length'] ) ?: 1;
-				$b_weight = floatval( $bulto['weight'] ) ?: 1;
+				$b_width  = floatval( $bulto['width'] ) ?: 1;
+				$b_height = floatval( $bulto['height'] ) ?: 1;
+				$b_depth  = floatval( $bulto['depth'] ) ?: 1;
+				$b_grams  = floatval( $bulto['weight'] ) ?: 1000;
 
 				$products[] = array(
 					'price'    => floatval( $price_per_bulto ),
 					'quantity' => intval( $quantity ),
-					'kgrams'   => floatval( self::convert_weight_to_unit( $b_weight, 'kg' ) ),
+					'kgrams'   => $b_grams / 1000,
 					'width'    => $b_width,
 					'depth'    => $b_depth,
 					'height'   => $b_height,
@@ -261,6 +264,14 @@ class Andreani_Order_Mapper {
 		);
 	}
 
+	/**
+	 * Bultos adicionales de un producto en unidades canónicas: dimensiones en cm
+	 * y peso en gramos, sin importar la unidad configurada en la tienda. La
+	 * conversión ocurre en la UI al guardar, así que los consumidores no convierten.
+	 *
+	 * @param int $product_id ID del producto (o variación).
+	 * @return array<int,array{name:string,height:float,width:float,depth:float,weight:float}>
+	 */
 	public static function get_bultos_adicionales( $product_id ) {
 		$json = get_post_meta( $product_id, '_andreani_bultos_adicionales', true );
 
@@ -345,6 +356,10 @@ class Andreani_Order_Mapper {
 			default:
 				return $cm;
 		}
+	}
+
+	public static function convert_grams_to_weight_unit( $grams ) {
+		return self::convert_kg_to_weight_unit( floatval( $grams ) / 1000 );
 	}
 
 	public static function convert_kg_to_weight_unit( $kg ) {
