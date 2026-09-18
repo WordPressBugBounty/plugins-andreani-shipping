@@ -204,7 +204,7 @@ class Andreani_Order_Mapper {
 				$b_width  = floatval( $bulto['width'] ) ?: 1;
 				$b_height = floatval( $bulto['height'] ) ?: 1;
 				$b_depth  = floatval( $bulto['depth'] ) ?: 1;
-				$b_grams  = floatval( $bulto['weight'] ) ?: 1000;
+				$b_grams  = Andreani_Package_Builder::floor_weight_grams( $bulto['weight'] );
 
 				$products[] = array(
 					'price'    => floatval( $price_per_bulto ),

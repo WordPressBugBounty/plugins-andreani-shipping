@@ -12,11 +12,53 @@ require_once ANDREANI_PLUGIN_DIR . 'includes/admin/class-andreani-product-apilad
 
 class Andreani_Package_Builder {
 
+	const MIN_WEIGHT_GRAMS = 1000;
+
+	/**
+	 * @param mixed $grams Peso en gramos, en cualquier forma numérica.
+	 * @return float
+	 */
+	public static function floor_weight_grams( $grams ) {
+		$grams = floatval( $grams );
+
+		return $grams < self::MIN_WEIGHT_GRAMS ? (float) self::MIN_WEIGHT_GRAMS : $grams;
+	}
+
+	/**
+	 * @param mixed $weight_kg Peso en kg, en cualquier forma numérica.
+	 * @return float
+	 */
+	public static function floor_weight_kg( $weight_kg ) {
+		return self::floor_weight_grams( floatval( $weight_kg ) * 1000 ) / 1000;
+	}
+
+	/**
+	 * El peso de un bulto no apilado viene por unidad y se declara $units veces,
+	 * así que el piso se aplica al total del bulto y se reparte de vuelta: 10
+	 * unidades de 300 g declaran 3 kg, no 10.
+	 *
+	 * @param array $bultos Bultos tal como los devuelve stack().
+	 * @param bool  $apila  Si los bultos son pilas (el peso ya es el total).
+	 * @return array
+	 */
+	public static function apply_min_weight( array $bultos, $apila ) {
+		foreach ( $bultos as $index => $bulto ) {
+			$units     = max( 1, (int) $bulto['units'] );
+			$weight_kg = floatval( $bulto['weight_kg'] );
+			$total_kg  = self::floor_weight_kg( $apila ? $weight_kg : $weight_kg * $units );
+
+			$bultos[ $index ]['weight_kg'] = $apila ? $total_kg : $total_kg / $units;
+		}
+
+		return $bultos;
+	}
+
 	/**
 	 * Bultos que ocupan N unidades de un producto en unidades canónicas (cm y kg).
 	 *
-	 * Las dimensiones y el peso caen al mínimo permisivo 1 cuando el producto no
-	 * los tiene cargados: un bulto nunca se declara con un lado en cero.
+	 * Las dimensiones caen al mínimo permisivo 1 cuando el producto no las tiene
+	 * cargadas: un bulto nunca se declara con un lado en cero. El peso de cada
+	 * bulto sale con el piso de MIN_WEIGHT_GRAMS ya aplicado.
 	 *
 	 * @param WC_Product $product  Producto o variación.
 	 * @param int        $quantity Unidades en el carrito o en el ítem de la orden.
@@ -29,9 +71,11 @@ class Andreani_Package_Builder {
 			'depth'  => Andreani_Order_Mapper::convert_dimension_to_cm( $product->get_length() ) ?: 1,
 		);
 
-		$weight_kg = Andreani_Order_Mapper::convert_weight_to_unit( $product->get_weight() ?: 1, 'kg' );
+		$weight_kg = Andreani_Order_Mapper::convert_weight_to_unit( $product->get_weight(), 'kg' );
 
-		return self::stack( $base, $weight_kg, self::resolve_apilado( $product ), $quantity );
+		$apilado = self::resolve_apilado( $product );
+
+		return self::apply_min_weight( self::stack( $base, $weight_kg, $apilado, $quantity ), ! empty( $apilado ) );
 	}
 
 	/**

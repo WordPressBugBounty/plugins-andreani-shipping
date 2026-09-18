@@ -9,8 +9,10 @@ class Andreani_Api_Utils {
 
 	public static function validate_package( $package ) {
 		if ( ! isset( $package['contents'] ) || empty( $package['contents'] ) ) {
-			Andreani_Utils::andreani_log( '[COTIZACION] Paquete vacío - no hay productos en el carrito', 'warning' );
-			return false;
+			return new WP_Error(
+				'andreani_empty_package',
+				__( 'El carrito no tiene productos para cotizar.', 'andreani-shipping' )
+			);
 		}
 
 		$has_shipping_products = false;
@@ -21,19 +23,13 @@ class Andreani_Api_Utils {
 			}
 
 			$has_shipping_products = true;
-			$product               = $values['data'];
-			$peso                  = $product->get_weight();
-
-			if ( ! $peso ) {
-				$product_name = $product->get_name();
-				$product_id   = $product->get_id();
-				Andreani_Utils::andreani_log( "[COTIZACION] Producto sin peso: \"{$product_name}\" (ID: {$product_id}) - configure el peso en WooCommerce > Productos", 'error' );
-				return false;
-			}
 		}
 
 		if ( ! $has_shipping_products ) {
-			return false;
+			return new WP_Error(
+				'andreani_no_shipping_products',
+				__( 'Ningún producto del carrito requiere envío.', 'andreani-shipping' )
+			);
 		}
 
 		return true;

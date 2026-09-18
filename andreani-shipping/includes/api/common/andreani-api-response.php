@@ -311,11 +311,22 @@ class Andreani_Api_Response {
 			$raw_height = Andreani_Order_Mapper::convert_dimension_to_cm( $product_data->get_height() );
 			$raw_depth  = Andreani_Order_Mapper::convert_dimension_to_cm( $product_data->get_length() );
 
-			if ( $weight <= 0 || $raw_width <= 0 || $raw_height <= 0 || $raw_depth <= 0 ) {
+			if ( $weight <= 0 ) {
+				$sku = $product_data->get_sku();
+
+				Andreani_Utils::andreani_log(
+					sprintf(
+						'[COTIZACION] Al producto "%s"%s le falta el peso: se cotiza con el mínimo de %d gramos. Cargalo en el producto para que Andreani cotice el peso real.',
+						$product_data->get_name(),
+						$sku ? ' (SKU ' . $sku . ')' : '',
+						Andreani_Package_Builder::MIN_WEIGHT_GRAMS
+					),
+					'warning'
+				);
+			}
+
+			if ( $raw_width <= 0 || $raw_height <= 0 || $raw_depth <= 0 ) {
 				$faltantes = array();
-				if ( $weight <= 0 ) {
-					$faltantes[] = 'peso';
-				}
 				if ( $raw_width <= 0 ) {
 					$faltantes[] = 'ancho';
 				}
@@ -366,9 +377,7 @@ class Andreani_Api_Response {
 						'width'  => max( 1, (int) round( $bulto['width'] ) ),
 						'height' => max( 1, (int) round( $bulto['height'] ) ),
 						'depth'  => max( 1, (int) round( $bulto['depth'] ) ),
-						'grams'  => $apila
-							? $bulto['weight_kg'] * 1000
-							: Andreani_Order_Mapper::convert_weight_to_unit( $product_data->get_weight(), 'gr' ),
+						'grams'  => $bulto['weight_kg'] * 1000,
 					),
 				);
 			}
@@ -377,9 +386,9 @@ class Andreani_Api_Response {
 				$b_raw_width  = floatval( $bulto['width'] );
 				$b_raw_height = floatval( $bulto['height'] );
 				$b_raw_depth  = floatval( $bulto['depth'] );
-				$b_grams      = floatval( $bulto['weight'] );
+				$b_grams      = Andreani_Package_Builder::floor_weight_grams( $bulto['weight'] );
 
-				if ( $b_raw_width <= 0 || $b_raw_height <= 0 || $b_raw_depth <= 0 || $b_grams <= 0 ) {
+				if ( $b_raw_width <= 0 || $b_raw_height <= 0 || $b_raw_depth <= 0 ) {
 					continue;
 				}
 

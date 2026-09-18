@@ -5,7 +5,7 @@ Copyright: 2025 Andreani.com
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.6.8
+Stable tag: 1.6.9
 Contributors: integracionandreani
 Donate link:
 Tags: woocommerce, shipping, andreani, envio, etiquetas
@@ -320,6 +320,10 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * El checkbox *Forzar carga de assets*: **sigue funcionando** pero casi nunca es necesario. Úsalo solo como último recurso.
 
 == Changelog ==
+
+= 1.6.9 =
+* Fix: El peso que se declara a Andreani nunca es menor a 1 kg. Un producto que pesaba menos, o que no tenía el peso cargado, podía despacharse con un peso muy por debajo del real: en tiendas que miden en gramos, con apenas unos gramos. El mínimo se aplica al bulto, así que si el comprador lleva varias unidades se sigue declarando el peso real de todas
+* Fix: Un producto sin peso cargado ya no deja el checkout sin opciones de envío. Antes Andreani no aparecía y parecía un problema de cobertura del código postal; ahora se cotiza con el mínimo de 1 kg
 
 = 1.6.8 =
 * Nuevo: Apilado de bultos. Si vendés productos que se encastran entre sí (sillas, macetas, cajones), ahora podés indicar hasta cuántas unidades entran en una pila y cuánto crece esa pila por cada unidad adicional. Cuando alguien compra varias, el envío se cotiza y se despacha como una sola pila en lugar de una unidad suelta por producto
