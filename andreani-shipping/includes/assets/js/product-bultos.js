@@ -1,8 +1,8 @@
 /**
- * Andreani — Panel de bultos adicionales.
+ * Andreani — Panel de modo de despacho en la ficha de producto.
  *
- * Evalúa los totales combinados (peso sumado, mayor suma de lados,
- * mayor lado) de todos los bultos para determinar si califica como Bigger.
+ * Un solo paquete, varias unidades apiladas en un bulto, o una unidad repartida
+ * en varias piezas: el modo elegido decide qué se evalúa y qué se guarda.
  * Usa delegación de eventos para sobrevivir a redibujos del DOM de WC.
  */
 (function ($) {
@@ -11,8 +11,12 @@
 	var WC_INPUTS_SELECTOR = 'input[name="_weight"], input[name="_width"], input[name="_height"], input[name="_length"]';
 	var BULTO_INPUTS_SELECTOR = '.andreani-bulto-row input[type="number"]';
 
+	var MODE_SINGLE = 'single';
+	var MODE_APILADO = 'apilado';
+	var MODE_MULTIBULTO = 'multibulto';
+
 	$(function () {
-		var $section = $('.andreani-bultos-section');
+		var $section = $('.andreani-despacho-section');
 
 		if ( ! $section.length ) {
 			return;
@@ -20,18 +24,19 @@
 
 		var config = window.AndreaniBultosConfig || {};
 		var thresholds = config.thresholds || { weight: 50, sum_sides: 300, max_side: 165 };
-		var i18n = config.i18n || { badge_bigger: 'Bigger', badge_paquete: 'Paquete común' };
+		var canonical = config.thresholds_canonical || { weight: 50, sum_sides: 300, max_side: 165 };
+		var i18n = config.i18n || {};
 
-		var $toggle  = $('#andreani-bultos-toggle');
-		var $content = $('#andreani-bultos-content');
-		var $list    = $('#andreani-bultos-list');
-		var $badge   = $section.find('.andreani-bultos-badge');
+		var cmFactor = config.cm_factor || 1;
+		var kgFactor = config.kg_factor || 1;
 
-		var cmFactor        = config.cm_factor || 1;
-		var $apiladoSection = $('.andreani-apilado-section');
-		var $apiladoToggle  = $('#andreani-apilado-toggle');
-		var $apiladoContent = $('#andreani-apilado-content');
-		var $apiladoInputs  = $apiladoSection.find('input[type="number"]');
+		var $modeInputs = $section.find('.andreani-despacho-option__input');
+		var $status = $('#andreani-despacho-status');
+		var $list = $('#andreani-bultos-list');
+		var $apiladoPanel = $('#andreani-despacho-panel-apilado');
+		var $multibultoPanel = $('#andreani-despacho-panel-multibulto');
+		var $apiladoInvalid = $('#andreani-apilado-invalid');
+		var $bultosInvalid = $('#andreani-bultos-invalid');
 
 		var tmpl = null;
 		if ( typeof window.wp !== 'undefined' && window.wp.template ) {
@@ -42,17 +47,44 @@
 			}
 		}
 
+		function currentMode() {
+			var mode = $modeInputs.filter(':checked').val();
+			return mode === MODE_APILADO || mode === MODE_MULTIBULTO ? mode : MODE_SINGLE;
+		}
+
+		function num( selector ) {
+			return parseFloat( $( selector ).val() ) || 0;
+		}
+
+		function round2( value ) {
+			return Math.round( ( parseFloat( value ) || 0 ) * 100 ) / 100;
+		}
+
+		function format( value ) {
+			return String( round2( value ) );
+		}
+
+		function toCm( value ) {
+			return cmFactor ? value / cmFactor : value;
+		}
+
+		function toKg( value ) {
+			return value * kgFactor;
+		}
+
+		function fill( template, first, second ) {
+			return String( template || '' )
+				.replace( '%1$s', first )
+				.replace( '%2$s', second );
+		}
+
 		function apiladoConfig() {
-			if ( ! $apiladoToggle.length || ! $apiladoToggle.is(':checked') ) {
-				return null;
-			}
-
 			var maxUnits = parseInt( $('#andreani-apilado-max-units').val(), 10 ) || 0;
-			var incH     = parseFloat( $('#andreani-apilado-inc-height').val() ) || 0;
-			var incW     = parseFloat( $('#andreani-apilado-inc-width').val() )  || 0;
-			var incD     = parseFloat( $('#andreani-apilado-inc-depth').val() )  || 0;
+			var incH = parseFloat( $('#andreani-apilado-inc-height').val() ) || 0;
+			var incW = parseFloat( $('#andreani-apilado-inc-width').val() ) || 0;
+			var incD = parseFloat( $('#andreani-apilado-inc-depth').val() ) || 0;
 
-			if ( maxUnits < 2 || ( incH <= 0 && incW <= 0 && incD <= 0 ) ) {
+			if ( maxUnits < 2 || incH < 0 || incW < 0 || incD < 0 || ( incH === 0 && incW === 0 && incD === 0 ) ) {
 				return null;
 			}
 
@@ -60,82 +92,79 @@
 		}
 
 		function evaluateBigger() {
-			var weight = parseFloat( $('input[name="_weight"]').val() ) || 0;
-			var width  = parseFloat( $('input[name="_width"]').val() )  || 0;
-			var height = parseFloat( $('input[name="_height"]').val() ) || 0;
-			var length = parseFloat( $('input[name="_length"]').val() ) || 0;
+			var mode = currentMode();
+			var weight = num('input[name="_weight"]');
+			var width = num('input[name="_width"]');
+			var height = num('input[name="_height"]');
+			var length = num('input[name="_length"]');
 
 			var totalWeight = weight;
 			var maxSumSides = width + height + length;
-			var maxSide     = Math.max( width, height, length );
+			var maxSide = Math.max( width, height, length );
 
-			if ( $list.find('.andreani-bulto-row').length === 0 ) {
+			if ( mode === MODE_APILADO ) {
 				var apilado = apiladoConfig();
 
 				if ( apilado ) {
 					var extra = apilado.maxUnits - 1;
-					var pilaW = width  + apilado.incW * cmFactor * extra;
+					var pilaW = width + apilado.incW * cmFactor * extra;
 					var pilaH = height + apilado.incH * cmFactor * extra;
 					var pilaL = length + apilado.incD * cmFactor * extra;
 
 					totalWeight = weight * apilado.maxUnits;
 					maxSumSides = pilaW + pilaH + pilaL;
-					maxSide     = Math.max( pilaW, pilaH, pilaL );
+					maxSide = Math.max( pilaW, pilaH, pilaL );
 				}
 			}
 
-			$list.find('.andreani-bulto-row').each(function () {
-				var $row = $(this);
-				var bW = parseFloat( $row.find('input[name="andreani_bulto_weight[]"]').val() ) || 0;
-				var bX = parseFloat( $row.find('input[name="andreani_bulto_width[]"]').val() )  || 0;
-				var bY = parseFloat( $row.find('input[name="andreani_bulto_height[]"]').val() ) || 0;
-				var bZ = parseFloat( $row.find('input[name="andreani_bulto_depth[]"]').val() ) || 0;
+			if ( mode === MODE_MULTIBULTO ) {
+				$list.find('.andreani-bulto-row').each(function () {
+					var $row = $(this);
+					var bW = parseFloat( $row.find('input[name="andreani_bulto_weight[]"]').val() ) || 0;
+					var bX = parseFloat( $row.find('input[name="andreani_bulto_width[]"]').val() ) || 0;
+					var bY = parseFloat( $row.find('input[name="andreani_bulto_height[]"]').val() ) || 0;
+					var bZ = parseFloat( $row.find('input[name="andreani_bulto_depth[]"]').val() ) || 0;
 
-				totalWeight += bW;
-				var bultoSumSides = bX + bY + bZ;
-				if ( bultoSumSides > maxSumSides ) {
-					maxSumSides = bultoSumSides;
-				}
-				var bultoMaxSide = Math.max( bX, bY, bZ );
-				if ( bultoMaxSide > maxSide ) {
-					maxSide = bultoMaxSide;
-				}
-			});
+					totalWeight += bW;
 
-			return totalWeight > thresholds.weight
-				|| maxSumSides > thresholds.sum_sides
-				|| maxSide > thresholds.max_side;
-		}
+					var bultoSumSides = bX + bY + bZ;
+					if ( bultoSumSides > maxSumSides ) {
+						maxSumSides = bultoSumSides;
+					}
 
-		function updateBadge() {
-			var isBigger = evaluateBigger();
-			$badge
-				.text( isBigger ? i18n.badge_bigger : i18n.badge_paquete )
-				.toggleClass( 'andreani-bultos-badge--bigger', isBigger )
-				.toggleClass( 'andreani-bultos-badge--regular', ! isBigger );
-		}
-
-		// Escuchar inputs de WC (delegación para sobrevivir a redibujos)
-		$(document)
-			.on('input.andreaniBultos change.andreaniBultos',
-				WC_INPUTS_SELECTOR,
-				updateBadge);
-
-		// Escuchar inputs de bultos adicionales (delegación para filas dinámicas)
-		$(document)
-			.on('input.andreaniBultos change.andreaniBultos',
-				BULTO_INPUTS_SELECTOR,
-				updateBadge);
-
-		$toggle.on('change', function () {
-			if (this.checked) {
-				$content.addClass('active');
-			} else {
-				$content.removeClass('active');
-				$list.empty();
-				updateBadge();
+					var bultoMaxSide = Math.max( bX, bY, bZ );
+					if ( bultoMaxSide > maxSide ) {
+						maxSide = bultoMaxSide;
+					}
+				});
 			}
-		});
+
+			if ( totalWeight > thresholds.weight ) {
+				return { isBigger: true, text: fill( i18n.bigger_reason_weight, format( toKg( totalWeight ) ), format( canonical.weight ) ) };
+			}
+
+			if ( maxSumSides > thresholds.sum_sides ) {
+				return { isBigger: true, text: fill( i18n.bigger_reason_sum_sides, format( toCm( maxSumSides ) ), format( canonical.sum_sides ) ) };
+			}
+
+			if ( maxSide > thresholds.max_side ) {
+				return { isBigger: true, text: fill( i18n.bigger_reason_max_side, format( toCm( maxSide ) ), format( canonical.max_side ) ) };
+			}
+
+			return { isBigger: false, text: '' };
+		}
+
+		function updateStatus() {
+			var evaluation = evaluateBigger();
+			var text = evaluation.isBigger
+				? String( i18n.bigger_prefix || '%s' ).replace( '%s', evaluation.text )
+				: ( i18n.bigger_regular || '' );
+
+			$status
+				.text( text )
+				.toggleClass( 'andreani-despacho-status--bigger', evaluation.isBigger )
+				.toggleClass( 'andreani-despacho-status--regular', ! evaluation.isBigger );
+		}
 
 		function reindex() {
 			$list.find('.andreani-bulto-row').each(function (i) {
@@ -144,67 +173,142 @@
 			});
 		}
 
-		$('#andreani-add-bulto').on('click', function () {
+		function updateSameDimsWarnings() {
+			var width = round2( num('input[name="_width"]') );
+			var height = round2( num('input[name="_height"]') );
+			var depth = round2( num('input[name="_length"]') );
+			var hasPrincipal = width > 0 && height > 0 && depth > 0;
+
+			$list.find('.andreani-bulto-row').each(function () {
+				var $row = $(this);
+				var same = hasPrincipal
+					&& round2( $row.find('input[name="andreani_bulto_height[]"]').val() ) === height
+					&& round2( $row.find('input[name="andreani_bulto_width[]"]').val() ) === width
+					&& round2( $row.find('input[name="andreani_bulto_depth[]"]').val() ) === depth;
+
+				$row.find('.andreani-bulto-warning').toggle( !! same );
+			});
+		}
+
+		function apiladoIsInvalid() {
+			return currentMode() === MODE_APILADO && ! apiladoConfig();
+		}
+
+		function multibultoIsInvalid() {
+			if ( currentMode() !== MODE_MULTIBULTO ) {
+				return false;
+			}
+
+			var hasComplete = false;
+
+			$list.find('.andreani-bulto-row').each(function () {
+				var $row = $(this);
+				var complete = [ 'weight', 'width', 'height', 'depth' ].every(function ( field ) {
+					return ( parseFloat( $row.find('input[name="andreani_bulto_' + field + '[]"]').val() ) || 0 ) > 0;
+				});
+
+				if ( complete ) {
+					hasComplete = true;
+				}
+			});
+
+			return ! hasComplete;
+		}
+
+		function syncMode() {
+			var mode = currentMode();
+
+			$apiladoPanel.toggleClass( 'active', mode === MODE_APILADO );
+			$multibultoPanel.toggleClass( 'active', mode === MODE_MULTIBULTO );
+			$apiladoInvalid.hide();
+			$bultosInvalid.hide();
+
+			updateSameDimsWarnings();
+			updateStatus();
+		}
+
+		function addRow() {
 			if ( ! tmpl ) {
 				return;
 			}
+
 			var count = $list.find('.andreani-bulto-row').length;
-			var html = tmpl({ index: count, number: count + 2 });
-			$list.append(html);
-		});
-
-		$(document).on('click.andreaniBultos', '.andreani-bultos-section .andreani-remove-bulto', function () {
-			$(this).closest('.andreani-bulto-row').remove();
-			reindex();
-			updateBadge();
-
-			if ($list.find('.andreani-bulto-row').length === 0) {
-				$toggle.prop('checked', false).trigger('change');
-			}
-		});
-
-		function syncExclusion() {
-			var hasBultos  = $list.find('.andreani-bulto-row').length > 0;
-			var hasApilado = !! apiladoConfig();
-
-			$apiladoSection.toggleClass('andreani-apilado-section--locked', hasBultos);
-			$('#andreani-apilado-notice').toggle( hasBultos );
-			$apiladoToggle.prop('disabled', hasBultos);
-			$apiladoInputs.prop('readonly', hasBultos);
-			$('#andreani-bultos-apilado-notice').toggle( hasApilado && ! hasBultos );
-			$('#andreani-apilado-invalid').toggle( $apiladoToggle.is(':checked') && ! hasApilado );
+			$list.append( tmpl({ index: count, number: count + 2 }) );
 		}
 
-		$apiladoToggle.on('change', function () {
-			if (this.checked) {
-				$apiladoContent.addClass('active');
+		$modeInputs.on('change', function () {
+			if ( currentMode() !== MODE_MULTIBULTO ) {
+				$list.empty();
+			}
 
+			if ( currentMode() === MODE_MULTIBULTO && ! $list.find('.andreani-bulto-row').length ) {
+				addRow();
+			}
+
+			if ( currentMode() === MODE_APILADO ) {
 				var $maxUnits = $('#andreani-apilado-max-units');
 				if ( ! $maxUnits.val() ) {
 					$maxUnits.val( $maxUnits.attr('min') );
 				}
-			} else {
-				$apiladoContent.removeClass('active');
 			}
-			syncExclusion();
-			updateBadge();
+
+			syncMode();
 		});
 
+		$('#andreani-add-bulto').on('click', addRow);
+
+		$(document).on('click.andreaniBultos', '.andreani-despacho-section .andreani-remove-bulto', function () {
+			$(this).closest('.andreani-bulto-row').remove();
+			reindex();
+			updateSameDimsWarnings();
+			updateStatus();
+		});
+
+		$(document).on('click.andreaniBultos', '.andreani-despacho-section .andreani-switch-to-apilado', function () {
+			$list.empty();
+			$('#andreani-despacho-mode-apilado').prop('checked', true).trigger('change');
+		});
+
+		$(document).on('input.andreaniBultos change.andreaniBultos',
+			WC_INPUTS_SELECTOR + ', ' + BULTO_INPUTS_SELECTOR,
+			function () {
+				$bultosInvalid.hide();
+				updateSameDimsWarnings();
+				updateStatus();
+			});
+
 		$(document).on('input.andreaniApilado change.andreaniApilado',
-			'.andreani-apilado-section input[type="number"]',
+			'#andreani-despacho-panel-apilado input[type="number"]',
 			function () {
-				syncExclusion();
-				updateBadge();
+				$apiladoInvalid.toggle( apiladoIsInvalid() );
+				updateStatus();
 			});
 
-		$(document).on('input.andreaniBultos change.andreaniBultos click.andreaniBultos',
-			BULTO_INPUTS_SELECTOR + ', #andreani-bultos-toggle, .andreani-bultos-section .andreani-remove-bulto, #andreani-add-bulto',
-			function () {
-				window.setTimeout(syncExclusion, 0);
-			});
+		// El apilado inválido no puede quedar en silencio: sin esto WordPress
+		// guarda el POST y la config se descarta después, sin avisar.
+		$('form#post').on('submit', function ( event ) {
+			var apiladoInvalid = apiladoIsInvalid();
+			var multibultoInvalid = multibultoIsInvalid();
 
-		syncExclusion();
-		updateBadge();
+			if ( ! apiladoInvalid && ! multibultoInvalid ) {
+				return;
+			}
+
+			event.preventDefault();
+
+			if ( apiladoInvalid ) {
+				$apiladoInvalid.show();
+				$('#andreani-apilado-max-units').focus();
+			} else {
+				$bultosInvalid.show();
+				$list.find('.andreani-bulto-row').first().find('input').first().focus();
+			}
+
+			$('#publish, #save-post, .button-primary').removeClass('disabled button-primary-disabled').prop('disabled', false);
+			$('.spinner').removeClass('is-active');
+		});
+
+		syncMode();
 	});
 
 })(jQuery);

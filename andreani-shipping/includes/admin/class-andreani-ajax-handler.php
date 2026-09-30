@@ -581,6 +581,60 @@ class Andreani_Ajax_Handler {
 		) );
 	}
 
+	private function parse_dispatch_draft() {
+		$weight = isset( $_POST['weight'] ) ? floatval( $_POST['weight'] ) : 0.0;
+		$length = isset( $_POST['length'] ) ? floatval( $_POST['length'] ) : 0.0;
+		$width  = isset( $_POST['width'] )  ? floatval( $_POST['width'] )  : 0.0;
+		$height = isset( $_POST['height'] ) ? floatval( $_POST['height'] ) : 0.0;
+		if ( $weight < 0 || $length < 0 || $width < 0 || $height < 0 ) {
+			return new WP_Error( 'negative_dims', __( 'Las dimensiones no pueden ser negativas.', 'andreani-shipping' ), 'dims' );
+		}
+
+		$mode = Andreani_Product_Bultos::sanitize_dispatch_mode(
+			isset( $_POST['dispatch_mode'] ) ? sanitize_text_field( wp_unslash( $_POST['dispatch_mode'] ) ) : ''
+		);
+
+		$apilado = array();
+		if ( Andreani_Product_Bultos::MODE_APILADO === $mode ) {
+			$apilado_json = isset( $_POST['apilado_json'] ) ? sanitize_textarea_field( wp_unslash( $_POST['apilado_json'] ) ) : '';
+			$decoded      = '' !== $apilado_json ? json_decode( $apilado_json, true ) : array();
+
+			if ( is_array( $decoded ) ) {
+				$apilado = array(
+					'maxStackableUnits'   => isset( $decoded['maxStackableUnits'] ) ? absint( $decoded['maxStackableUnits'] ) : 0,
+					'unitIncrementHeight' => isset( $decoded['unitIncrementHeight'] ) ? floatval( $decoded['unitIncrementHeight'] ) : 0,
+					'unitIncrementWidth'  => isset( $decoded['unitIncrementWidth'] ) ? floatval( $decoded['unitIncrementWidth'] ) : 0,
+					'unitIncrementDepth'  => isset( $decoded['unitIncrementDepth'] ) ? floatval( $decoded['unitIncrementDepth'] ) : 0,
+				);
+			}
+
+			if ( ! Andreani_Product_Apilado::is_valid( $apilado ) ) {
+				return new WP_Error( 'invalid_apilado', Andreani_Product_Apilado::invalid_message(), 'apilado' );
+			}
+		}
+
+		$bultos = array();
+		if ( Andreani_Product_Bultos::MODE_MULTIBULTO === $mode ) {
+			$bultos_json = isset( $_POST['bultos_json'] ) ? sanitize_textarea_field( wp_unslash( $_POST['bultos_json'] ) ) : '';
+			$decoded     = '' !== $bultos_json ? json_decode( $bultos_json, true ) : array();
+			$bultos      = Andreani_Product_Bultos::pieces_from_rows( is_array( $decoded ) ? $decoded : array() );
+
+			if ( empty( $bultos ) ) {
+				return new WP_Error( 'invalid_bultos', Andreani_Product_Bultos::bultos_invalid_message(), 'bultos' );
+			}
+		}
+
+		return array(
+			'weight'  => $weight,
+			'length'  => $length,
+			'width'   => $width,
+			'height'  => $height,
+			'mode'    => $mode,
+			'apilado' => $apilado,
+			'bultos'  => $bultos,
+		);
+	}
+
 	public function handle_save_product_dims() {
 		check_ajax_referer( 'andreani_save_product_dims', 'nonce' );
 
@@ -598,13 +652,21 @@ class Andreani_Ajax_Handler {
 			wp_send_json_error( array( 'message' => __( 'Producto no encontrado.', 'andreani-shipping' ) ), 404 );
 		}
 
-		$weight = isset( $_POST['weight'] ) ? floatval( $_POST['weight'] ) : 0.0;
-		$length = isset( $_POST['length'] ) ? floatval( $_POST['length'] ) : 0.0;
-		$width  = isset( $_POST['width'] )  ? floatval( $_POST['width'] )  : 0.0;
-		$height = isset( $_POST['height'] ) ? floatval( $_POST['height'] ) : 0.0;
-		if ( $weight < 0 || $length < 0 || $width < 0 || $height < 0 ) {
-			wp_send_json_error( array( 'message' => __( 'Las dimensiones no pueden ser negativas.', 'andreani-shipping' ) ), 422 );
+		$draft = $this->parse_dispatch_draft();
+		if ( is_wp_error( $draft ) ) {
+			wp_send_json_error( array(
+				'message' => $draft->get_error_message(),
+				'field'   => $draft->get_error_data(),
+			), 422 );
 		}
+
+		$weight  = $draft['weight'];
+		$length  = $draft['length'];
+		$width   = $draft['width'];
+		$height  = $draft['height'];
+		$mode    = $draft['mode'];
+		$apilado = $draft['apilado'];
+		$bultos  = $draft['bultos'];
 
 		$product->set_weight( $weight > 0 ? $weight : '' );
 		$product->set_length( $length > 0 ? $length : '' );
@@ -612,65 +674,42 @@ class Andreani_Ajax_Handler {
 		$product->set_height( $height > 0 ? $height : '' );
 		$product->save();
 
-		// Bultos adicionales: llega el array completo (cada bulto con sus 4 medidas) en JSON.
-		// Mismo criterio que Andreani_Product_Bultos: solo se persisten los bultos con las
-		// 4 medidas > 0. El bulto principal es el peso/dimensiones de arriba.
-		$bultos      = array();
-		$bultos_json = isset( $_POST['bultos_json'] ) ? sanitize_textarea_field( wp_unslash( $_POST['bultos_json'] ) ) : '';
-		if ( '' !== $bultos_json ) {
-			$decoded = json_decode( $bultos_json, true );
-			if ( is_array( $decoded ) ) {
-				foreach ( $decoded as $b ) {
-					$bw = isset( $b['weight'] ) ? floatval( $b['weight'] ) : 0;
-					$bx = isset( $b['width'] )  ? floatval( $b['width'] )  : 0;
-					$by = isset( $b['height'] ) ? floatval( $b['height'] ) : 0;
-					$bz = isset( $b['depth'] )  ? floatval( $b['depth'] )  : 0;
-					if ( $bw > 0 && $bx > 0 && $by > 0 && $bz > 0 ) {
-						$bultos[] = Andreani_Product_Bultos::to_canonical_bulto(
-							isset( $b['name'] ) ? $b['name'] : '',
-							$by,
-							$bx,
-							$bz,
-							$bw,
-							count( $bultos )
-						);
-					}
-				}
-			}
-		}
-
 		if ( ! empty( $bultos ) ) {
 			update_post_meta( $product_id, Andreani_Product_Bultos::META_KEY, wp_slash( wp_json_encode( $bultos ) ) );
 		} else {
 			delete_post_meta( $product_id, Andreani_Product_Bultos::META_KEY );
 		}
 
-		// Con bultos el apilado ya no aplica y el modal lo bloquea: no se toca su meta, borrarla acá la perdería sin que el usuario la haya cambiado.
-		if ( empty( $bultos ) && class_exists( 'Andreani_Product_Apilado' ) ) {
-			$apilado      = array();
-			$apilado_json = isset( $_POST['apilado_json'] ) ? sanitize_textarea_field( wp_unslash( $_POST['apilado_json'] ) ) : '';
-			if ( '' !== $apilado_json ) {
-				$decoded_apilado = json_decode( $apilado_json, true );
-				if ( is_array( $decoded_apilado ) ) {
-					$apilado = array(
-						'maxStackableUnits'   => isset( $decoded_apilado['maxStackableUnits'] ) ? absint( $decoded_apilado['maxStackableUnits'] ) : 0,
-						'unitIncrementHeight' => isset( $decoded_apilado['unitIncrementHeight'] ) ? floatval( $decoded_apilado['unitIncrementHeight'] ) : 0,
-						'unitIncrementWidth'  => isset( $decoded_apilado['unitIncrementWidth'] ) ? floatval( $decoded_apilado['unitIncrementWidth'] ) : 0,
-						'unitIncrementDepth'  => isset( $decoded_apilado['unitIncrementDepth'] ) ? floatval( $decoded_apilado['unitIncrementDepth'] ) : 0,
-					);
-				}
-			}
-
-			if ( Andreani_Product_Apilado::is_valid( $apilado ) ) {
-				update_post_meta( $product_id, Andreani_Product_Apilado::META_KEY, wp_json_encode( $apilado ) );
-			} else {
-				delete_post_meta( $product_id, Andreani_Product_Apilado::META_KEY );
-			}
+		if ( Andreani_Product_Bultos::MODE_APILADO === $mode ) {
+			update_post_meta( $product_id, Andreani_Product_Apilado::META_KEY, wp_json_encode( $apilado ) );
+		} else {
+			delete_post_meta( $product_id, Andreani_Product_Apilado::META_KEY );
 		}
 
 		wp_send_json_success( array(
 			'message' => __( 'Dimensiones guardadas correctamente.', 'andreani-shipping' ),
 		) );
+	}
+
+	private function apply_dispatch_draft( $product, array $draft ) {
+		$product->set_weight( $draft['weight'] > 0 ? $draft['weight'] : '' );
+		$product->set_length( $draft['length'] > 0 ? $draft['length'] : '' );
+		$product->set_width( $draft['width'] > 0 ? $draft['width'] : '' );
+		$product->set_height( $draft['height'] > 0 ? $draft['height'] : '' );
+
+		$metas = array(
+			Andreani_Product_Bultos::META_KEY  => ! empty( $draft['bultos'] ) ? wp_json_encode( $draft['bultos'] ) : '',
+			Andreani_Product_Apilado::META_KEY => ! empty( $draft['apilado'] ) ? wp_json_encode( $draft['apilado'] ) : '',
+		);
+		$ids   = array_filter( array( $product->get_id(), $product->get_parent_id() ) );
+
+		add_filter( 'get_post_metadata', function ( $value, $object_id, $meta_key ) use ( $metas, $ids ) {
+			if ( isset( $metas[ $meta_key ] ) && in_array( (int) $object_id, $ids, true ) ) {
+				return array( $metas[ $meta_key ] );
+			}
+
+			return $value;
+		}, 10, 3 );
 	}
 
 	public function handle_test_quote() {
@@ -682,6 +721,8 @@ class Andreani_Ajax_Handler {
 
 		$product_id = isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0;
 		$cp_destino = isset( $_POST['cp_destino'] ) ? sanitize_text_field( wp_unslash( $_POST['cp_destino'] ) ) : '';
+		$quantity   = isset( $_POST['quantity'] ) ? absint( $_POST['quantity'] ) : 1;
+		$quantity   = max( 1, min( 99, $quantity ) );
 
 		if ( ! $product_id ) {
 			wp_send_json_error( array( 'message' => __( 'ID de producto inválido.', 'andreani-shipping' ) ), 400 );
@@ -693,6 +734,18 @@ class Andreani_Ajax_Handler {
 		$product = wc_get_product( $product_id );
 		if ( ! $product ) {
 			wp_send_json_error( array( 'message' => __( 'Producto no encontrado.', 'andreani-shipping' ) ), 404 );
+		}
+
+		if ( isset( $_POST['dispatch_mode'] ) ) {
+			$draft = $this->parse_dispatch_draft();
+			if ( is_wp_error( $draft ) ) {
+				wp_send_json_error( array(
+					'message' => $draft->get_error_message(),
+					'field'   => $draft->get_error_data(),
+				), 422 );
+			}
+
+			$this->apply_dispatch_draft( $product, $draft );
 		}
 
 		// Verificamos dims antes de llamar a la API para dar un error claro.
@@ -717,10 +770,10 @@ class Andreani_Ajax_Handler {
 			'contents'      => array(
 				array(
 					'data'     => $product,
-					'quantity' => 1,
+					'quantity' => $quantity,
 				),
 			),
-			'contents_cost' => floatval( $product->get_price() ),
+			'contents_cost' => floatval( $product->get_price() ) * $quantity,
 		);
 
 		if ( ! Andreani_Api_Manager::is_api_available() ) {

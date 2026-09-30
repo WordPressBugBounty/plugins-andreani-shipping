@@ -26,26 +26,25 @@ class Andreani_Product_Apilado {
 	}
 
 	private function __construct() {
-		add_action( 'woocommerce_product_options_shipping', array( $this, 'render_panel' ), 110 );
-
 		// Prioridad 20: tiene que correr DESPUÉS de que Andreani_Product_Bultos
-		// guarde, porque save_apilado decide en base a los bultos ya persistidos.
+		// guarde, porque las dos metas son excluyentes y el modo elegido manda.
 		add_action( 'woocommerce_process_product_meta', array( $this, 'save_apilado' ), 20 );
 	}
 
-	public function render_panel() {
-		global $post;
-
-		if ( ! $post ) {
-			return;
-		}
-
-		$apilado     = self::get_apilado( $post->ID );
-		$has_apilado = self::is_valid( $apilado );
-		$has_bultos  = class_exists( 'Andreani_Product_Bultos' )
-			&& ! empty( Andreani_Product_Bultos::get_bultos( $post->ID ) );
+	/**
+	 * @param int $product_id ID del producto (o variación).
+	 */
+	public static function render_fields( $product_id ) {
+		$apilado = self::get_apilado( $product_id );
 
 		include ANDREANI_PLUGIN_DIR . 'includes/admin/views/product-apilado-panel.php';
+	}
+
+	/**
+	 * @return string
+	 */
+	public static function invalid_message() {
+		return __( 'Para apilar necesitás un límite de 2 unidades o más y que al menos una de las tres medidas aumente por unidad. Si las unidades entran en la misma caja sin que crezca, escribinos: hoy no se puede declarar así.', 'andreani-shipping' );
 	}
 
 	/**
@@ -112,38 +111,44 @@ class Andreani_Product_Apilado {
 			return;
 		}
 
-		// Con bultos adicionales el switch se pinta deshabilitado y el navegador
-		// no manda los campos deshabilitados: leer esa ausencia como "apagado"
-		// borraría una configuración que el usuario nunca tocó.
-		if ( class_exists( 'Andreani_Product_Bultos' ) && ! empty( Andreani_Product_Bultos::get_bultos( $post_id ) ) ) {
-			return;
-		}
+		$mode = class_exists( 'Andreani_Product_Bultos' )
+			? Andreani_Product_Bultos::sanitize_dispatch_mode(
+				isset( $_POST[ Andreani_Product_Bultos::MODE_FIELD ] ) ? sanitize_text_field( wp_unslash( $_POST[ Andreani_Product_Bultos::MODE_FIELD ] ) ) : ''
+			)
+			: '';
 
-		if ( empty( $_POST['andreani_apilado_activo'] ) ) {
+		if ( ! class_exists( 'Andreani_Product_Bultos' ) || Andreani_Product_Bultos::MODE_APILADO !== $mode ) {
+			if ( class_exists( 'Andreani_Product_Bultos' ) && Andreani_Product_Bultos::MODE_MULTIBULTO === $mode && empty( Andreani_Product_Bultos::posted_pieces() ) ) {
+				return;
+			}
+
 			delete_post_meta( $post_id, self::META_KEY );
 			return;
 		}
 
-		$config = array(
-			'maxStackableUnits'   => isset( $_POST['andreani_apilado_maxStackableUnits'] ) ? absint( wp_unslash( $_POST['andreani_apilado_maxStackableUnits'] ) ) : 0,
-			'unitIncrementHeight' => isset( $_POST['andreani_apilado_unitIncrementHeight'] ) ? floatval( wp_unslash( $_POST['andreani_apilado_unitIncrementHeight'] ) ) : 0,
-			'unitIncrementWidth'  => isset( $_POST['andreani_apilado_unitIncrementWidth'] ) ? floatval( wp_unslash( $_POST['andreani_apilado_unitIncrementWidth'] ) ) : 0,
-			'unitIncrementDepth'  => isset( $_POST['andreani_apilado_unitIncrementDepth'] ) ? floatval( wp_unslash( $_POST['andreani_apilado_unitIncrementDepth'] ) ) : 0,
-		);
+		$config = self::posted_config();
 
 		if ( ! self::is_valid( $config ) ) {
-			delete_post_meta( $post_id, self::META_KEY );
-
 			if ( class_exists( 'WC_Admin_Meta_Boxes' ) ) {
-				WC_Admin_Meta_Boxes::add_error(
-					__( 'El apilado no se guardó: necesitás un límite de 2 unidades o más y que al menos uno de los incrementos sea mayor a cero.', 'andreani-shipping' )
-				);
+				WC_Admin_Meta_Boxes::add_error( self::invalid_message() );
 			}
 
 			return;
 		}
 
 		update_post_meta( $post_id, self::META_KEY, wp_json_encode( $config ) );
+	}
+
+	/**
+	 * @return array{maxStackableUnits:int,unitIncrementHeight:float,unitIncrementWidth:float,unitIncrementDepth:float}
+	 */
+	public static function posted_config() {
+		return array(
+			'maxStackableUnits'   => isset( $_POST['andreani_apilado_maxStackableUnits'] ) ? absint( wp_unslash( $_POST['andreani_apilado_maxStackableUnits'] ) ) : 0,
+			'unitIncrementHeight' => isset( $_POST['andreani_apilado_unitIncrementHeight'] ) ? floatval( wp_unslash( $_POST['andreani_apilado_unitIncrementHeight'] ) ) : 0,
+			'unitIncrementWidth'  => isset( $_POST['andreani_apilado_unitIncrementWidth'] ) ? floatval( wp_unslash( $_POST['andreani_apilado_unitIncrementWidth'] ) ) : 0,
+			'unitIncrementDepth'  => isset( $_POST['andreani_apilado_unitIncrementDepth'] ) ? floatval( wp_unslash( $_POST['andreani_apilado_unitIncrementDepth'] ) ) : 0,
+		);
 	}
 
 	private static function read_config( $product_id ) {

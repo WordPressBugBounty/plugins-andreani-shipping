@@ -2817,13 +2817,23 @@
     config: window.andreani_admin || {},
     $modal: null,
     thresholds: { weight: 50, sum_sides: 300, max_side: 165 },
+    canonical: { weight: 50, sum_sides: 300, max_side: 165 },
+
+    MODE_SINGLE: 'single',
+    MODE_APILADO: 'apilado',
+    MODE_MULTIBULTO: 'multibulto',
 
     init() {
       this.$modal = $('#andreani-product-edit-modal');
       if (!this.$modal.length) return;
       this.config = window.andreani_admin || {};
       this.thresholds = this.config.bigger_thresholds || this.thresholds;
+      this.canonical = this.config.thresholds_canonical || this.canonical;
       this.bindEvents();
+    },
+
+    strings() {
+      return (this.config.i18n || {}).dispatch || {};
     },
 
     bindEvents() {
@@ -2841,6 +2851,10 @@
         $('#andreani-edit-width').val($btn.data('width') || '');
         $('#andreani-edit-height').val($btn.data('height') || '');
         $('#andreani-edit-message').hide().text('').removeClass('andreani-products-inline-msg--success andreani-products-inline-msg--error');
+        $('#andreani-edit-quote-results').hide().empty();
+        $('#andreani-edit-quote-message').hide().text('').removeClass('andreani-products-inline-msg--success andreani-products-inline-msg--error');
+        $('#andreani-edit-quote-cp').val('');
+        $('#andreani-edit-quote-qty').val('1');
 
         let bultos = $btn.attr('data-bultos-json');
         try { bultos = bultos ? JSON.parse(bultos) : []; } catch (e) { bultos = []; }
@@ -2852,12 +2866,16 @@
         if (!apilado || typeof apilado !== 'object' || Array.isArray(apilado)) apilado = {};
         self.renderApilado(apilado);
 
+        let mode = self.MODE_SINGLE;
+        if (bultos.length) mode = self.MODE_MULTIBULTO;
+        else if (self.isValidApilado(apilado)) mode = self.MODE_APILADO;
+        self.setMode(mode);
+
         self.$modal.show();
       });
 
       this.$modal.on('click', '.andreani-modal__close, .andr-modal__backdrop', () => this.$modal.hide());
 
-      // Stepper: subir/bajar la cantidad de bultos con un click.
       $('#andreani-bultos-plus').on('click', () => { self.addCard(); self.afterChange(); });
       $('#andreani-bultos-minus').on('click', () => {
         self.$modal.find('.andreani-bulto-card').last().remove();
@@ -2868,19 +2886,64 @@
         self.afterChange();
       });
 
-      // Recalcular categoría (Bigger / Paquete común) al tipear en principal o bultos.
-      this.$modal.on('input',
-        '#andreani-edit-weight, #andreani-edit-length, #andreani-edit-width, #andreani-edit-height, .andreani-bulto-card input',
-        () => self.recalcBadge());
-
-      this.$modal.on('change', '#andreani-edit-apilado-toggle', function() {
-        if (!this.checked) self.$modal.find('#andreani-edit-apilado-fields input').val('');
-        self.syncApilado();
+      this.$modal.on('click', '.andreani-bulto-card__switch', () => {
+        $('#andreani-bultos-cards').empty();
+        self.setMode(self.MODE_APILADO);
       });
 
-      this.$modal.on('input', '#andreani-edit-apilado-fields input', () => self.syncApilado());
+      this.$modal.on('input',
+        '#andreani-edit-weight, #andreani-edit-length, #andreani-edit-width, #andreani-edit-height, .andreani-bulto-card input',
+        () => {
+          $('#andreani-edit-bultos-invalid').hide();
+          self.markSameDims();
+          self.recalcStatus();
+        });
+
+      this.$modal.on('change', '.andreani-despacho-card__input', function() {
+        self.setMode($(this).val());
+      });
+
+      this.$modal.on('input', '#andreani-edit-apilado-fields input', () => {
+        $('#andreani-edit-apilado-invalid').toggle(self.currentMode() === self.MODE_APILADO && !self.collectApilado());
+        self.recalcStatus();
+      });
 
       $('#andreani-product-edit-save').on('click', () => this.save());
+      $('#andreani-edit-quote-submit').on('click', () => this.quote());
+    },
+
+    currentMode() {
+      const mode = this.$modal.find('.andreani-despacho-card__input:checked').val();
+      return (mode === this.MODE_APILADO || mode === this.MODE_MULTIBULTO) ? mode : this.MODE_SINGLE;
+    },
+
+    setMode(mode) {
+      mode = (mode === this.MODE_APILADO || mode === this.MODE_MULTIBULTO) ? mode : this.MODE_SINGLE;
+
+      if (mode !== this.MODE_MULTIBULTO) $('#andreani-bultos-cards').empty();
+
+      this.$modal.find('.andreani-despacho-card__input').each(function() {
+        $(this).prop('checked', $(this).val() === mode);
+      });
+      this.$modal.find('.andreani-despacho-card').each(function() {
+        $(this).toggleClass('andreani-despacho-card--active', $(this).find('.andreani-despacho-card__input').val() === mode);
+      });
+
+      if (mode === this.MODE_APILADO) {
+        const $maxUnits = $('#andreani-edit-apilado-max-units');
+        if (!$maxUnits.val()) $maxUnits.val($maxUnits.attr('min'));
+      }
+
+      if (mode === this.MODE_MULTIBULTO && !$('#andreani-bultos-cards .andreani-bulto-card').length) {
+        this.addCard();
+      }
+
+      $('#andreani-edit-panel-apilado').toggle(mode === this.MODE_APILADO);
+      $('#andreani-edit-panel-multibulto').toggle(mode === this.MODE_MULTIBULTO);
+      $('#andreani-edit-apilado-invalid').hide();
+      $('#andreani-edit-bultos-invalid').hide();
+
+      this.afterChange();
     },
 
     cardHtml(index, b) {
@@ -2888,13 +2951,14 @@
       const v = (x) => (x === undefined || x === null) ? '' : x;
       const u = this.config.units || { weight: 'kg', dimension: 'cm' };
       const i18n = this.config.i18n || {};
+      const s = this.strings();
       const nameLabel = i18n.bulto_name_label || 'Referencia del bulto';
       const namePlaceholder = i18n.bulto_name_placeholder || 'Ej. Base de somier';
       return ''
         + '<div class="andreani-bulto-card">'
         +   '<div class="andreani-bulto-card__head">'
         +     '<span class="andreani-bulto-card__title">Bulto ' + (index + 2) + '</span>'
-        +     '<button type="button" class="andreani-bulto-card__remove" aria-label="Eliminar bulto">&times;</button>'
+        +     '<button type="button" class="andreani-bulto-card__remove" aria-label="Eliminar pieza">&times;</button>'
         +   '</div>'
         +   '<label class="andreani-bulto-card__field andreani-bulto-card__field--name">'
         +     '<span>' + escapeHtml(nameLabel) + '</span>'
@@ -2905,6 +2969,10 @@
         +     '<label class="andreani-bulto-card__field"><span>Ancho (' + escapeHtml(u.dimension) + ')</span><input type="number" class="b-width" min="0" step="0.01" value="' + v(b.width) + '"></label>'
         +     '<label class="andreani-bulto-card__field"><span>Profundidad (' + escapeHtml(u.dimension) + ')</span><input type="number" class="b-depth" min="0" step="0.01" value="' + v(b.depth) + '"></label>'
         +     '<label class="andreani-bulto-card__field"><span>Peso (' + escapeHtml(u.weight) + ')</span><input type="number" class="b-weight" min="0" step="0.001" value="' + v(b.weight) + '"></label>'
+        +   '</div>'
+        +   '<div class="andreani-bulto-card__warning" style="display:none;">'
+        +     '<span>' + escapeHtml(s.same_dims_warning || '') + '</span>'
+        +     '<button type="button" class="andr-btn andr-btn--ghost andr-btn--sm andreani-bulto-card__switch">' + escapeHtml(s.switch_to_apilado || '') + '</button>'
         +   '</div>'
         + '</div>';
     },
@@ -2929,7 +2997,29 @@
       const n = $('#andreani-bultos-cards .andreani-bulto-card').length;
       $('#andreani-bultos-count').text(n);
       $('#andreani-bultos-minus').prop('disabled', n === 0);
-      this.syncApilado();
+      this.markSameDims();
+      this.recalcStatus();
+    },
+
+    round2(value) {
+      return Math.round((parseFloat(value) || 0) * 100) / 100;
+    },
+
+    markSameDims() {
+      const width = this.round2($('#andreani-edit-width').val());
+      const height = this.round2($('#andreani-edit-height').val());
+      const depth = this.round2($('#andreani-edit-length').val());
+      const hasPrincipal = width > 0 && height > 0 && depth > 0;
+      const self = this;
+
+      $('#andreani-bultos-cards .andreani-bulto-card').each(function() {
+        const $c = $(this);
+        const same = hasPrincipal
+          && self.round2($c.find('.b-height').val()) === height
+          && self.round2($c.find('.b-width').val()) === width
+          && self.round2($c.find('.b-depth').val()) === depth;
+        $c.find('.andreani-bulto-card__warning').toggle(!!same);
+      });
     },
 
     collectBultos() {
@@ -2947,14 +3037,34 @@
       return bultos;
     },
 
+    hasCompleteBulto() {
+      return this.collectBultos().some((b) => b.weight > 0 && b.height > 0 && b.width > 0 && b.depth > 0);
+    },
+
+    draftPayload() {
+      const mode = this.currentMode();
+      const apilado = this.collectApilado();
+      return {
+        weight:        $('#andreani-edit-weight').val(),
+        length:        $('#andreani-edit-length').val(),
+        width:         $('#andreani-edit-width').val(),
+        height:        $('#andreani-edit-height').val(),
+        dispatch_mode: mode,
+        bultos_json:   JSON.stringify(mode === this.MODE_MULTIBULTO ? this.collectBultos() : []),
+        apilado_json:  JSON.stringify(mode === this.MODE_APILADO ? (apilado || {}) : {}),
+      };
+    },
+
+    serverError(xhr) {
+      return (xhr && xhr.responseJSON && xhr.responseJSON.data) || {};
+    },
+
     renderApilado(apilado) {
       const valid = this.isValidApilado(apilado);
-      $('#andreani-edit-apilado-toggle').prop('checked', valid);
       $('#andreani-edit-apilado-max-units').val(valid ? apilado.maxStackableUnits : '');
       $('#andreani-edit-apilado-inc-height').val(valid ? apilado.unitIncrementHeight : '');
       $('#andreani-edit-apilado-inc-width').val(valid ? apilado.unitIncrementWidth : '');
       $('#andreani-edit-apilado-inc-depth').val(valid ? apilado.unitIncrementDepth : '');
-      this.syncApilado();
     },
 
     isValidApilado(a) {
@@ -2963,11 +3073,11 @@
       const incH = parseFloat(a.unitIncrementHeight) || 0;
       const incW = parseFloat(a.unitIncrementWidth) || 0;
       const incD = parseFloat(a.unitIncrementDepth) || 0;
+      if (incH < 0 || incW < 0 || incD < 0) return false;
       return maxUnits >= 2 && (incH > 0 || incW > 0 || incD > 0);
     },
 
     collectApilado() {
-      if (!$('#andreani-edit-apilado-toggle').is(':checked')) return null;
       const a = {
         maxStackableUnits:   parseInt($('#andreani-edit-apilado-max-units').val(), 10) || 0,
         unitIncrementHeight: parseFloat($('#andreani-edit-apilado-inc-height').val()) || 0,
@@ -2977,53 +3087,65 @@
       return this.isValidApilado(a) ? a : null;
     },
 
-    syncApilado() {
-      const hasBultos = $('#andreani-bultos-cards .andreani-bulto-card').length > 0;
-      const checked = $('#andreani-edit-apilado-toggle').is(':checked');
-      $('#andreani-edit-apilado-lock').toggle(hasBultos);
-      $('#andreani-edit-apilado-toggle').prop('disabled', hasBultos);
-      $('#andreani-edit-apilado-fields').toggle(checked && !hasBultos)
-        .find('input').prop('disabled', hasBultos);
-      this.recalcBadge();
-    },
-
-    recalcBadge() {
+    recalcStatus() {
       const t = this.thresholds || { weight: 50, sum_sides: 300, max_side: 165 };
-      let totalWeight = parseFloat($('#andreani-edit-weight').val()) || 0;
-      let maxSumSides = (parseFloat($('#andreani-edit-length').val()) || 0)
-                      + (parseFloat($('#andreani-edit-width').val())  || 0)
-                      + (parseFloat($('#andreani-edit-height').val()) || 0);
-      let maxSide = Math.max(
-        parseFloat($('#andreani-edit-length').val()) || 0,
-        parseFloat($('#andreani-edit-width').val())  || 0,
-        parseFloat($('#andreani-edit-height').val()) || 0
-      );
-      const bultos = this.collectBultos();
-      const apilado = bultos.length === 0 ? this.collectApilado() : null;
+      const c = this.canonical || { weight: 50, sum_sides: 300, max_side: 165 };
+      const s = this.strings();
+      const mode = this.currentMode();
+      const cmFactor = (this.config && this.config.cm_factor) || 1;
+      const kgFactor = (this.config && this.config.kg_factor) || 1;
+      const fmt = (value) => String(Math.round((parseFloat(value) || 0) * 100) / 100);
+      const fill = (tpl, first, second) => String(tpl || '').replace('%1$s', first).replace('%2$s', second);
 
-      if (apilado) {
-        const extra = apilado.maxStackableUnits - 1;
-        const cmFactor = (this.config && this.config.cm_factor) || 1;
-        const pilaL = (parseFloat($('#andreani-edit-length').val()) || 0) + apilado.unitIncrementDepth * cmFactor * extra;
-        const pilaW = (parseFloat($('#andreani-edit-width').val()) || 0) + apilado.unitIncrementWidth * cmFactor * extra;
-        const pilaH = (parseFloat($('#andreani-edit-height').val()) || 0) + apilado.unitIncrementHeight * cmFactor * extra;
-        totalWeight = (parseFloat($('#andreani-edit-weight').val()) || 0) * apilado.maxStackableUnits;
-        maxSumSides = pilaL + pilaW + pilaH;
-        maxSide = Math.max(pilaL, pilaW, pilaH);
+      const weight = parseFloat($('#andreani-edit-weight').val()) || 0;
+      const length = parseFloat($('#andreani-edit-length').val()) || 0;
+      const width = parseFloat($('#andreani-edit-width').val()) || 0;
+      const height = parseFloat($('#andreani-edit-height').val()) || 0;
+
+      let totalWeight = weight;
+      let maxSumSides = length + width + height;
+      let maxSide = Math.max(length, width, height);
+
+      if (mode === this.MODE_APILADO) {
+        const apilado = this.collectApilado();
+        if (apilado) {
+          const extra = apilado.maxStackableUnits - 1;
+          const pilaL = length + apilado.unitIncrementDepth * cmFactor * extra;
+          const pilaW = width + apilado.unitIncrementWidth * cmFactor * extra;
+          const pilaH = height + apilado.unitIncrementHeight * cmFactor * extra;
+          totalWeight = weight * apilado.maxStackableUnits;
+          maxSumSides = pilaL + pilaW + pilaH;
+          maxSide = Math.max(pilaL, pilaW, pilaH);
+        }
       }
 
-      bultos.forEach((b) => {
-        totalWeight += b.weight;
-        const sum = b.depth + b.width + b.height;
-        if (sum > maxSumSides) maxSumSides = sum;
-        const ms = Math.max(b.depth, b.width, b.height);
-        if (ms > maxSide) maxSide = ms;
-      });
-      const isBigger = totalWeight > t.weight || maxSumSides > t.sum_sides || maxSide > t.max_side;
-      $('#andreani-edit-bigger-badge')
-        .text(isBigger ? 'Bigger' : 'Paquete común')
-        .toggleClass('andr-badge--info', isBigger)
-        .toggleClass('andr-badge--neutral', !isBigger);
+      if (mode === this.MODE_MULTIBULTO) {
+        this.collectBultos().forEach((b) => {
+          totalWeight += b.weight;
+          const sum = b.depth + b.width + b.height;
+          if (sum > maxSumSides) maxSumSides = sum;
+          const ms = Math.max(b.depth, b.width, b.height);
+          if (ms > maxSide) maxSide = ms;
+        });
+      }
+
+      let reason = '';
+      if (totalWeight > t.weight) {
+        reason = fill(s.bigger_reason_weight, fmt(totalWeight * kgFactor), fmt(c.weight));
+      } else if (maxSumSides > t.sum_sides) {
+        reason = fill(s.bigger_reason_sum_sides, fmt(cmFactor ? maxSumSides / cmFactor : maxSumSides), fmt(c.sum_sides));
+      } else if (maxSide > t.max_side) {
+        reason = fill(s.bigger_reason_max_side, fmt(cmFactor ? maxSide / cmFactor : maxSide), fmt(c.max_side));
+      }
+
+      const text = reason
+        ? String(s.bigger_prefix || '%s').replace('%s', reason)
+        : (s.bigger_regular || '');
+
+      $('#andreani-edit-bigger-status')
+        .text(text)
+        .toggleClass('andreani-despacho-status--bigger', !!reason)
+        .toggleClass('andreani-despacho-status--regular', !reason);
     },
 
     save() {
@@ -3031,21 +3153,32 @@
       const $btn = $('#andreani-product-edit-save');
       const $msg = $('#andreani-edit-message');
       const i18n = (this.config.i18n || {});
+      const mode = this.currentMode();
+      const apilado = this.collectApilado();
 
-      $btn.prop('disabled', true).text(i18n.save_dims_loading || 'Guardando...');
       $msg.hide().text('').removeClass('andreani-products-inline-msg--success andreani-products-inline-msg--error');
 
-      $.post(this.config.ajax_url || ajaxurl, {
-        action:      'andreani_save_product_dims',
-        nonce:       this.config.nonce_save_dims,
-        product_id:  $('#andreani-edit-product-id').val(),
-        weight:      $('#andreani-edit-weight').val(),
-        length:      $('#andreani-edit-length').val(),
-        width:       $('#andreani-edit-width').val(),
-        height:      $('#andreani-edit-height').val(),
-        bultos_json: JSON.stringify(this.collectBultos()),
-        apilado_json: JSON.stringify(this.collectApilado() || {}),
-      })
+      // El apilado inválido no se descarta en silencio: sin esto el guardado
+      // vuelve OK y el producto sigue cotizando una caja por unidad.
+      if (mode === this.MODE_APILADO && !apilado) {
+        $('#andreani-edit-apilado-invalid').show();
+        $('#andreani-edit-apilado-max-units').focus();
+        return;
+      }
+
+      if (mode === this.MODE_MULTIBULTO && !this.hasCompleteBulto()) {
+        $('#andreani-edit-bultos-invalid').show();
+        $('#andreani-bultos-cards .andreani-bulto-card').first().find('input').first().focus();
+        return;
+      }
+
+      $btn.prop('disabled', true).text(i18n.save_dims_loading || 'Guardando...');
+
+      $.post(this.config.ajax_url || ajaxurl, $.extend({
+        action:     'andreani_save_product_dims',
+        nonce:      this.config.nonce_save_dims,
+        product_id: $('#andreani-edit-product-id').val(),
+      }, this.draftPayload()))
         .done((res) => {
           if (res.success) {
             $msg.text(i18n.save_dims_success || 'Guardado.').addClass('andreani-products-inline-msg--success').show();
@@ -3058,10 +3191,57 @@
               .addClass('andreani-products-inline-msg--error').show();
           }
         })
-        .fail(() => {
-          $msg.text(i18n.save_dims_error || 'Error de red.').addClass('andreani-products-inline-msg--error').show();
+        .fail((xhr) => {
+          const data = self.serverError(xhr);
+          if (data.field === 'apilado') {
+            $('#andreani-edit-apilado-invalid').text(data.message).show();
+            $('#andreani-edit-apilado-max-units').focus();
+          } else if (data.field === 'bultos') {
+            $('#andreani-edit-bultos-invalid').text(data.message).show();
+          } else {
+            $msg.text(data.message || i18n.save_dims_error || 'Error de red.').addClass('andreani-products-inline-msg--error').show();
+          }
         })
         .always(() => { $btn.prop('disabled', false).text('Guardar'); });
+    },
+
+    quote() {
+      const self = this;
+      const $btn = $('#andreani-edit-quote-submit');
+      const $results = $('#andreani-edit-quote-results');
+      const $msg = $('#andreani-edit-quote-message');
+      const i18n = (this.config.i18n || {});
+
+      $msg.hide().text('').removeClass('andreani-products-inline-msg--success andreani-products-inline-msg--error');
+      $results.hide().empty();
+      $btn.prop('disabled', true).text(i18n.quote_loading || 'Cotizando...');
+
+      $.post(this.config.ajax_url || ajaxurl, $.extend({
+        action:     'andreani_test_quote',
+        nonce:      this.config.nonce_test_quote,
+        product_id: $('#andreani-edit-product-id').val(),
+        cp_destino: ($('#andreani-edit-quote-cp').val() || '').trim(),
+        quantity:   $('#andreani-edit-quote-qty').val() || 1,
+      }, this.draftPayload()))
+        .done((res) => {
+          if (res.success && res.data.rates && res.data.rates.length) {
+            let html = '';
+            res.data.rates.forEach((r) => {
+              html += '<div class="andreani-quote-rate">'
+                + '<span class="andreani-quote-rate__name">' + escapeHtml(String(r.label)) + '</span>'
+                + '<span class="andreani-quote-rate__price">$' + escapeHtml(parseFloat(r.cost).toFixed(2)) + '</span>'
+                + '</div>';
+            });
+            $results.html(html).show();
+          } else {
+            $msg.text((res.data && res.data.message) || i18n.quote_error || 'Error al cotizar.')
+              .addClass('andreani-products-inline-msg--error').show();
+          }
+        })
+        .fail((xhr) => {
+          $msg.text(self.serverError(xhr).message || i18n.quote_error || 'Error de red.').addClass('andreani-products-inline-msg--error').show();
+        })
+        .always(() => { $btn.prop('disabled', false).text('Cotizar'); });
     },
   };
 
@@ -3153,9 +3333,10 @@
             }
           });
         })
-        .fail(() => {
+        .fail((xhr) => {
           finish(() => {
-            $msg.text(i18n.quote_error || 'Error de red.').addClass('andreani-products-inline-msg--error').show();
+            const data = (xhr.responseJSON && xhr.responseJSON.data) || {};
+            $msg.text(data.message || i18n.quote_error || 'Error de red.').addClass('andreani-products-inline-msg--error').show();
           });
         })
         .always(() => { $btn.prop('disabled', false).text('Cotizar'); });

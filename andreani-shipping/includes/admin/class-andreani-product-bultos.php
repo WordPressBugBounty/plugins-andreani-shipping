@@ -1,10 +1,7 @@
 <?php
 /**
- * Panel de bultos adicionales en la ficha de producto.
- *
- * Cualquier producto puede configurar múltiples bultos (ej: un mueble que
- * viaja en 2 cajas). El badge Bigger es solo informativo — indica si el
- * producto supera los umbrales de Andreani para el servicio Bigger.
+ * Panel de modo de despacho en la ficha de producto: un solo paquete, varias
+ * unidades apiladas en un bulto, o una unidad repartida en varias piezas.
  *
  * @package AndreaniPlugin
  */
@@ -19,6 +16,11 @@ class Andreani_Product_Bultos {
 
 	const META_KEY  = '_andreani_bultos_adicionales';
 	const NONCE_KEY = 'andreani_bultos_nonce';
+
+	const MODE_FIELD      = 'andreani_dispatch_mode';
+	const MODE_SINGLE     = 'single';
+	const MODE_APILADO    = 'apilado';
+	const MODE_MULTIBULTO = 'multibulto';
 
 	public static function get_instance() {
 		if ( null === self::$instance ) {
@@ -40,18 +42,57 @@ class Andreani_Product_Bultos {
 			return;
 		}
 
-		$is_bigger   = self::is_bigger_product( $post->ID );
+		$evaluation  = self::evaluate_bigger( $post->ID );
+		$bigger_text = self::bigger_status_text( $evaluation );
+		$is_bigger   = $evaluation['is_bigger'];
 		$bultos      = self::to_store_units( self::get_bultos( $post->ID ) );
-		$has_bultos  = ! empty( $bultos );
-		$has_apilado = class_exists( 'Andreani_Product_Apilado' )
-			&& Andreani_Product_Apilado::is_valid( Andreani_Product_Apilado::get_apilado( $post->ID ) );
+		$mode        = self::resolve_dispatch_mode( $post->ID );
 
 		include ANDREANI_PLUGIN_DIR . 'includes/admin/views/product-bultos-panel.php';
 	}
 
 	/**
+	 * @param int $product_id ID del producto (o variación).
+	 * @return string
+	 */
+	public static function resolve_dispatch_mode( $product_id ) {
+		if ( ! empty( self::get_bultos( $product_id ) ) ) {
+			return self::MODE_MULTIBULTO;
+		}
+
+		if ( class_exists( 'Andreani_Product_Apilado' )
+			&& Andreani_Product_Apilado::is_valid( Andreani_Product_Apilado::get_apilado( $product_id ) ) ) {
+			return self::MODE_APILADO;
+		}
+
+		return self::MODE_SINGLE;
+	}
+
+	/**
+	 * @param string $mode Modo tal como llegó del formulario.
+	 * @return string
+	 */
+	public static function sanitize_dispatch_mode( $mode ) {
+		$mode = is_string( $mode ) ? $mode : '';
+
+		return in_array( $mode, array( self::MODE_APILADO, self::MODE_MULTIBULTO ), true )
+			? $mode
+			: self::MODE_SINGLE;
+	}
+
+	/**
 	 * Determinar si un producto califica como Bigger según los umbrales de Andreani.
 	 *
+	 * @param int $product_id ID del producto (o variación).
+	 * @return bool
+	 */
+	public static function is_bigger_product( $product_id ) {
+		$evaluation = self::evaluate_bigger( $product_id );
+
+		return $evaluation['is_bigger'];
+	}
+
+	/**
 	 * Combina principal + bultos adicionales: peso es la suma total; suma de lados y
 	 * lado máximo se quedan con el mayor entre todos los bultos.
 	 *
@@ -59,13 +100,13 @@ class Andreani_Product_Bultos {
 	 * que es el bulto más grande que el producto llega a declarar.
 	 *
 	 * @param int $product_id ID del producto (o variación).
-	 * @return bool
+	 * @return array{is_bigger:bool,reason:string,value:float}
 	 */
-	public static function is_bigger_product( $product_id ) {
+	public static function evaluate_bigger( $product_id ) {
 		$product = wc_get_product( $product_id );
 
 		if ( ! $product ) {
-			return false;
+			return self::bigger_evaluation( false, '', 0.0 );
 		}
 
 		$weight = (float) $product->get_weight();
@@ -131,9 +172,118 @@ class Andreani_Product_Bultos {
 			}
 		}
 
-		return $total_weight  > Andreani_Api_Config::BIGGER_WEIGHT_KG
-			|| $max_sum_sides > Andreani_Api_Config::BIGGER_SUM_SIDES_CM
-			|| $max_side      > Andreani_Api_Config::BIGGER_MAX_SIDE_CM;
+		if ( $total_weight > Andreani_Api_Config::BIGGER_WEIGHT_KG ) {
+			return self::bigger_evaluation( true, 'weight', $total_weight );
+		}
+
+		if ( $max_sum_sides > Andreani_Api_Config::BIGGER_SUM_SIDES_CM ) {
+			return self::bigger_evaluation( true, 'sum_sides', $max_sum_sides );
+		}
+
+		if ( $max_side > Andreani_Api_Config::BIGGER_MAX_SIDE_CM ) {
+			return self::bigger_evaluation( true, 'max_side', $max_side );
+		}
+
+		return self::bigger_evaluation( false, '', 0.0 );
+	}
+
+	/**
+	 * @param bool   $is_bigger Si califica como Bigger.
+	 * @param string $reason    Motivo: weight, sum_sides o max_side.
+	 * @param float  $value     Magnitud medida que disparó el motivo, en kg o cm.
+	 * @return array{is_bigger:bool,reason:string,value:float}
+	 */
+	private static function bigger_evaluation( $is_bigger, $reason, $value ) {
+		return array(
+			'is_bigger' => (bool) $is_bigger,
+			'reason'    => (string) $reason,
+			'value'     => (float) $value,
+		);
+	}
+
+	/**
+	 * @param array $evaluation Evaluación devuelta por evaluate_bigger().
+	 * @return string
+	 */
+	public static function bigger_status_text( array $evaluation ) {
+		$strings = self::get_ui_strings();
+
+		if ( empty( $evaluation['is_bigger'] ) ) {
+			return $strings['bigger_regular'];
+		}
+
+		$reasons = array(
+			'weight'    => array( $strings['bigger_reason_weight'], Andreani_Api_Config::BIGGER_WEIGHT_KG ),
+			'sum_sides' => array( $strings['bigger_reason_sum_sides'], Andreani_Api_Config::BIGGER_SUM_SIDES_CM ),
+			'max_side'  => array( $strings['bigger_reason_max_side'], Andreani_Api_Config::BIGGER_MAX_SIDE_CM ),
+		);
+
+		$reason = isset( $evaluation['reason'] ) ? $evaluation['reason'] : '';
+
+		if ( ! isset( $reasons[ $reason ] ) ) {
+			return $strings['bigger_regular'];
+		}
+
+		return sprintf(
+			$strings['bigger_prefix'],
+			sprintf(
+				$reasons[ $reason ][0],
+				self::format_measure( isset( $evaluation['value'] ) ? $evaluation['value'] : 0 ),
+				self::format_measure( $reasons[ $reason ][1] )
+			)
+		);
+	}
+
+	/**
+	 * @param mixed $value Magnitud numérica.
+	 * @return string
+	 */
+	public static function format_measure( $value ) {
+		$formatted = number_format( (float) $value, 2, '.', '' );
+		$formatted = rtrim( rtrim( $formatted, '0' ), '.' );
+
+		return '' === $formatted ? '0' : $formatted;
+	}
+
+	/**
+	 * @return array<string,string>
+	 */
+	public static function get_ui_strings() {
+		return array(
+			'mode_question'            => __( '¿Cómo se despacha este producto?', 'andreani-shipping' ),
+			'mode_single_title'        => __( 'En un solo paquete', 'andreani-shipping' ),
+			'mode_single_desc'         => __( 'Usa el peso y las medidas de arriba.', 'andreani-shipping' ),
+			'mode_apilado_title'       => __( 'Varias unidades viajan juntas', 'andreani-shipping' ),
+			'mode_apilado_desc'        => __( 'Se apilan y viajan en un mismo bulto que crece. Ej.: sillas que se apilan una sobre otra.', 'andreani-shipping' ),
+			'mode_multibulto_title'    => __( 'Una unidad viaja en varias piezas', 'andreani-shipping' ),
+			'mode_multibulto_desc'     => __( 'Una sola unidad del producto se despacha en más de una caja. Ej.: un aire acondicionado, unidad interior + unidad exterior.', 'andreani-shipping' ),
+			'mode_multibulto_warning'  => __( 'Cada pieza que agregues se cotiza y se despacha como un paquete más, por cada unidad vendida.', 'andreani-shipping' ),
+			'bigger_prefix'            => __( 'Se despacha como Bigger — %s', 'andreani-shipping' ),
+			'bigger_regular'           => __( 'Se despacha como Paquete estándar', 'andreani-shipping' ),
+			/* translators: 1: peso del producto en kg, 2: umbral de peso en kg */
+			'bigger_reason_weight'     => __( 'pesa %1$s kg y supera los %2$s kg de paquetería', 'andreani-shipping' ),
+			/* translators: 1: suma de los lados en cm, 2: umbral de suma de lados en cm */
+			'bigger_reason_sum_sides'  => __( 'la suma de sus lados es %1$s cm y supera los %2$s cm', 'andreani-shipping' ),
+			/* translators: 1: lado más largo en cm, 2: umbral de lado máximo en cm */
+			'bigger_reason_max_side'   => __( 'su lado más largo es %1$s cm y supera los %2$s cm', 'andreani-shipping' ),
+			'same_dims_warning'        => __( 'Esta pieza tiene las mismas medidas que el bulto principal. Si lo que pasa es que vendés varias unidades y viajan juntas, esto no es multibulto: elegí «Varias unidades viajan juntas».', 'andreani-shipping' ),
+			'switch_to_apilado'        => __( 'Cambiar a apilado', 'andreani-shipping' ),
+			'apilado_invalid'          => class_exists( 'Andreani_Product_Apilado' )
+				? Andreani_Product_Apilado::invalid_message()
+				: '',
+			'bultos_invalid'           => self::bultos_invalid_message(),
+		);
+	}
+
+	/**
+	 * @return array{weight:float,sum_sides:float,max_side:float}
+	 */
+	public static function get_canonical_thresholds() {
+		return array(
+			'weight'    => (float) Andreani_Api_Config::BIGGER_WEIGHT_KG,
+			'sum_sides' => (float) Andreani_Api_Config::BIGGER_SUM_SIDES_CM,
+			'max_side'  => (float) Andreani_Api_Config::BIGGER_MAX_SIDE_CM,
+		);
 	}
 
 	/**
@@ -164,7 +314,39 @@ class Andreani_Product_Bultos {
 			return;
 		}
 
-		$bultos = array();
+		$mode = self::sanitize_dispatch_mode(
+			isset( $_POST[ self::MODE_FIELD ] ) ? sanitize_text_field( wp_unslash( $_POST[ self::MODE_FIELD ] ) ) : ''
+		);
+
+		if ( self::MODE_MULTIBULTO !== $mode ) {
+			if ( self::MODE_APILADO === $mode && class_exists( 'Andreani_Product_Apilado' ) && ! Andreani_Product_Apilado::is_valid( Andreani_Product_Apilado::posted_config() ) ) {
+				return;
+			}
+
+			delete_post_meta( $post_id, self::META_KEY );
+			return;
+		}
+
+		$bultos = self::posted_pieces();
+
+		if ( empty( $bultos ) ) {
+			if ( class_exists( 'WC_Admin_Meta_Boxes' ) ) {
+				WC_Admin_Meta_Boxes::add_error( self::bultos_invalid_message() );
+			}
+
+			return;
+		}
+
+		// update_post_meta desescapa el valor: sin wp_slash una comilla en la
+		// referencia del bulto rompe el JSON que se guarda.
+		update_post_meta( $post_id, self::META_KEY, wp_slash( wp_json_encode( $bultos ) ) );
+	}
+
+	/**
+	 * @return array<int,array{name:string,height:float,width:float,depth:float,weight:float}>
+	 */
+	public static function posted_pieces() {
+		$rows = array();
 
 		if ( ! empty( $_POST['andreani_bulto_weight'] ) && is_array( $_POST['andreani_bulto_weight'] ) ) {
 			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
@@ -179,31 +361,56 @@ class Andreani_Product_Bultos {
 			$names   = isset( $_POST['andreani_bulto_name'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['andreani_bulto_name'] ) ) : array();
 
 			foreach ( $weights as $i => $weight ) {
-				$w      = floatval( $weight );
-				$width  = isset( $widths[ $i ] ) ? floatval( $widths[ $i ] ) : 0;
-				$height = isset( $heights[ $i ] ) ? floatval( $heights[ $i ] ) : 0;
-				$depth  = isset( $depths[ $i ] ) ? floatval( $depths[ $i ] ) : 0;
-
-				if ( $w > 0 && $width > 0 && $height > 0 && $depth > 0 ) {
-					$bultos[] = self::to_canonical_bulto(
-						isset( $names[ $i ] ) ? $names[ $i ] : '',
-						$height,
-						$width,
-						$depth,
-						$w,
-						count( $bultos )
-					);
-				}
+				$rows[] = array(
+					'name'   => isset( $names[ $i ] ) ? $names[ $i ] : '',
+					'height' => isset( $heights[ $i ] ) ? $heights[ $i ] : 0,
+					'width'  => isset( $widths[ $i ] ) ? $widths[ $i ] : 0,
+					'depth'  => isset( $depths[ $i ] ) ? $depths[ $i ] : 0,
+					'weight' => $weight,
+				);
 			}
 		}
 
-		if ( ! empty( $bultos ) ) {
-			// update_post_meta desescapa el valor: sin wp_slash una comilla en la
-			// referencia del bulto rompe el JSON que se guarda.
-			update_post_meta( $post_id, self::META_KEY, wp_slash( wp_json_encode( $bultos ) ) );
-		} else {
-			delete_post_meta( $post_id, self::META_KEY );
+		return self::pieces_from_rows( $rows );
+	}
+
+	/**
+	 * @return string
+	 */
+	public static function bultos_invalid_message() {
+		return __( 'Para despachar en varias piezas cargá al menos una pieza con peso y las tres medidas completas.', 'andreani-shipping' );
+	}
+
+	/**
+	 * @param array $rows Filas con name, height, width, depth y weight en la unidad de la tienda.
+	 * @return array<int,array{name:string,height:float,width:float,depth:float,weight:float}>
+	 */
+	public static function pieces_from_rows( array $rows ) {
+		$bultos = array();
+
+		foreach ( $rows as $row ) {
+			if ( ! is_array( $row ) ) {
+				continue;
+			}
+
+			$weight = isset( $row['weight'] ) ? floatval( $row['weight'] ) : 0;
+			$width  = isset( $row['width'] ) ? floatval( $row['width'] ) : 0;
+			$height = isset( $row['height'] ) ? floatval( $row['height'] ) : 0;
+			$depth  = isset( $row['depth'] ) ? floatval( $row['depth'] ) : 0;
+
+			if ( $weight > 0 && $width > 0 && $height > 0 && $depth > 0 ) {
+				$bultos[] = self::to_canonical_bulto(
+					isset( $row['name'] ) ? $row['name'] : '',
+					$height,
+					$width,
+					$depth,
+					$weight,
+					count( $bultos )
+				);
+			}
 		}
+
+		return $bultos;
 	}
 
 	/**
@@ -309,12 +516,11 @@ class Andreani_Product_Bultos {
 			'andreani-product-bultos',
 			'AndreaniBultosConfig',
 			array(
-				'thresholds' => self::get_bigger_thresholds(),
-				'cm_factor'  => (float) Andreani_Order_Mapper::convert_cm_to_dimension_unit( 1 ),
-				'i18n'       => array(
-					'badge_bigger'   => __( 'Bigger', 'andreani-shipping' ),
-					'badge_paquete'  => __( 'Paquete común', 'andreani-shipping' ),
-				),
+				'thresholds'           => self::get_bigger_thresholds(),
+				'thresholds_canonical' => self::get_canonical_thresholds(),
+				'cm_factor'            => (float) Andreani_Order_Mapper::convert_cm_to_dimension_unit( 1 ),
+				'kg_factor'            => (float) Andreani_Order_Mapper::convert_weight_to_unit( 1, 'kg' ),
+				'i18n'                 => self::get_ui_strings(),
 			)
 		);
 	}

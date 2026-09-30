@@ -415,27 +415,8 @@
 }
 
 /* ===========================================================
-   Modal: bloque de bultos (stepper + mini-cards + badge categoría)
+   Modal: piezas del producto (stepper + mini-cards)
    =========================================================== */
-
-.andreani-bultos-block {
-	margin-top: var(--andr-sp-4);
-	padding-top: var(--andr-sp-3);
-	border-top: 1px solid var(--andr-color-border);
-}
-
-.andreani-bultos-block__head {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: var(--andr-sp-2);
-	margin-bottom: var(--andr-sp-1);
-}
-
-.andreani-bultos-block__title {
-	font-weight: var(--andr-fw-semibold);
-	color: var(--andr-color-text-strong);
-}
 
 .andreani-bultos-stepper {
 	display: flex;
@@ -697,24 +678,136 @@
 }
 
 /* ===========================================================
-   Modal: bloque de apilado (excluyente con bultos adicionales)
+   Modal: modo de despacho (tarjetas excluyentes) + campos de cada modo
    =========================================================== */
 
-.andreani-apilado-block__lock {
-    display: block;
-    margin-bottom: var(--andr-sp-2);
+.andreani-despacho-status {
+    margin: var(--andr-sp-3) 0 0;
+    padding: var(--andr-sp-2) var(--andr-sp-3);
+    border-radius: var(--andr-radius-sm);
+    background: var(--andr-color-surface-muted);
+    color: var(--andr-color-text-muted);
+    font-size: var(--andr-text-sm);
     line-height: 1.45;
-    white-space: normal;
 }
 
-.andreani-apilado-block__toggle {
-    display: inline-flex;
-    align-items: center;
+.andreani-despacho-status--bigger {
+    background: var(--andr-color-success-subtle);
+    color: var(--andr-color-success-strong);
+}
+
+.andreani-despacho-block {
+    margin-top: var(--andr-sp-4);
+    padding-top: var(--andr-sp-3);
+    border-top: 1px solid var(--andr-color-border);
+}
+
+.andreani-despacho-block__title {
+    display: block;
+    margin-bottom: var(--andr-sp-2);
+    font-weight: var(--andr-fw-semibold);
+    color: var(--andr-color-text-strong);
+}
+
+.andreani-despacho-cards {
+    display: flex;
+    flex-direction: column;
     gap: var(--andr-sp-2);
-    margin: var(--andr-sp-2) 0;
+}
+
+.andreani-despacho-card {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--andr-sp-2);
+    padding: var(--andr-sp-2) var(--andr-sp-3);
+    border: 1px solid var(--andr-color-border);
+    border-radius: var(--andr-radius-sm);
+    background: var(--andr-color-surface);
+    cursor: pointer;
+    transition: var(--andr-transition-fast);
+}
+
+.andreani-despacho-card:hover {
+    border-color: var(--andreani-primary);
+}
+
+.andreani-despacho-card--active {
+    border-color: var(--andreani-primary);
+    background: color-mix(in srgb, var(--andreani-primary) 6%, transparent);
+}
+
+.andreani-despacho-card__input {
+    margin: 3px 0 0;
+    flex-shrink: 0;
+}
+
+.andreani-despacho-card__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.andreani-despacho-card__title {
     font-weight: var(--andr-fw-semibold);
     color: var(--andr-color-text);
-    cursor: pointer;
+}
+
+.andreani-despacho-card__desc {
+    font-size: var(--andr-text-sm);
+    color: var(--andr-color-text-muted);
+    line-height: 1.45;
+}
+
+.andreani-despacho-panel {
+    margin-top: var(--andr-sp-3);
+}
+
+.andreani-despacho-warning {
+    margin: 0 0 var(--andr-sp-2);
+    padding: var(--andr-sp-2) var(--andr-sp-3);
+    border-radius: var(--andr-radius-sm);
+    background: var(--andr-color-warning-subtle);
+    color: var(--andr-color-warning-strong);
+    font-size: var(--andr-text-sm);
+    line-height: 1.45;
+}
+
+.andreani-despacho-error {
+    margin: var(--andr-sp-2) 0 0;
+    padding: var(--andr-sp-2) var(--andr-sp-3);
+    border-radius: var(--andr-radius-sm);
+    background: var(--andr-color-error-subtle);
+    color: var(--andr-color-error-strong);
+    font-size: var(--andr-text-sm);
+    line-height: 1.45;
+}
+
+.andreani-bulto-card__warning {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--andr-sp-2);
+    margin-top: var(--andr-sp-2);
+    padding: var(--andr-sp-2) var(--andr-sp-3);
+    border-radius: var(--andr-radius-sm);
+    background: var(--andr-color-warning-subtle);
+    color: var(--andr-color-warning-strong);
+    font-size: var(--andr-text-sm);
+    line-height: 1.45;
+}
+
+.andreani-bulto-card__warning span {
+    flex: 1 1 240px;
+}
+
+.andreani-edit-quote .andreani-quote-tester {
+    margin-top: var(--andr-sp-2);
+}
+
+.andreani-edit-quote__qty input {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
 }
 
 .andreani-apilado-grid {

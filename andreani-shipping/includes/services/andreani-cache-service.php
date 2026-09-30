@@ -283,6 +283,10 @@ class Andreani_Cache_Service {
 				// la cotización vieja hasta que venciera el TTL.
 				if ( isset( $item['data'] ) && class_exists( 'Andreani_Package_Builder' ) ) {
 					$entry['bultos'] = Andreani_Package_Builder::build( $item['data'], $entry['qty'] );
+
+					if ( class_exists( 'Andreani_Order_Mapper' ) ) {
+						$entry['adicionales'] = Andreani_Order_Mapper::get_bultos_adicionales( $item['data']->get_id() );
+					}
 				}
 
 				$items[] = $entry;

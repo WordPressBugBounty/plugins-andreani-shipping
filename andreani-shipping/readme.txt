@@ -5,7 +5,7 @@ Copyright: 2025 Andreani.com
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.6.9
+Stable tag: 1.6.10
 Contributors: integracionandreani
 Donate link:
 Tags: woocommerce, shipping, andreani, envio, etiquetas
@@ -321,6 +321,16 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 
 == Changelog ==
 
+= 1.6.10 =
+* Mejora: La ficha del producto ahora te pregunta directamente cómo se despacha, con tres opciones: en un solo paquete, varias unidades que viajan juntas (apilado), o una unidad que viaja en varias piezas. Antes eran dos configuraciones separadas de nombre parecido y era fácil elegir la equivocada: quien vendía productos que se apilan terminaba cargándolos como si cada unidad viajara en varias cajas, y el envío se cotizaba mucho más caro de lo que correspondía
+* Mejora: Al cargar piezas adicionales el plugin te avisa que cada una se cotiza y se despacha como un paquete más por cada unidad vendida. Esa opción es para un producto que físicamente no entra en una sola caja, como un aire acondicionado con su unidad interior y su unidad exterior
+* Mejora: La etiqueta "Bigger" o "Paquete estándar" (antes "Paquete común") pasó a estar debajo de las medidas y ahora te dice el motivo: qué peso o qué medida supera el límite, y cuál es ese límite. Antes figuraba al lado del título de los bultos y parecía que dependía de cuántos bultos cargabas
+* Mejora: Si cargás una pieza con las mismas medidas que el bulto principal, el plugin te avisa que probablemente lo que buscás es el apilado, y te ofrece cambiarlo con un clic
+* Fix: Una configuración de apilado incompleta ya no se pierde en silencio. Si el límite de unidades o el crecimiento de la pila no estaban bien cargados, el plugin guardaba igual y después descartaba la configuración sin avisar, y el producto seguía cotizando una caja por unidad. Ahora el error se muestra junto al campo y el guardado se detiene
+* Mejora: "Probar cotización" en "Ver mis productos" cotiza con lo que tenés cargado en pantalla, sin guardar el producto, y la cantidad de unidades puede ser cualquiera entre 1 y 99 en los tres modos de despacho
+* Fix: Una configuración de varias piezas sin ninguna pieza completa ya no se guarda volviendo a un solo paquete sin avisar: el plugin avisa junto al bloque de piezas y conserva lo que estaba guardado
+* Fix: Los errores de validación del servidor, como un apilado inválido o un código postal vacío, ahora se muestran con su mensaje en vez de un error de red genérico
+
 = 1.6.9 =
 * Fix: El peso que se declara a Andreani nunca es menor a 1 kg. Un producto que pesaba menos, o que no tenía el peso cargado, podía despacharse con un peso muy por debajo del real: en tiendas que miden en gramos, con apenas unos gramos. El mínimo se aplica al bulto, así que si el comprador lleva varias unidades se sigue declarando el peso real de todas
 * Fix: Un producto sin peso cargado ya no deja el checkout sin opciones de envío. Antes Andreani no aparecía y parecía un problema de cobertura del código postal; ahora se cotiza con el mínimo de 1 kg
@@ -473,6 +483,9 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * Versión inicial publicada en el repositorio de WordPress
 
 == Upgrade Notice ==
+
+= 1.6.10 =
+La configuración de bultos de la ficha del producto se simplificó en una sola pregunta sobre cómo se despacha. Lo que ya tenías cargado se sigue leyendo igual y no tenés que reconfigurar nada.
 
 = 1.6.7 =
 Corrige la carga de "Ver mis envíos" en tiendas con muchos pedidos. La actualización es transparente y no tenés que configurar nada.
