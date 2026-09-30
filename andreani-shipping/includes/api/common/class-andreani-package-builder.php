@@ -12,7 +12,7 @@ require_once ANDREANI_PLUGIN_DIR . 'includes/admin/class-andreani-product-apilad
 
 class Andreani_Package_Builder {
 
-	const MIN_WEIGHT_GRAMS = 1000;
+	const MIN_WEIGHT_GRAMS = 1;
 
 	/**
 	 * @param mixed $grams Peso en gramos, en cualquier forma numérica.

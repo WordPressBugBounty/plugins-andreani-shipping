@@ -5,7 +5,7 @@ Copyright: 2025 Andreani.com
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.6.10
+Stable tag: 1.6.11
 Contributors: integracionandreani
 Donate link:
 Tags: woocommerce, shipping, andreani, envio, etiquetas
@@ -320,6 +320,9 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * El checkbox *Forzar carga de assets*: **sigue funcionando** pero casi nunca es necesario. Úsalo solo como último recurso.
 
 == Changelog ==
+
+= 1.6.11 =
+* Cambio: El peso mínimo que se declara a Andreani por paquete pasa de 1 kg a 1 g. Un producto liviano, como un sticker o un sobre, se cotiza y se despacha con su peso real en lugar de 1 kg, y aplica la tarifa que corresponde a ese peso. Un producto sin peso cargado se sigue cotizando, con el mínimo de 1 g
 
 = 1.6.10 =
 * Mejora: La ficha del producto ahora te pregunta directamente cómo se despacha, con tres opciones: en un solo paquete, varias unidades que viajan juntas (apilado), o una unidad que viaja en varias piezas. Antes eran dos configuraciones separadas de nombre parecido y era fácil elegir la equivocada: quien vendía productos que se apilan terminaba cargándolos como si cada unidad viajara en varias cajas, y el envío se cotizaba mucho más caro de lo que correspondía

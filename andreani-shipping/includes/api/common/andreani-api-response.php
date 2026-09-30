@@ -316,7 +316,7 @@ class Andreani_Api_Response {
 
 				Andreani_Utils::andreani_log(
 					sprintf(
-						'[COTIZACION] Al producto "%s"%s le falta el peso: se cotiza con el mínimo de %d gramos. Cargalo en el producto para que Andreani cotice el peso real.',
+						'[COTIZACION] Al producto "%s"%s le falta el peso: se cotiza con el peso mínimo (%d g). Cargalo en el producto para que Andreani cotice el peso real.',
 						$product_data->get_name(),
 						$sku ? ' (SKU ' . $sku . ')' : '',
 						Andreani_Package_Builder::MIN_WEIGHT_GRAMS
