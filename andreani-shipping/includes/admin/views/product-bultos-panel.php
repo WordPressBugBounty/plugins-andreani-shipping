@@ -102,6 +102,12 @@ $mode_options = array(
 
 		<p class="andreani-apilado-help andreani-apilado-help--warn" id="andreani-bultos-invalid" style="display:none;"><?php echo esc_html( $strings['bultos_invalid'] ); ?></p>
 	</div>
+
+	<div class="andreani-despacho-preview" id="andreani-despacho-preview">
+		<span class="andreani-despacho-preview__title"><?php echo esc_html( $strings['preview_title'] ); ?></span>
+		<p class="andreani-despacho-preview__help"><?php echo esc_html( $strings['preview_help'] ); ?></p>
+		<div class="andreani-despacho-preview__body" id="andreani-despacho-preview-body" aria-live="polite"></div>
+	</div>
 </div>
 
 <script type="text/html" id="tmpl-andreani-bulto-row">

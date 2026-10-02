@@ -40,15 +40,15 @@ $mode_cards = array(
 				</label>
 				<label class="andreani-product-dims__field">
 					<span class="andreani-product-dims__label"><?php printf( esc_html__( 'Largo (%s)', 'andreani-shipping' ), esc_html( $wc_dimension_unit ) ); ?></span>
-					<input type="number" id="andreani-edit-length" class="regular-text" min="0" step="0.01" placeholder="0.00" />
+					<input type="number" id="andreani-edit-length" class="regular-text" min="0" step="any" placeholder="0.00" />
 				</label>
 				<label class="andreani-product-dims__field">
 					<span class="andreani-product-dims__label"><?php printf( esc_html__( 'Ancho (%s)', 'andreani-shipping' ), esc_html( $wc_dimension_unit ) ); ?></span>
-					<input type="number" id="andreani-edit-width" class="regular-text" min="0" step="0.01" placeholder="0.00" />
+					<input type="number" id="andreani-edit-width" class="regular-text" min="0" step="any" placeholder="0.00" />
 				</label>
 				<label class="andreani-product-dims__field">
 					<span class="andreani-product-dims__label"><?php printf( esc_html__( 'Alto (%s)', 'andreani-shipping' ), esc_html( $wc_dimension_unit ) ); ?></span>
-					<input type="number" id="andreani-edit-height" class="regular-text" min="0" step="0.01" placeholder="0.00" />
+					<input type="number" id="andreani-edit-height" class="regular-text" min="0" step="any" placeholder="0.00" />
 				</label>
 			</div>
 
@@ -82,15 +82,15 @@ $mode_cards = array(
 						</label>
 						<label class="andreani-product-dims__field">
 							<span class="andreani-product-dims__label"><?php esc_html_e( 'Aumenta alto (cm)', 'andreani-shipping' ); ?></span>
-							<input type="number" id="andreani-edit-apilado-inc-height" class="regular-text" min="0" step="0.01" />
+							<input type="number" id="andreani-edit-apilado-inc-height" class="regular-text" min="0" step="any" />
 						</label>
 						<label class="andreani-product-dims__field">
 							<span class="andreani-product-dims__label"><?php esc_html_e( 'Aumenta ancho (cm)', 'andreani-shipping' ); ?></span>
-							<input type="number" id="andreani-edit-apilado-inc-width" class="regular-text" min="0" step="0.01" />
+							<input type="number" id="andreani-edit-apilado-inc-width" class="regular-text" min="0" step="any" />
 						</label>
 						<label class="andreani-product-dims__field">
 							<span class="andreani-product-dims__label"><?php esc_html_e( 'Aumenta profund. (cm)', 'andreani-shipping' ); ?></span>
-							<input type="number" id="andreani-edit-apilado-inc-depth" class="regular-text" min="0" step="0.01" />
+							<input type="number" id="andreani-edit-apilado-inc-depth" class="regular-text" min="0" step="any" />
 						</label>
 					</div>
 					<p class="andreani-product-dims__hint"><?php esc_html_e( 'La primera unidad ocupa las medidas de arriba y cada unidad extra suma el incremento. Por ejemplo: una silla de 45 cm de alto que apila de a 6 sumando 15 cm por unidad, en un pedido de 4 unidades viaja como un solo bulto de 90 cm de alto.', 'andreani-shipping' ); ?></p>
@@ -108,6 +108,12 @@ $mode_cards = array(
 					<div id="andreani-bultos-cards" class="andreani-bultos-cards"></div>
 					<p class="andreani-despacho-error" id="andreani-edit-bultos-invalid" style="display:none;"><?php echo esc_html( $strings['bultos_invalid'] ); ?></p>
 				</div>
+			</div>
+
+			<div class="andreani-despacho-block andreani-despacho-preview" id="andreani-edit-preview">
+				<span class="andreani-despacho-block__title andreani-despacho-preview__title"><?php echo esc_html( $strings['preview_title'] ); ?></span>
+				<p class="andreani-product-dims__hint andreani-despacho-preview__help"><?php echo esc_html( $strings['preview_help'] ); ?></p>
+				<div class="andreani-despacho-preview__body" id="andreani-edit-preview-body" aria-live="polite"></div>
 			</div>
 
 			<div class="andreani-despacho-block andreani-edit-quote">

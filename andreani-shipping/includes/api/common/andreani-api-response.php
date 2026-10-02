@@ -374,9 +374,9 @@ class Andreani_Api_Response {
 					'quantity'   => $apila ? 1 : $units,
 					'price'      => $apila ? (int) ( $price_per_bulto * $units ) : $price_per_bulto,
 					'dimensions' => array(
-						'width'  => max( 1, (int) round( $bulto['width'] ) ),
-						'height' => max( 1, (int) round( $bulto['height'] ) ),
-						'depth'  => max( 1, (int) round( $bulto['depth'] ) ),
+						'width'  => floatval( $bulto['width'] ),
+						'height' => floatval( $bulto['height'] ),
+						'depth'  => floatval( $bulto['depth'] ),
 						'grams'  => $bulto['weight_kg'] * 1000,
 					),
 				);
@@ -396,9 +396,9 @@ class Andreani_Api_Response {
 					'quantity'   => (int) $values['quantity'],
 					'price'      => $price_per_bulto,
 					'dimensions' => array(
-						'width'  => max( 1, (int) round( $b_raw_width ) ),
-						'height' => max( 1, (int) round( $b_raw_height ) ),
-						'depth'  => max( 1, (int) round( $b_raw_depth ) ),
+						'width'  => $b_raw_width,
+						'height' => $b_raw_height,
+						'depth'  => $b_raw_depth,
 						'grams'  => $b_grams,
 					),
 				);

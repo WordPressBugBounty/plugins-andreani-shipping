@@ -34,6 +34,7 @@ class Andreani_Ajax_Handler {
 		add_action( 'wp_ajax_andreani_products_table', array( $this, 'handle_products_table' ) );
 		add_action( 'wp_ajax_andreani_save_product_dims', array( $this, 'handle_save_product_dims' ) );
 		add_action( 'wp_ajax_andreani_test_quote', array( $this, 'handle_test_quote' ) );
+		add_action( 'wp_ajax_andreani_preview_bultos', array( $this, 'handle_preview_bultos' ) );
 		add_action( 'wp_ajax_andreani_toggle_tracking_sync', array( $this, 'handle_toggle_tracking_sync' ) );
 
 		Andreani_Shipment_Exporter::get_instance();
@@ -710,6 +711,22 @@ class Andreani_Ajax_Handler {
 
 			return $value;
 		}, 10, 3 );
+	}
+
+	public function handle_preview_bultos() {
+		check_ajax_referer( Andreani_Product_Bultos::PREVIEW_NONCE, 'nonce' );
+
+		if ( ! current_user_can( 'edit_products' ) ) {
+			wp_send_json_error( array( 'message' => __( 'No tenes permisos.', 'andreani-shipping' ) ), 403 );
+		}
+
+		$draft = $this->parse_dispatch_draft();
+		$rows  = is_wp_error( $draft ) ? array() : Andreani_Product_Bultos::preview_rows_from_draft( $draft );
+
+		wp_send_json_success( array(
+			'rows' => $rows,
+			'html' => Andreani_Product_Bultos::render_preview( $rows ),
+		) );
 	}
 
 	public function handle_test_quote() {

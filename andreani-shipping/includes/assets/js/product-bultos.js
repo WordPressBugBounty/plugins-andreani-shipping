@@ -37,6 +37,9 @@
 		var $multibultoPanel = $('#andreani-despacho-panel-multibulto');
 		var $apiladoInvalid = $('#andreani-apilado-invalid');
 		var $bultosInvalid = $('#andreani-bultos-invalid');
+		var $previewBody = $('#andreani-despacho-preview-body');
+		var previewTimer = null;
+		var previewRequest = 0;
 
 		var tmpl = null;
 		if ( typeof window.wp !== 'undefined' && window.wp.template ) {
@@ -53,7 +56,7 @@
 		}
 
 		function num( selector ) {
-			return parseFloat( $( selector ).val() ) || 0;
+			return parseFloat( String( $( selector ).val() || '' ).replace( ',', '.' ) ) || 0;
 		}
 
 		function round2( value ) {
@@ -154,7 +157,64 @@
 			return { isBigger: false, text: '' };
 		}
 
+		function previewDraft() {
+			var mode = currentMode();
+			var apilado = mode === MODE_APILADO ? apiladoConfig() : null;
+			var bultos = [];
+
+			if ( mode === MODE_MULTIBULTO ) {
+				$list.find('.andreani-bulto-row').each(function () {
+					var $row = $(this);
+
+					bultos.push({
+						name: '',
+						height: parseFloat( $row.find('input[name="andreani_bulto_height[]"]').val() ) || 0,
+						width: parseFloat( $row.find('input[name="andreani_bulto_width[]"]').val() ) || 0,
+						depth: parseFloat( $row.find('input[name="andreani_bulto_depth[]"]').val() ) || 0,
+						weight: parseFloat( $row.find('input[name="andreani_bulto_weight[]"]').val() ) || 0
+					});
+				});
+			}
+
+			return {
+				action: 'andreani_preview_bultos',
+				nonce: config.nonce_preview,
+				weight: num('input[name="_weight"]'),
+				length: num('input[name="_length"]'),
+				width: num('input[name="_width"]'),
+				height: num('input[name="_height"]'),
+				dispatch_mode: mode,
+				bultos_json: JSON.stringify( bultos ),
+				apilado_json: JSON.stringify( apilado ? {
+					maxStackableUnits: apilado.maxUnits,
+					unitIncrementHeight: apilado.incH,
+					unitIncrementWidth: apilado.incW,
+					unitIncrementDepth: apilado.incD
+				} : {} )
+			};
+		}
+
+		function schedulePreview() {
+			if ( ! $previewBody.length || ! config.ajax_url ) {
+				return;
+			}
+
+			clearTimeout( previewTimer );
+
+			previewTimer = setTimeout(function () {
+				var request = ++previewRequest;
+
+				$.post( config.ajax_url, previewDraft() ).done(function ( res ) {
+					if ( request === previewRequest && res && res.success && res.data ) {
+						$previewBody.html( res.data.html );
+					}
+				});
+			}, 300 );
+		}
+
 		function updateStatus() {
+			schedulePreview();
+
 			var evaluation = evaluateBigger();
 			var text = evaluation.isBigger
 				? String( i18n.bigger_prefix || '%s' ).replace( '%s', evaluation.text )

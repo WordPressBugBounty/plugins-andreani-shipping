@@ -156,7 +156,7 @@ class Andreani_Order_Mapper {
 			}
 
 			$quantity = $item->get_quantity();
-			$price    = $mostrar_sin_decimales ? round( floatval( $product->get_price() ) ) : floatval( $product->get_price() );
+			$price    = self::resolve_unit_price( $order->get_item_subtotal( $item, false, false ), $product->get_price(), $mostrar_sin_decimales );
 
 			if ( ! $product->get_weight() ) {
 				Andreani_Utils::andreani_log( "[ORDEN] Producto sin peso: \"{$product->get_name()}\" (ID: {$product->get_id()}) - usando peso por defecto", 'warning' );
@@ -234,6 +234,16 @@ class Andreani_Order_Mapper {
 		}
 
 		return $products;
+	}
+
+	public static function resolve_unit_price( $line_price, $catalog_price, $mostrar_sin_decimales = false ) {
+		$price = floatval( $line_price );
+
+		if ( $price <= 0 ) {
+			$price = floatval( $catalog_price );
+		}
+
+		return $mostrar_sin_decimales ? round( $price ) : $price;
 	}
 
 	public static function parse_address_street_number( $address ) {

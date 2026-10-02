@@ -5,7 +5,7 @@ Copyright: 2025 Andreani.com
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.6.11
+Stable tag: 1.6.12
 Contributors: integracionandreani
 Donate link:
 Tags: woocommerce, shipping, andreani, envio, etiquetas
@@ -321,6 +321,11 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 
 == Changelog ==
 
+= 1.6.12 =
+* Fix: La cotización ahora usa las medidas reales del producto, con decimales. Antes cada medida se redondeaba a centímetros enteros con un mínimo de 1 cm, y un producto muy fino, como un sticker o una lámina, se cotizaba como si ocupara mucho más espacio: al comprar muchas unidades el envío salía bastante más caro de lo que correspondía. Ahora la cotización declara las mismas medidas que el envío. Si tus productos tienen medidas con decimales (por ejemplo 2,4 cm), el costo de envío puede variar levemente, porque ya no se redondean
+* Fix: El valor declarado del envío se toma del precio al que se vendió cada unidad en el pedido, y no del precio de lista del producto. Si usás precios por cantidad o mayoristas, antes se declaraba de más
+* Nuevo: En la ficha del producto y en "Ver mis productos" aparece el bloque "Así se cotiza", que te muestra qué se le declara a Andreani para 1, 10, 50 y 200 unidades: cuántos bultos, qué volumen, el peso real y el peso aforado, y cuál de los dos pesos es el que se cobra. Se actualiza mientras cargás las medidas, sin guardar el producto
+
 = 1.6.11 =
 * Cambio: El peso mínimo que se declara a Andreani por paquete pasa de 1 kg a 1 g. Un producto liviano, como un sticker o un sobre, se cotiza y se despacha con su peso real en lugar de 1 kg, y aplica la tarifa que corresponde a ese peso. Un producto sin peso cargado se sigue cotizando, con el mínimo de 1 g
 
@@ -486,6 +491,9 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * Versión inicial publicada en el repositorio de WordPress
 
 == Upgrade Notice ==
+
+= 1.6.12 =
+La cotización pasa a usar las medidas reales del producto, con decimales. Si vendés productos muy finos o muy chicos, el costo de envío que ven tus clientes puede bajar; si tus medidas tienen decimales, puede variar levemente. No tenés que configurar nada.
 
 = 1.6.10 =
 La configuración de bultos de la ficha del producto se simplificó en una sola pregunta sobre cómo se despacha. Lo que ya tenías cargado se sigue leyendo igual y no tenés que reconfigurar nada.

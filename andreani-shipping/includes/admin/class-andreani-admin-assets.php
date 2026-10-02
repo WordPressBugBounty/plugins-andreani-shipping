@@ -205,6 +205,7 @@ class Andreani_Admin_Assets {
 			'nonce_products_table' => wp_create_nonce( 'andreani_products_table' ),
 			'nonce_save_dims'      => wp_create_nonce( 'andreani_save_product_dims' ),
 			'nonce_test_quote'     => wp_create_nonce( 'andreani_test_quote' ),
+			'nonce_preview_bultos' => wp_create_nonce( 'andreani_preview_bultos' ),
 			'nonce_toggle_sync'    => wp_create_nonce( 'andreani_toggle_tracking_sync' ),
 			'nonce_origen_sucursales' => wp_create_nonce( Andreani_Origen_Ajax::NONCE_SUCURSALES ),
 			'nonce_origen_default'    => wp_create_nonce( Andreani_Origen_Ajax::NONCE_DEFAULT ),

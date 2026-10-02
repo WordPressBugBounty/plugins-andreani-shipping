@@ -246,3 +246,58 @@
 	float: none;
 	min-height: 0;
 }
+
+
+.andreani-despacho-section .andreani-despacho-preview {
+	margin-top: var(--andr-sp-3);
+	padding-top: var(--andr-sp-3);
+	border-top: 1px solid var(--andr-color-border);
+}
+
+.andreani-despacho-section .andreani-despacho-preview__title {
+	display: block;
+	font-weight: 600;
+	color: var(--andr-color-text);
+}
+
+.andreani-despacho-section .andreani-despacho-preview__help,
+.andreani-despacho-section .andreani-despacho-preview__message {
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-subtle);
+	margin: var(--andr-sp-1) 0 var(--andr-sp-2);
+	line-height: 1.45;
+}
+
+.andreani-despacho-section .andreani-despacho-preview__table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: var(--andr-text-sm);
+}
+
+.andreani-despacho-section .andreani-despacho-preview__table th,
+.andreani-despacho-section .andreani-despacho-preview__table td {
+	padding: var(--andr-sp-1) var(--andr-sp-2);
+	border-bottom: 1px solid var(--andr-color-border);
+	text-align: left;
+	vertical-align: top;
+}
+
+.andreani-despacho-section .andreani-despacho-preview__table th {
+	color: var(--andr-color-text-subtle);
+	font-weight: 600;
+}
+
+.andreani-despacho-section .andreani-despacho-preview__cell--charged {
+	font-weight: 600;
+	color: var(--andr-color-success-strong);
+}
+
+.andreani-despacho-section .andreani-despacho-preview__badge {
+	display: inline-block;
+	padding: 0 var(--andr-sp-1);
+	border-radius: var(--andr-radius-xs);
+	background: var(--andr-color-success-subtle);
+	font-size: var(--andr-text-xs);
+	font-weight: 400;
+	white-space: nowrap;
+}

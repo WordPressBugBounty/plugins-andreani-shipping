@@ -9,6 +9,7 @@
 defined( 'ABSPATH' ) || exit;
 
 require_once ANDREANI_PLUGIN_DIR . 'includes/admin/class-andreani-product-apilado.php';
+require_once ANDREANI_PLUGIN_DIR . 'includes/api/common/andreani-api-config.php';
 
 class Andreani_Package_Builder {
 
@@ -171,5 +172,63 @@ class Andreani_Package_Builder {
 		}
 
 		return $bultos;
+	}
+
+	public static function preview( array $base, $weight_kg, array $config, array $adicionales, array $quantities ) {
+		foreach ( array( 'width', 'height', 'depth' ) as $side ) {
+			if ( ! isset( $base[ $side ] ) || (float) $base[ $side ] <= 0 ) {
+				return array();
+			}
+		}
+
+		$apila = empty( $adicionales ) && Andreani_Product_Apilado::is_valid( $config );
+		$rows  = array();
+
+		foreach ( $quantities as $quantity ) {
+			$quantity = (int) $quantity;
+
+			if ( $quantity <= 0 ) {
+				continue;
+			}
+
+			$bultos     = 0;
+			$volume_cm3 = 0.0;
+			$total_kg   = 0.0;
+
+			foreach ( self::apply_min_weight( self::stack( $base, $weight_kg, $apila ? $config : array(), $quantity ), $apila ) as $bulto ) {
+				$count = $apila ? 1 : (int) $bulto['units'];
+
+				$bultos     += $count;
+				$volume_cm3 += $bulto['width'] * $bulto['height'] * $bulto['depth'] * $count;
+				$total_kg   += $bulto['weight_kg'] * $count;
+			}
+
+			foreach ( $adicionales as $pieza ) {
+				$width  = isset( $pieza['width'] ) ? (float) $pieza['width'] : 0.0;
+				$height = isset( $pieza['height'] ) ? (float) $pieza['height'] : 0.0;
+				$depth  = isset( $pieza['depth'] ) ? (float) $pieza['depth'] : 0.0;
+
+				if ( $width <= 0 || $height <= 0 || $depth <= 0 ) {
+					continue;
+				}
+
+				$bultos     += $quantity;
+				$volume_cm3 += $width * $height * $depth * $quantity;
+				$total_kg   += self::floor_weight_grams( isset( $pieza['weight'] ) ? $pieza['weight'] : 0 ) / 1000 * $quantity;
+			}
+
+			$aforado_kg = $volume_cm3 * Andreani_Api_Config::AFORO_KG_M3 / 1000000;
+
+			$rows[] = array(
+				'quantity'   => $quantity,
+				'bultos'     => $bultos,
+				'volume_cm3' => $volume_cm3,
+				'weight_kg'  => $total_kg,
+				'aforado_kg' => $aforado_kg,
+				'charged'    => $aforado_kg > $total_kg ? 'aforado' : 'real',
+			);
+		}
+
+		return $rows;
 	}
 }

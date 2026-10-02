@@ -5,6 +5,7 @@ class Andreani_Api_Config {
     const BIGGER_WEIGHT_KG    = 50;
     const BIGGER_SUM_SIDES_CM = 300;
     const BIGGER_MAX_SIDE_CM  = 165;
+    const AFORO_KG_M3         = 350;
 
     private static $api_base_url = 'https://woocommerce-api-acom.andreani.com';
 

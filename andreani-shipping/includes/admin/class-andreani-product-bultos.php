@@ -22,6 +22,9 @@ class Andreani_Product_Bultos {
 	const MODE_APILADO    = 'apilado';
 	const MODE_MULTIBULTO = 'multibulto';
 
+	const PREVIEW_NONCE      = 'andreani_preview_bultos';
+	const PREVIEW_QUANTITIES = array( 1, 10, 50, 200 );
+
 	public static function get_instance() {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -245,6 +248,75 @@ class Andreani_Product_Bultos {
 		return '' === $formatted ? '0' : $formatted;
 	}
 
+	public static function preview_rows_from_draft( array $draft ) {
+		return Andreani_Package_Builder::preview(
+			array(
+				'width'  => Andreani_Order_Mapper::convert_dimension_to_cm( isset( $draft['width'] ) ? $draft['width'] : 0 ),
+				'height' => Andreani_Order_Mapper::convert_dimension_to_cm( isset( $draft['height'] ) ? $draft['height'] : 0 ),
+				'depth'  => Andreani_Order_Mapper::convert_dimension_to_cm( isset( $draft['length'] ) ? $draft['length'] : 0 ),
+			),
+			Andreani_Order_Mapper::convert_weight_to_unit( isset( $draft['weight'] ) ? $draft['weight'] : 0, 'kg' ),
+			isset( $draft['apilado'] ) && is_array( $draft['apilado'] ) ? $draft['apilado'] : array(),
+			isset( $draft['bultos'] ) && is_array( $draft['bultos'] ) ? $draft['bultos'] : array(),
+			self::PREVIEW_QUANTITIES
+		);
+	}
+
+	public static function format_preview_number( $value ) {
+		$value     = (float) $value;
+		$formatted = number_format( $value, 3, ',', '.' );
+		$formatted = rtrim( rtrim( $formatted, '0' ), ',' );
+
+		if ( '0' === $formatted && $value > 0 ) {
+			return '< 0,001';
+		}
+
+		return $formatted;
+	}
+
+	public static function format_preview_weight( $weight_kg ) {
+		$weight_kg = (float) $weight_kg;
+
+		return $weight_kg < 1
+			? self::format_preview_number( $weight_kg * 1000 ) . ' g'
+			: self::format_preview_number( $weight_kg ) . ' kg';
+	}
+
+	public static function render_preview( array $rows ) {
+		$strings = self::get_ui_strings();
+
+		if ( empty( $rows ) ) {
+			return '<p class="andreani-despacho-preview__message">' . esc_html( $strings['preview_empty'] ) . '</p>';
+		}
+
+		$html = '<table class="andreani-despacho-preview__table"><thead><tr>';
+
+		foreach ( array( 'preview_col_units', 'preview_col_bultos', 'preview_col_volume', 'preview_col_weight', 'preview_col_aforado' ) as $key ) {
+			$html .= '<th scope="col">' . esc_html( $strings[ $key ] ) . '</th>';
+		}
+
+		$html .= '</tr></thead><tbody>';
+
+		foreach ( $rows as $row ) {
+			$html .= '<tr data-quantity="' . esc_attr( $row['quantity'] ) . '">'
+				. '<td data-col="units">' . esc_html( $row['quantity'] ) . '</td>'
+				. '<td data-col="bultos">' . esc_html( $row['bultos'] ) . '</td>'
+				. '<td data-col="volume">' . esc_html( self::format_preview_number( $row['volume_cm3'] ) . ' cm³' ) . '</td>'
+				. self::preview_weight_cell( 'real', $row['weight_kg'], 'real' === $row['charged'], $strings['preview_charged'] )
+				. self::preview_weight_cell( 'aforado', $row['aforado_kg'], 'aforado' === $row['charged'], $strings['preview_charged'] )
+				. '</tr>';
+		}
+
+		return $html . '</tbody></table>';
+	}
+
+	private static function preview_weight_cell( $column, $weight_kg, $charged, $label ) {
+		return '<td data-col="' . esc_attr( $column ) . '"' . ( $charged ? ' class="andreani-despacho-preview__cell--charged"' : '' ) . '>'
+			. esc_html( self::format_preview_weight( $weight_kg ) )
+			. ( $charged ? ' <span class="andreani-despacho-preview__badge">' . esc_html( $label ) . '</span>' : '' )
+			. '</td>';
+	}
+
 	/**
 	 * @return array<string,string>
 	 */
@@ -272,6 +344,19 @@ class Andreani_Product_Bultos {
 				? Andreani_Product_Apilado::invalid_message()
 				: '',
 			'bultos_invalid'           => self::bultos_invalid_message(),
+			'preview_title'            => __( 'Así se cotiza', 'andreani-shipping' ),
+			'preview_help'             => sprintf(
+				/* translators: %s: kilos por metro cúbico que se usan para calcular el peso aforado */
+				__( 'Esto es lo que se le declara a Andreani según cuántas unidades te compren, con lo que tenés cargado en pantalla. El peso aforado es el que le corresponde al envío por el espacio que ocupa (%s kg por cada m³). Andreani cobra por el mayor de los dos pesos.', 'andreani-shipping' ),
+				self::format_measure( Andreani_Api_Config::AFORO_KG_M3 )
+			),
+			'preview_empty'            => __( 'Cargá el peso y las tres medidas del producto, y completá la opción de despacho elegida, para ver el ejemplo.', 'andreani-shipping' ),
+			'preview_col_units'        => __( 'Unidades', 'andreani-shipping' ),
+			'preview_col_bultos'       => __( 'Bultos', 'andreani-shipping' ),
+			'preview_col_volume'       => __( 'Volumen total', 'andreani-shipping' ),
+			'preview_col_weight'       => __( 'Peso real', 'andreani-shipping' ),
+			'preview_col_aforado'      => __( 'Peso aforado', 'andreani-shipping' ),
+			'preview_charged'          => __( 'es el que se cobra', 'andreani-shipping' ),
 		);
 	}
 
@@ -520,6 +605,8 @@ class Andreani_Product_Bultos {
 				'thresholds_canonical' => self::get_canonical_thresholds(),
 				'cm_factor'            => (float) Andreani_Order_Mapper::convert_cm_to_dimension_unit( 1 ),
 				'kg_factor'            => (float) Andreani_Order_Mapper::convert_weight_to_unit( 1, 'kg' ),
+				'ajax_url'             => admin_url( 'admin-ajax.php' ),
+				'nonce_preview'        => wp_create_nonce( self::PREVIEW_NONCE ),
 				'i18n'                 => self::get_ui_strings(),
 			)
 		);

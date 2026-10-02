@@ -2818,6 +2818,8 @@
     $modal: null,
     thresholds: { weight: 50, sum_sides: 300, max_side: 165 },
     canonical: { weight: 50, sum_sides: 300, max_side: 165 },
+    previewTimer: null,
+    previewRequest: 0,
 
     MODE_SINGLE: 'single',
     MODE_APILADO: 'apilado',
@@ -2855,6 +2857,7 @@
         $('#andreani-edit-quote-message').hide().text('').removeClass('andreani-products-inline-msg--success andreani-products-inline-msg--error');
         $('#andreani-edit-quote-cp').val('');
         $('#andreani-edit-quote-qty').val('1');
+        $('#andreani-edit-preview-body').empty();
 
         let bultos = $btn.attr('data-bultos-json');
         try { bultos = bultos ? JSON.parse(bultos) : []; } catch (e) { bultos = []; }
@@ -3146,6 +3149,29 @@
         .text(text)
         .toggleClass('andreani-despacho-status--bigger', !!reason)
         .toggleClass('andreani-despacho-status--regular', !reason);
+
+      this.schedulePreview();
+    },
+
+    schedulePreview() {
+      const $body = $('#andreani-edit-preview-body');
+      if (!$body.length) return;
+
+      clearTimeout(this.previewTimer);
+
+      this.previewTimer = setTimeout(() => {
+        const request = ++this.previewRequest;
+
+        $.post(this.config.ajax_url || ajaxurl, $.extend({
+          action: 'andreani_preview_bultos',
+          nonce:  this.config.nonce_preview_bultos,
+        }, this.draftPayload()))
+          .done((res) => {
+            if (request === this.previewRequest && res && res.success && res.data) {
+              $body.html(res.data.html);
+            }
+          });
+      }, 300);
     },
 
     save() {
