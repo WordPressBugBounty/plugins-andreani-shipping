@@ -6,6 +6,8 @@
 .andreani-settings-wrapper {
 	max-width: 800px;
 	position: relative;
+	border-radius: var(--andr-radius-card);
+	box-shadow: var(--andr-shadow-card);
 }
 
 .andreani-settings-loader {
@@ -18,7 +20,7 @@
 	background: rgba(255, 255, 255, 0.6);
 	backdrop-filter: blur(4px);
 	-webkit-backdrop-filter: blur(4px);
-	border-radius: var(--andr-radius-sm);
+	border-radius: var(--andr-radius-card);
 }
 
 .andreani-settings-wrapper--saving .andreani-settings-loader {
@@ -95,48 +97,63 @@
 	align-items: center;
 	justify-content: space-between;
 	margin-bottom: 0;
-	padding: var(--andr-sp-3) var(--andr-sp-5);
-	min-height: 56px;
-	background: linear-gradient(135deg, var(--andr-color-brand) 0%, var(--andr-color-brand-hover) 100%);
-	border-radius: var(--andr-radius-sm) var(--andr-radius-sm) 0 0;
+	padding: 22px 28px 14px;
+	background: var(--andr-color-surface);
+	border: 1px solid var(--andr-color-border);
+	border-top: 4px solid var(--andr-color-brand);
+	border-bottom: 0;
+	border-radius: var(--andr-radius-card) var(--andr-radius-card) 0 0;
 }
 
 .andreani-settings-header__title {
-	color: var(--andr-color-text-inverse);
-	font-size: var(--andr-text-lg);
+	color: var(--andr-color-text-strong);
+	font-family: var(--andr-font-display);
+	font-size: var(--andr-text-xl);
 	font-weight: var(--andr-fw-semibold);
-	letter-spacing: 0.01em;
+	line-height: 1.2;
 	margin: 0;
 }
 
 .andreani-settings-header__logo {
-	height: 24px;
-	filter: brightness(0) invert(1);
+	height: 22px;
 }
 
 /* Wrapper que contiene los tabs (reemplaza al .andreani-settings-card del flujo viejo).
- * El .andr-tabs hereda los bordes/sombra y se conecta visualmente con header/footer. */
+ * El .andr-tabs hereda los bordes y se conecta visualmente con header/footer. */
 .andreani-settings-wrapper > .andr-tabs {
 	background-color: var(--andr-color-surface);
 	border: 1px solid var(--andr-color-border);
 	border-top: none;
-	box-shadow: var(--andr-shadow-md);
 	overflow: hidden;
 }
 
 .andreani-settings-wrapper > .andr-tabs > .andr-tabs__list {
-	padding: 0;
-	gap: 0;
+	justify-content: flex-start;
+	padding: 0 var(--andr-tab-inset);
+	gap: var(--andr-sp-1);
 	overflow: visible;
-	background: var(--andr-color-surface-subtle);
+	background: var(--andr-color-surface);
+}
+
+/* WC aplica margin: 0 -30px 24px a todo nav de #mainform */
+#mainform .andreani-settings-wrapper > .andr-tabs > .andr-tabs__list {
+	margin: 0;
 }
 
 .andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item {
-	flex: 1 1 0;
-	justify-content: center;
+	flex: 0 0 auto;
+	justify-content: flex-start;
+	gap: var(--andr-sp-2);
 	min-width: 0;
-	padding: var(--andr-sp-3) var(--andr-sp-2);
-	font-size: var(--andr-text-sm);
+	min-height: var(--andr-tab-h);
+	margin: 0;
+	padding: 0 var(--andr-tab-inset);
+	font-size: var(--andr-text-md);
+	line-height: 1;
+	color: var(--andr-gray-500);
+	border: 0;
+	border-radius: var(--andr-radius-sm) var(--andr-radius-sm) 0 0;
+	position: relative;
 }
 
 .andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item span {
@@ -146,30 +163,39 @@
 }
 
 .andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item svg {
-	width: 16px;
-	height: 16px;
+	width: 18px;
+	height: 18px;
+	color: var(--andr-gray-400);
 }
 
-.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item--active {
-	background: var(--andr-color-surface);
+.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item:hover {
+	background: var(--andr-color-surface-hover);
+	color: var(--andr-gray-700);
+}
+
+.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item--active,
+.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item--active:hover {
+	color: var(--andr-gray-800);
+	background: transparent;
+	box-shadow: inset 0 -3px 0 var(--andr-color-brand);
+}
+
+.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item--active svg {
+	color: var(--andr-color-brand);
 }
 
 .andreani-settings-wrapper > .andr-tabs > .andr-tabs__panel {
-	padding: var(--andr-sp-4) var(--andr-sp-5) var(--andr-sp-5);
+	padding: var(--andr-sp-5) 28px 28px;
 }
 
 @media (max-width: 700px) {
 	.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item {
 		font-size: var(--andr-text-xs);
-		padding: var(--andr-sp-2) var(--andr-sp-1);
+		padding: 0 var(--andr-sp-3);
 		gap: var(--andr-sp-1);
 	}
 	.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item span {
 		display: none;
-	}
-	.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item svg {
-		width: 18px;
-		height: 18px;
 	}
 	.andreani-settings-wrapper > .andr-tabs > .andr-tabs__panel {
 		padding: var(--andr-sp-4);
@@ -190,7 +216,7 @@
 	color: var(--andr-color-text-muted);
 	background: var(--andr-color-surface-subtle);
 	border: 1px dashed var(--andr-color-border);
-	border-radius: var(--andr-radius-xs);
+	border-radius: var(--andr-radius-card);
 }
 
 .andreani-modos-empty p {
@@ -203,7 +229,7 @@
 	text-align: center;
 	background: var(--andr-color-surface-subtle);
 	border: 1px dashed var(--andr-color-border);
-	border-radius: var(--andr-radius-sm);
+	border-radius: var(--andr-radius-card);
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -265,7 +291,7 @@
 .andreani-modos-panel {
 	background-color: var(--andr-color-surface);
 	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-xs);
+	border-radius: var(--andr-radius-card);
 	overflow: hidden;
 	transition: opacity 0.3s ease, transform 0.3s ease;
 }
@@ -438,8 +464,8 @@
 .andr-tabs__panel .form-table input[type="text"],
 .andr-tabs__panel .form-table input[type="number"],
 .andr-tabs__panel .form-table input[type="password"] {
-	border: 1px solid var(--andr-color-border-strong);
-	border-radius: var(--andr-radius-xs);
+	border: 1px solid var(--andr-color-border-input);
+	border-radius: var(--andr-radius-control);
 	padding: 0 14px !important;
 	font-size: var(--andr-text-md) !important;
 	font-family: inherit !important;
@@ -460,8 +486,8 @@
 }
 
 .andr-tabs__panel select {
-	border: 1px solid var(--andr-color-border-strong);
-	border-radius: var(--andr-radius-xs);
+	border: 1px solid var(--andr-color-border-input);
+	border-radius: var(--andr-radius-control);
 	padding: 0 14px;
 	font-size: var(--andr-text-md);
 	transition: border-color var(--andr-transition-base), box-shadow var(--andr-transition-base);
@@ -477,8 +503,8 @@
 .andr-tabs__panel input[type="number"]:focus,
 .andr-tabs__panel input[type="password"]:focus,
 .andr-tabs__panel select:focus {
-	border-color: var(--andr-color-text-link);
-	box-shadow: 0 0 0 1px var(--andr-color-text-link);
+	border-color: var(--andr-color-text-meta);
+	box-shadow: var(--andr-shadow-focus);
 	outline: none;
 }
 
@@ -597,7 +623,7 @@
 	margin-bottom: 15px;
 	background-color: var(--andr-color-surface-subtle);
 	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-xs);
+	border-radius: var(--andr-radius-control);
 	transition: opacity 0.3s ease, max-height 0.3s ease;
 }
 
@@ -698,8 +724,8 @@
 	padding: var(--andr-sp-3) var(--andr-sp-4);
 	margin: 0 0 var(--andr-sp-4);
 	background: var(--andr-color-success-subtle, rgba(31, 126, 90, 0.08));
-	border: 1px solid var(--andr-color-success, #1f7e5a);
-	border-radius: var(--andr-radius-sm);
+	border: 1px solid var(--andr-green-200);
+	border-radius: var(--andr-radius-box);
 	transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
@@ -816,8 +842,8 @@
 	gap: 6px;
 	padding: 6px 12px;
 	background-color: var(--andr-color-surface-muted);
-	border: 1px solid var(--andr-color-border-strong);
-	border-radius: var(--andr-radius-xs);
+	border: 1px solid var(--andr-color-border-input);
+	border-radius: var(--andr-radius-control);
 	font-size: var(--andr-text-base);
 	font-weight: var(--andr-fw-medium);
 	color: var(--andr-color-text-muted);
@@ -847,8 +873,8 @@
 
 .andreani-field-error:focus,
 .andreani-field-success:focus {
-	border-color: var(--andr-color-text-link) !important;
-	box-shadow: 0 0 0 1px var(--andr-color-text-link) !important;
+	border-color: var(--andr-color-text-meta) !important;
+	box-shadow: var(--andr-shadow-focus) !important;
 }
 
 .andreani-products-warning {
@@ -858,7 +884,7 @@
 	background-color: var(--andr-color-warning-subtle);
 	border: 1px solid var(--andr-color-warning);
 	border-left: 4px solid var(--andr-color-warning);
-	border-radius: var(--andr-radius-sm);
+	border-radius: var(--andr-radius-card);
 	overflow: hidden;
 }
 
@@ -1007,9 +1033,9 @@
 	margin-top: 0;
 	padding: 10px 20px;
 	background-color: var(--andr-color-surface-subtle);
-	border-radius: 0 0 var(--andr-radius-sm) var(--andr-radius-sm);
+	border-radius: 0 0 var(--andr-radius-card) var(--andr-radius-card);
 	border: 1px solid var(--andr-color-border);
-	border-top: none;
+	border-top-color: var(--andr-color-border-soft);
 	display: flex;
 	align-items: center;
 	gap: 10px;
@@ -1049,7 +1075,7 @@
 .andreani-settings-wrapper + p.submit .woocommerce-save-button {
 	background: linear-gradient(135deg, var(--andr-color-brand) 0%, var(--andr-color-brand-hover) 100%) !important;
 	border: none !important;
-	border-radius: var(--andr-radius-xs) !important;
+	border-radius: var(--andr-radius-button) !important;
 	padding: 10px 24px !important;
 	font-size: var(--andr-text-md) !important;
 	font-weight: var(--andr-fw-medium) !important;
@@ -1139,7 +1165,7 @@
 .andreani-contrato-item {
 	background-color: var(--andr-color-surface-subtle);
 	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-xs);
+	border-radius: var(--andr-radius-card);
 	padding: 12px 16px;
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
@@ -1287,7 +1313,7 @@
 	padding: 12px 16px;
 	background: var(--andr-color-surface-subtle);
 	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-xs);
+	border-radius: var(--andr-radius-card);
 	transition: all var(--andr-transition-base);
 }
 
@@ -1413,9 +1439,9 @@
 	align-items: center;
 	padding: 0 6px;
 	background: var(--andr-color-surface);
-	border: 1px solid var(--andr-color-border-strong);
+	border: 1px solid var(--andr-color-border-input);
 	border-right: none;
-	border-radius: var(--andr-radius-xs) 0 0 var(--andr-radius-xs);
+	border-radius: var(--andr-radius-control) 0 0 var(--andr-radius-control);
 	color: var(--andr-color-text-muted);
 	font-size: var(--andr-text-sm);
 	height: 32px;
@@ -1423,7 +1449,7 @@
 }
 
 .andreani-input-prefix .andreani-costo-input {
-	border-radius: 0 var(--andr-radius-xs) var(--andr-radius-xs) 0 !important;
+	border-radius: 0 var(--andr-radius-control) var(--andr-radius-control) 0 !important;
 }
 
 .andreani-contrato-row__field .andreani-costo-input {
@@ -1434,8 +1460,8 @@
 
 .andreani-contrato-row__field input[type="number"] {
 	padding: 6px 6px !important;
-	border: 1px solid var(--andr-color-border-strong) !important;
-	border-radius: var(--andr-radius-xs) !important;
+	border: 1px solid var(--andr-color-border-input) !important;
+	border-radius: var(--andr-radius-control) !important;
 	font-size: var(--andr-text-base) !important;
 	height: 32px !important;
 	box-sizing: border-box !important;
@@ -1444,8 +1470,8 @@
 
 .andreani-costo-input:focus,
 .andreani-dias-input:focus {
-	border-color: var(--andr-color-text-link);
-	box-shadow: 0 0 0 1px var(--andr-color-text-link);
+	border-color: var(--andr-color-text-meta);
+	box-shadow: var(--andr-shadow-focus);
 	outline: none;
 }
 
@@ -1475,7 +1501,7 @@
 .andreani-modo-card {
 	background: var(--andr-color-surface);
 	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-xs);
+	border-radius: var(--andr-radius-card);
 	overflow: hidden;
 	transition: all var(--andr-transition-base);
 }
@@ -1682,8 +1708,8 @@
 .andreani-modo-monto {
 	width: 120px !important;
 	padding: 8px 10px !important;
-	border: 1px solid var(--andr-color-border-strong) !important;
-	border-radius: 0 var(--andr-radius-xs) var(--andr-radius-xs) 0 !important;
+	border: 1px solid var(--andr-color-border-input) !important;
+	border-radius: 0 var(--andr-radius-control) var(--andr-radius-control) 0 !important;
 	font-size: var(--andr-text-md) !important;
 	height: 38px !important;
 	box-sizing: border-box !important;
@@ -1694,8 +1720,8 @@
 	width: 100% !important;
 	max-width: 350px !important;
 	padding: 8px 12px !important;
-	border: 1px solid var(--andr-color-border-strong) !important;
-	border-radius: var(--andr-radius-xs) !important;
+	border: 1px solid var(--andr-color-border-input) !important;
+	border-radius: var(--andr-radius-control) !important;
 	font-size: var(--andr-text-md) !important;
 	height: 38px !important;
 	box-sizing: border-box !important;
@@ -1704,8 +1730,8 @@
 .andreani-modo-motivo:focus,
 .andreani-modo-costo:focus,
 .andreani-modo-monto:focus {
-	border-color: var(--andr-color-text-link) !important;
-	box-shadow: 0 0 0 1px var(--andr-color-text-link) !important;
+	border-color: var(--andr-color-text-meta) !important;
+	box-shadow: var(--andr-shadow-focus) !important;
 	outline: none;
 }
 
@@ -1727,9 +1753,9 @@
 	align-items: center;
 	padding: 0 10px;
 	background: var(--andr-color-surface-subtle);
-	border: 1px solid var(--andr-color-border-strong);
+	border: 1px solid var(--andr-color-border-input);
 	border-right: none;
-	border-radius: var(--andr-radius-xs) 0 0 var(--andr-radius-xs);
+	border-radius: var(--andr-radius-control) 0 0 var(--andr-radius-control);
 	color: var(--andr-color-text-muted);
 	font-size: var(--andr-text-md);
 	height: 38px;
@@ -1776,7 +1802,7 @@
 	padding: 18px 20px;
 	background: var(--andr-color-surface-subtle);
 	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-xs);
+	border-radius: var(--andr-radius-card);
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
@@ -1827,8 +1853,8 @@
 	width: auto !important;
 	min-width: 140px !important;
 	padding: 6px 10px;
-	border: 1px solid var(--andr-color-border-strong);
-	border-radius: var(--andr-radius-xs);
+	border: 1px solid var(--andr-color-border-input);
+	border-radius: var(--andr-radius-control);
 	font-size: var(--andr-text-base);
 	height: auto;
 	background-color: var(--andr-color-surface);
@@ -1947,7 +1973,7 @@
 	padding: 10px 14px;
 	background: var(--andr-color-surface-subtle);
 	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-xs);
+	border-radius: var(--andr-radius-card);
 	width: fit-content;
 }
 
@@ -1963,17 +1989,17 @@
 	min-width: 90px !important;
 	max-width: 90px !important;
 	padding: 5px 8px;
-	border: 1px solid var(--andr-color-border-strong);
-	border-radius: var(--andr-radius-xs);
+	border: 1px solid var(--andr-color-border-input);
+	border-radius: var(--andr-radius-control);
 	font-size: var(--andr-text-base);
 	height: auto;
 	background-color: var(--andr-color-surface);
 }
 
 .andreani-cotizador-config__tema select.andreani-cotizador-tema:focus {
-	border-color: var(--andr-color-text-link);
+	border-color: var(--andr-color-text-meta);
 	outline: none;
-	box-shadow: 0 0 0 1px var(--andr-color-text-link);
+	box-shadow: var(--andr-shadow-focus);
 }
 
 @media screen and (max-width: 782px) {
@@ -2144,14 +2170,10 @@
 	padding-top: 0 !important;
 }
 
-.andreani-info-box-wrapper--attached .andreani-info-box {
-	border-left: 3px solid var(--andr-color-brand);
-}
-
 .andreani-info-box {
 	background: var(--andr-color-surface-subtle);
 	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-xs);
+	border-radius: var(--andr-radius-card);
 	transition: border-color 0.2s ease, box-shadow 0.2s ease;
 	width: 100%;
 	box-sizing: border-box;
@@ -2279,7 +2301,7 @@
 	width: 100%;
 	padding: 7px 10px;
 	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-xs);
+	border-radius: var(--andr-radius-control);
 	font-size: var(--andr-text-base);
 	height: auto;
 	background-color: var(--andr-color-surface);
@@ -2615,7 +2637,7 @@
 	padding: var(--andr-sp-3) var(--andr-sp-4);
 	background: var(--andr-color-surface);
 	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-xs);
+	border-radius: var(--andr-radius-card);
 	cursor: pointer;
 	transition: border-color var(--andr-transition-fast), box-shadow var(--andr-transition-fast), transform var(--andr-transition-fast);
 	position: relative;
@@ -2764,7 +2786,7 @@
 	margin-top: var(--andr-sp-2);
 	background: var(--andr-color-surface);
 	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-xs);
+	border-radius: var(--andr-radius-card);
 	overflow: hidden;
 }
 
@@ -2910,7 +2932,7 @@
 	padding: 0 var(--andr-sp-5) !important;
 	background: linear-gradient(135deg, var(--andr-color-brand) 0%, var(--andr-color-brand-hover) 100%) !important;
 	border: 1px solid var(--andr-color-brand-hover) !important;
-	border-radius: var(--andr-radius-md) !important;
+	border-radius: var(--andr-radius-button) !important;
 	font-size: var(--andr-text-md) !important;
 	font-weight: var(--andr-fw-semibold) !important;
 	color: var(--andr-color-text-inverse) !important;
@@ -3066,7 +3088,7 @@
 	gap: var(--andr-sp-2);
 	padding: var(--andr-sp-3);
 	margin-bottom: var(--andr-sp-3);
-	border-radius: var(--andr-radius-sm);
+	border-radius: var(--andr-radius-control);
 	background: var(--andr-yellow-50);
 	color: var(--andr-yellow-900);
 }
@@ -3084,6 +3106,22 @@
 	gap: var(--andr-sp-2);
 	flex-wrap: wrap;
 	margin: var(--andr-sp-3) 0 0;
+}
+
+.andreani-origen-traer {
+	min-height: var(--andr-control-h-sm);
+	padding: 0 var(--andr-sp-3);
+	font-size: var(--andr-text-sm);
+	color: var(--andr-gray-700);
+	background: var(--andr-color-surface);
+	border: 1px solid var(--andr-color-border-input);
+	border-radius: var(--andr-radius-pill);
+}
+
+.andreani-origen-traer:hover {
+	color: var(--andr-color-brand);
+	background: var(--andr-color-brand-subtle);
+	border-color: var(--andr-color-brand);
 }
 
 .andreani-origen-traer__aviso {
@@ -3166,7 +3204,7 @@
 	overscroll-behavior: contain;
 	padding: var(--andr-sp-1);
 	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-md);
+	border-radius: var(--andr-radius-card);
 	background: var(--andr-color-surface-subtle);
 }
 
@@ -3177,7 +3215,7 @@
 	margin-top: var(--andr-sp-3);
 	padding: 0 var(--andr-sp-3);
 	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-sm);
+	border-radius: var(--andr-radius-control);
 	background: var(--andr-color-surface);
 }
 
@@ -3299,7 +3337,7 @@
 .andreani-origen-estado {
 	margin: 0;
 	padding: var(--andr-sp-3);
-	border-radius: var(--andr-radius-sm);
+	border-radius: var(--andr-radius-control);
 	background: var(--andr-color-surface-subtle);
 	color: var(--andr-color-text-subtle);
 }

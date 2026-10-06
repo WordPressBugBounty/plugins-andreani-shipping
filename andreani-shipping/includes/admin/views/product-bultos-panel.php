@@ -26,8 +26,6 @@ $mode_options = array(
 <div class="options_group andreani-despacho-section">
 	<?php wp_nonce_field( 'andreani_save_bultos', Andreani_Product_Bultos::NONCE_KEY ); ?>
 
-	<p class="andreani-despacho-status andreani-despacho-status--<?php echo $is_bigger ? 'bigger' : 'regular'; ?>" id="andreani-despacho-status"><?php echo esc_html( $bigger_text ); ?></p>
-
 	<div class="andreani-despacho-header">
 		<span class="andreani-despacho-title">
 			<svg class="andreani-despacho-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 341 341" aria-hidden="true" focusable="false">
@@ -37,6 +35,7 @@ $mode_options = array(
 			</svg>
 			<?php echo esc_html( $strings['mode_question'] ); ?>
 		</span>
+		<span class="andreani-despacho-status andreani-despacho-status--<?php echo $is_bigger ? 'bigger' : 'regular'; ?>" id="andreani-despacho-status"><?php echo esc_html( $bigger_text ); ?></span>
 	</div>
 
 	<div class="andreani-despacho-options">
@@ -104,9 +103,14 @@ $mode_options = array(
 	</div>
 
 	<div class="andreani-despacho-preview" id="andreani-despacho-preview">
-		<span class="andreani-despacho-preview__title"><?php echo esc_html( $strings['preview_title'] ); ?></span>
-		<p class="andreani-despacho-preview__help"><?php echo esc_html( $strings['preview_help'] ); ?></p>
-		<div class="andreani-despacho-preview__body" id="andreani-despacho-preview-body" aria-live="polite"></div>
+		<button type="button" class="andreani-despacho-preview__toggle" id="andreani-despacho-preview-toggle" aria-expanded="false" aria-controls="andreani-despacho-preview-content">
+			<span class="andreani-despacho-preview__title"><?php echo esc_html( $strings['preview_title'] ); ?></span>
+			<svg class="andreani-despacho-preview__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+		</button>
+		<div class="andreani-despacho-preview__content" id="andreani-despacho-preview-content" hidden>
+			<p class="andreani-despacho-preview__help"><?php echo esc_html( $strings['preview_help'] ); ?></p>
+			<div class="andreani-despacho-preview__body" id="andreani-despacho-preview-body" aria-live="polite"></div>
+		</div>
 	</div>
 </div>
 

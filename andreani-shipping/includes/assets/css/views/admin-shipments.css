@@ -380,13 +380,15 @@
 }
 
 .andreani-shipments-wrap .wp-list-table {
+	width: 100%;
+	table-layout: fixed;
 	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-sm);
+	border-radius: var(--andr-radius-card);
 	border-collapse: separate;
 	border-spacing: 0;
 	overflow: hidden;
 	background: var(--andr-color-surface);
-	box-shadow: var(--andr-shadow-xs);
+	box-shadow: var(--andr-shadow-card);
 }
 
 .andreani-shipments-wrap .wp-list-table tfoot {
@@ -394,22 +396,22 @@
 }
 
 .andreani-shipments-wrap .wp-list-table thead th {
-	background: var(--andr-color-surface-subtle);
+	background: var(--andr-color-surface);
 	border-bottom: 1px solid var(--andr-color-border);
-	padding: var(--andr-sp-3) var(--andr-sp-3);
-	font-size: var(--andr-text-xs);
-	font-weight: var(--andr-fw-semibold);
-	color: var(--andr-color-text-muted);
-	text-transform: uppercase;
-	letter-spacing: 0.5px;
+	padding: 14px var(--andr-sp-3);
+	font-size: var(--andr-text-base);
+	font-weight: var(--andr-fw-medium);
+	line-height: 1.3;
+	color: var(--andr-gray-700);
+	box-sizing: border-box;
 }
 
 .andreani-shipments-wrap .wp-list-table thead th:first-child {
-	border-top-left-radius: var(--andr-radius-sm);
+	border-top-left-radius: var(--andr-radius-card);
 }
 
 .andreani-shipments-wrap .wp-list-table thead th:last-child {
-	border-top-right-radius: var(--andr-radius-sm);
+	border-top-right-radius: var(--andr-radius-card);
 }
 
 .andreani-shipments-wrap .wp-list-table th.sortable a,
@@ -435,65 +437,71 @@
 }
 
 .andreani-shipments-wrap .wp-list-table tbody tr:hover {
-	background: color-mix(in srgb, var(--andreani-primary) 5%, transparent);
-}
-
-.andreani-shipments-wrap .wp-list-table tbody tr.andreani-row--expanded {
-	background: color-mix(in srgb, var(--andreani-primary) 7%, transparent);
-	box-shadow: inset 3px 0 0 0 var(--andreani-primary);
+	background: var(--andr-color-surface-subtle);
 }
 
 .andreani-shipments-wrap .wp-list-table tbody tr.andreani-row--expanded:hover {
-	background: color-mix(in srgb, var(--andreani-primary) 10%, transparent);
+	background: var(--andr-color-brand-subtle);
 }
 
 .andreani-shipments-wrap .wp-list-table tbody tr:last-child td {
 	border-bottom: none;
 }
 
+.andreani-shipments-wrap .wp-list-table tbody th.check-column {
+	padding: var(--andr-sp-3);
+	vertical-align: middle;
+}
+
 .andreani-shipments-wrap .wp-list-table tbody tr:last-child td:first-child {
-	border-bottom-left-radius: var(--andr-radius-sm);
+	border-bottom-left-radius: var(--andr-radius-card);
 }
 
 .andreani-shipments-wrap .wp-list-table tbody tr:last-child td:last-child {
-	border-bottom-right-radius: var(--andr-radius-sm);
+	border-bottom-right-radius: var(--andr-radius-card);
 }
 
 .andreani-shipments-wrap .wp-list-table td {
 	padding: var(--andr-sp-3) var(--andr-sp-3);
-	border-bottom: 1px solid var(--andr-color-border-subtle);
+	border-bottom: 1px solid var(--andr-color-border-soft);
 	font-size: var(--andr-text-sm);
 	color: var(--andr-color-text-subtle);
 	vertical-align: middle;
+	box-sizing: border-box;
 }
 
-.andreani-shipments-wrap .column-cb { width: 36px; }
-.andreani-shipments-wrap .column-order_number { width: 70px; }
-.andreani-shipments-wrap .column-customer { width: 130px; }
-.andreani-shipments-wrap .column-destination { width: 110px; }
+.andreani-shipments-wrap .column-cb { width: 3%; }
+.andreani-shipments-wrap .column-order_number { width: 7%; }
+.andreani-shipments-wrap .column-customer { width: 15%; }
+.andreani-shipments-wrap .column-destination { width: 13%; }
 .andreani-shipments-wrap .column-products { width: 150px; }
 .andreani-shipments-wrap .column-client_type { width: 70px; text-align: center; }
 .andreani-shipments-wrap .column-delivery_mode { width: 80px; }
-.andreani-shipments-wrap .column-payment { width: 80px; text-align: center; }
+.andreani-shipments-wrap .column-payment { width: 8.5%; text-align: center; }
 .andreani-shipments-wrap .column-payment .andreani-payment--na {
 	color: var(--andr-color-text-disabled);
 }
-.andreani-shipments-wrap .column-status { width: 130px; }
+.andreani-shipments-wrap .column-status { width: 13%; }
 .andreani-shipments-wrap .column-andreani_id { width: 145px; }
-.andreani-shipments-wrap .column-tracking { width: 200px; }
-.andreani-shipments-wrap .column-date { width: 85px; }
+.andreani-shipments-wrap .column-tracking { width: 16%; }
+.andreani-shipments-wrap .column-date { width: 8%; }
 .andreani-shipments-wrap .column-date,
 .andreani-shipments-wrap .column-date span,
 .andreani-shipments-wrap .column-date abbr {
 	text-decoration: none;
 	border-bottom: none;
+	font-size: var(--andr-text-base);
+	color: var(--andr-color-text-subtle);
 }
 
-.andreani-shipments-wrap .column-actions { width: 140px; text-align: center; }
+.andreani-shipments-wrap .column-actions { width: 8%; text-align: right; }
 
 .andreani-shipments-wrap .wp-list-table td.column-order_number a {
-	color: var(--andr-color-brand);
+	color: var(--andr-color-text-strong);
+	font-family: var(--andr-font-display);
+	font-size: 15px;
 	font-weight: var(--andr-fw-semibold);
+	line-height: 1.2;
 	text-decoration: none;
 	display: inline-flex;
 	align-items: baseline;
@@ -511,84 +519,100 @@
 /* Número de pedido: el "#" en cursiva muted como prefijo discreto, el número
  * grande y prominente. Da jerarquía visual entre el separador y el dato real. */
 .andreani-order-number__hash {
-	font-style: italic;
-	font-weight: var(--andr-fw-regular);
-	color: var(--andr-color-text-disabled);
+	font-weight: var(--andr-fw-normal);
+	color: var(--andr-color-text-meta);
 	font-size: var(--andr-text-sm);
 }
 
 .andreani-order-number__num {
-	font-size: var(--andr-text-md);
+	font-size: 15px;
 	font-weight: var(--andr-fw-semibold);
-	letter-spacing: 0.01em;
 }
 
 /* Columna Pedido: número grande + caption del tipo debajo, sutil. */
 .andreani-order-number-wrap {
-	display: inline-flex;
-	flex-direction: column;
-	align-items: flex-start;
+	display: grid;
+	grid-template-columns: auto auto;
+	align-items: center;
+	justify-content: start;
+	column-gap: 6px;
+	row-gap: 2px;
 	line-height: 1.2;
-	position: relative;
 }
 
 .andreani-order-number__chevron {
-	position: absolute;
-	right: -18px;
-	top: 50%;
-	transform: translateY(-50%);
-	width: 12px;
-	height: 12px;
-	color: var(--andr-color-text-muted);
-	opacity: 0.45;
+	grid-row: 1;
+	grid-column: 2;
+	width: 16px;
+	height: 16px;
+	color: var(--andr-color-text-meta);
+	opacity: 0.8;
 	transition: transform var(--andr-transition-base), opacity var(--andr-transition-fast);
 	pointer-events: none;
 }
 
 .andreani-shipments-wrap tbody tr[data-order-id]:hover .andreani-order-number__chevron {
-	opacity: 0.8;
+	opacity: 1;
 }
 
 .andreani-shipments-wrap tbody tr[data-order-id].andreani-row--expanded .andreani-order-number__chevron {
-	transform: translateY(-50%) rotate(180deg);
+	transform: rotate(180deg);
 	opacity: 1;
 	color: var(--andr-color-brand);
 }
 
 .andreani-order-number__type {
-	margin-top: 2px;
+	grid-column: 1 / -1;
+	justify-self: start;
+	padding: 3px 8px;
+	border-radius: var(--andr-radius-pill);
 	font-size: 10px;
-	font-weight: var(--andr-fw-semibold);
+	font-weight: var(--andr-fw-medium);
 	text-transform: uppercase;
-	letter-spacing: 0.08em;
+	letter-spacing: 0.4px;
 	line-height: 1;
-	opacity: 0.7;
 }
 
 .andreani-order-number__type--pyme {
-	color: var(--andr-red-500);
+	background: var(--andr-color-brand-subtle);
+	color: var(--andr-color-brand-strong);
 }
 
 .andreani-order-number__type--corporativo {
+	background: var(--andr-color-info-subtle);
 	color: var(--andr-color-info-strong);
 }
 
 /* Columna Cliente: nombre prominente, meta (email + DNI) discreta debajo. */
 .andreani-customer__name {
-	font-weight: var(--andr-fw-semibold);
+	font-size: var(--andr-text-md);
+	font-weight: var(--andr-fw-medium);
 	color: var(--andr-color-text-strong);
-	line-height: 1.3;
+	line-height: 1.4;
 }
 
 .andreani-customer__meta {
 	margin-top: 2px;
-	font-size: var(--andr-text-xs);
-	color: var(--andr-color-text-muted);
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-meta);
 	line-height: 1.5;
 }
 
+.andreani-customer__meta br {
+	display: none;
+}
+
+.andreani-customer__email,
+.andreani-customer__dni {
+	display: block;
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
 .andreani-customer__email {
-	color: var(--andr-color-text-muted);
+	color: var(--andr-color-text-meta);
 	text-decoration: none;
 }
 
@@ -598,7 +622,7 @@
 }
 
 .andreani-customer__dni {
-	color: var(--andr-color-text-muted);
+	color: var(--andr-color-text-meta);
 }
 
 /* Columna Destino: línea principal con calle + número, línea secundaria muted
@@ -611,7 +635,7 @@
 }
 
 .andreani-destination__line {
-	font-size: var(--andr-text-xs);
+	font-size: var(--andr-text-base);
 	color: var(--andr-color-text-strong);
 	line-height: 1.3;
 	overflow: hidden;
@@ -620,7 +644,8 @@
 }
 
 .andreani-destination__line--muted {
-	color: var(--andr-color-text-muted);
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-meta);
 }
 
 .andreani-destination--empty {
@@ -652,28 +677,28 @@
 /* Columna Seguimiento: ID + Seg apilados, monospace plano, sin fondo. */
 .andreani-shipments-wrap .wp-list-table th.column-tracking,
 .andreani-shipments-wrap .wp-list-table td.column-tracking {
-	width: 200px;
-	max-width: 200px;
+	width: 16%;
 }
 
 .andreani-identifier-stack {
 	display: flex;
 	flex-direction: column;
-	gap: 2px;
+	gap: var(--andr-sp-1);
 	width: 100%;
 	min-width: 0;
 }
 
 .andreani-identifier {
+	position: relative;
 	display: flex;
 	align-items: baseline;
 	gap: 6px;
 	width: 100%;
 	min-width: 0;
 	font-family: var(--andr-font-mono);
-	font-size: 11px;
-	line-height: 1.4;
-	color: var(--andr-color-text-subtle);
+	font-size: var(--andr-text-sm);
+	line-height: 1.3;
+	color: var(--andr-color-text-strong);
 	cursor: pointer;
 	transition: color var(--andr-transition-fast);
 }
@@ -686,14 +711,47 @@
 	color: var(--andr-color-success-strong, var(--andr-color-success));
 }
 
+.andreani-identifier::after {
+	content: attr(data-tracking);
+	position: absolute;
+	left: 52px;
+	bottom: calc(100% + 4px);
+	z-index: 10;
+	padding: 4px var(--andr-sp-2);
+	border-radius: var(--andr-radius-xs);
+	background: var(--andr-color-text-strong);
+	color: var(--andr-color-text-inverse);
+	font-size: var(--andr-text-xs);
+	white-space: nowrap;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity var(--andr-transition-fast);
+}
+
+.andreani-identifier:hover::after,
+.andreani-identifier:focus-visible::after {
+	opacity: 1;
+}
+
+.andreani-identifier.copied::after {
+	content: attr(data-copied);
+	opacity: 1;
+}
+
+.andreani-identifier:focus-visible {
+	outline: 2px solid var(--andr-color-brand);
+	outline-offset: 2px;
+}
+
 .andreani-identifier__label {
 	flex-shrink: 0;
-	font-size: 9px;
-	font-weight: var(--andr-fw-semibold);
-	letter-spacing: 0.05em;
-	color: var(--andr-color-text-disabled);
+	font-size: 10px;
+	font-weight: var(--andr-fw-medium);
+	letter-spacing: 0.4px;
+	line-height: 1;
+	color: var(--andr-color-text-meta);
 	text-transform: uppercase;
-	width: 48px;
+	width: 52px;
 	white-space: nowrap;
 	font-family: var(--andr-font-body);
 }
@@ -731,28 +789,13 @@
 	color: var(--andr-color-success-strong, var(--andr-color-success));
 }
 
-/* Chips de Servicio, Pago y Estado: por defecto solo icono (círculo 24×24).
- * Al hover aparece el tooltip flotante (`::after` con position:absolute) que
- * NO desplaza el layout y se superpone a la grilla. Lee el texto del
- * atributo `data-label`. Si necesitamos versión textual en otro lugar, se
- * quita la clase `--icon-only`. */
+/* Chips de Servicio, Pago y Estado: soft badge con ícono + etiqueta. Si el
+ * markup es `--icon-only`, el texto sale de `data-label`. */
 .andreani-shipments-wrap .wp-list-table .andr-badge,
 .andreani-shipments-wrap .wp-list-table .andr-status {
-	position: relative;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	height: 30px;
-	padding: 0 12px;
+	min-height: 26px;
+	padding-left: var(--andr-sp-2);
 	gap: 6px;
-	font-family: var(--andr-font-body);
-	font-size: 12px;
-	font-weight: var(--andr-fw-semibold);
-	line-height: 1;
-	letter-spacing: 0.02em;
-	border-radius: var(--andr-radius-pill);
-	white-space: nowrap;
-	user-select: none;
 	box-sizing: border-box;
 	vertical-align: middle;
 	cursor: default;
@@ -761,76 +804,44 @@
 .andreani-shipments-wrap .wp-list-table .andr-badge svg,
 .andreani-shipments-wrap .wp-list-table .andr-status svg {
 	display: block;
-	width: 16px;
-	height: 16px;
-	flex-shrink: 0;
+	width: 14px;
+	height: 14px;
+	flex: 0 0 14px;
 	stroke-width: 2;
 	fill: none;
 }
 
-.andreani-shipments-wrap .wp-list-table .andr-badge--icon-only,
 .andreani-shipments-wrap .wp-list-table .andr-status--icon-only {
-	width: 30px;
-	height: 30px;
-	padding: 0;
-	position: relative;
-}
-
-.andr-status__error-dot {
-	position: absolute;
-	top: -2px;
-	right: -2px;
-	width: 10px;
-	height: 10px;
-	background: var(--andr-color-error);
-	border-radius: 50%;
-	border: 2px solid var(--andr-color-surface);
-	pointer-events: none;
+	max-width: 100%;
+	white-space: normal;
+	text-align: left;
 }
 
 .andreani-shipments-wrap .wp-list-table .andr-badge--icon-only::after,
 .andreani-shipments-wrap .wp-list-table .andr-status--icon-only::after {
 	content: attr(data-label);
-	position: absolute;
-	bottom: calc(100% + 6px);
-	left: 50%;
-	transform: translateX(-50%) translateY(4px);
-	background: var(--andr-color-text-strong);
-	color: var(--andr-color-surface);
-	padding: 4px 8px;
-	border-radius: var(--andr-radius-sm, 4px);
-	font-size: 11px;
-	font-weight: var(--andr-fw-medium);
-	letter-spacing: normal;
-	line-height: 1.2;
-	white-space: nowrap;
-	opacity: 0;
+}
+
+.andr-status__error-dot {
+	order: -1;
+	flex-shrink: 0;
+	width: 6px;
+	height: 6px;
+	background: var(--andr-color-error);
+	border-radius: 50%;
 	pointer-events: none;
-	transition: opacity 0.15s ease, transform 0.15s ease;
-	z-index: 1000;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.andreani-shipments-wrap .wp-list-table .andr-badge--icon-only:hover::after,
-.andreani-shipments-wrap .wp-list-table .andr-badge--icon-only:focus::after,
-.andreani-shipments-wrap .wp-list-table .andr-status--icon-only:hover::after,
-.andreani-shipments-wrap .wp-list-table .andr-status--icon-only:focus::after {
-	opacity: 1;
-	transform: translateX(-50%) translateY(0);
-}
-
-/* Columnas de chips icon-only: ancho mínimo para que el header no se rompa
- * en vertical y centrado del chip dentro de la celda. */
 .andreani-shipments-wrap .wp-list-table th.column-service,
 .andreani-shipments-wrap .wp-list-table td.column-service,
 .andreani-shipments-wrap .wp-list-table th.column-payment,
 .andreani-shipments-wrap .wp-list-table td.column-payment,
 .andreani-shipments-wrap .wp-list-table th.column-status,
 .andreani-shipments-wrap .wp-list-table td.column-status {
-	width: 80px;
-	min-width: 80px;
 	text-align: center;
 }
+
+.andreani-shipments-wrap .column-service { width: 8.5%; }
 
 .andreani-cell--empty,
 .andreani-tracking--empty,
@@ -864,7 +875,6 @@
 	min-width: 34px;
 	min-height: 34px;
 	padding: 0;
-	border-radius: var(--andr-radius-sm);
 	border-color: var(--andr-color-border-strong);
 	background: var(--andr-color-surface);
 	color: var(--andr-color-text-muted);
@@ -1431,7 +1441,7 @@
 .andreani-date-range__input {
 	padding: 3px var(--andr-sp-2);
 	border: 1px solid var(--andr-color-border-strong);
-	border-radius: var(--andr-radius-md, 6px);
+	border-radius: var(--andr-radius-control);
 	background: var(--andr-color-surface);
 	font-size: var(--andr-text-sm);
 	color: var(--andr-color-text-strong);
@@ -2112,12 +2122,15 @@
    indicador visual de "abierto". */
 .andreani-shipments-wrap .wp-list-table tbody tr.andreani-row--expanded {
 	background: var(--andr-color-brand-subtle);
-	box-shadow: inset 3px 0 0 0 var(--andr-color-brand);
 }
 
 .andreani-shipments-wrap .wp-list-table tbody tr.andreani-row--expanded > td,
 .andreani-shipments-wrap .wp-list-table tbody tr.andreani-row--expanded > th {
 	border-bottom: none;
+}
+
+.andreani-shipments-wrap .wp-list-table tbody tr.andreani-row--expanded > :first-child {
+	box-shadow: inset 3px 0 0 var(--andr-color-brand);
 }
 
 /* ----- Detail row (TR eager-loaded en single_row) -----
@@ -2130,7 +2143,11 @@
 }
 
 .andreani-shipments-wrap .andreani-detail-row.andreani-detail-row--visible {
-	background: color-mix(in srgb, var(--andreani-primary) 7%, transparent);
+	background: var(--andr-color-surface-subtle);
+}
+
+.andreani-shipments-wrap .andreani-detail-row--visible > .andreani-detail-row__cell {
+	box-shadow: inset 3px 0 0 var(--andr-color-brand);
 }
 
 .andreani-shipments-wrap .andreani-detail-row__cell {
@@ -2159,9 +2176,8 @@
 
 /* ----- Detalle: layout denso operativo ----- */
 .andreani-shipments-wrap .andreani-detail {
-	padding: var(--andr-sp-4) var(--andr-sp-5);
-	background: var(--andr-color-surface);
-	border-left: 3px solid var(--andr-color-brand);
+	padding: 20px 28px 24px;
+	background: transparent;
 }
 
 .andreani-shipments-wrap .andreani-detail--error {
@@ -2174,16 +2190,17 @@
 	display: flex;
 	flex-direction: column;
 	gap: var(--andr-sp-1);
-	padding-bottom: var(--andr-sp-3);
+	padding-bottom: 14px;
 	border-bottom: 1px solid var(--andr-color-border);
-	margin-bottom: var(--andr-sp-3);
+	margin-bottom: var(--andr-sp-4);
 }
 
 .andreani-shipments-wrap .andreani-detail__order {
 	margin: 0;
 	font-family: var(--andr-font-display);
-	font-size: var(--andr-text-md);
-	font-weight: var(--andr-fw-semibold);
+	font-size: var(--andr-text-lg);
+	font-weight: var(--andr-fw-medium);
+	line-height: 1.3;
 	color: var(--andr-color-text-strong);
 }
 
@@ -2316,19 +2333,9 @@
 	outline-offset: 2px;
 }
 
-/* ----- Layout 2 columnas cuando hay error -----
-   Sin error: 1 columna (rows full width). Con error: 50/50, izquierda rows
-   (con productos integrado debajo de "Vas a enviar") y derecha aside con
-   error card + body card apilados verticalmente. */
+/* ----- Layout: la card de error (si hay) va arriba a todo el ancho; las cards debajo en la misma grilla ----- */
 .andreani-shipments-wrap .andreani-detail__layout {
 	display: block;
-}
-
-.andreani-shipments-wrap .andreani-detail__layout--has-error {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: var(--andr-sp-4);
-	align-items: start;
 }
 
 .andreani-shipments-wrap .andreani-detail__main {
@@ -2340,13 +2347,14 @@
 	flex-direction: column;
 	gap: var(--andr-sp-3);
 	min-width: 0;
+	margin-bottom: var(--andr-sp-3);
 }
 
-/* Card del mensaje de error (en el aside derecho) */
+/* Card del mensaje de error */
 .andreani-shipments-wrap .andreani-detail__error-card {
 	background: var(--andr-color-error-subtle);
 	border: 1px solid var(--andr-color-error);
-	border-radius: var(--andr-radius-sm);
+	border-radius: var(--andr-radius-card);
 	overflow: hidden;
 }
 
@@ -2504,7 +2512,7 @@
 	flex-direction: column;
 	background: var(--andr-color-surface);
 	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-sm);
+	border-radius: var(--andr-radius-card);
 	overflow: hidden;
 	min-width: 0;
 }
@@ -2569,12 +2577,6 @@
 	overflow: auto;
 	white-space: pre;
 	word-break: normal;
-}
-
-@media (max-width: 1024px) {
-	.andreani-shipments-wrap .andreani-detail__layout--has-error {
-		grid-template-columns: 1fr;
-	}
 }
 
 /* ----- "Vas a enviar" colapsable: chevron + summary + lista plana sutil -----
@@ -2788,22 +2790,22 @@
 	color: var(--andr-color-text);
 	background: var(--andr-color-surface);
 	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-sm);
+	border-radius: var(--andr-radius-control);
 	cursor: pointer;
 	transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .andreani-shipments-wrap .andreani-per-page__btn:hover {
-	background: color-mix(in srgb, var(--andreani-primary) 6%, transparent);
-	border-color: var(--andreani-primary);
+	background: var(--andr-color-brand-subtle);
+	border-color: var(--andr-color-brand);
 }
 
 .andreani-shipments-wrap .andreani-per-page__btn.is-active,
 .andreani-shipments-wrap .andreani-per-page__btn.is-active:hover,
 .andreani-shipments-wrap .andreani-per-page__btn.is-active:focus {
-	background: #e31e24 !important;
-	border-color: #e31e24 !important;
-	color: #fff !important;
+	background: var(--andr-color-brand) !important;
+	border-color: var(--andr-color-brand) !important;
+	color: var(--andr-color-brand-on-brand) !important;
 }
 
 .andreani-toolbar {
@@ -2824,21 +2826,24 @@
 .andreani-search-input {
 	width: 240px;
 	max-width: 100%;
-	height: 34px;
-	padding: 0 var(--andr-sp-3);
-	border: 1px solid var(--andr-color-border-strong);
-	border-radius: var(--andr-radius-pill);
+	height: var(--andr-control-h);
+	padding: 0 var(--andr-sp-4);
+	border: 1px solid var(--andr-color-border-input);
+	border-radius: var(--andr-radius-control);
 	background: var(--andr-color-surface);
-	font-size: var(--andr-text-sm);
+	font-family: var(--andr-font-body);
+	font-size: var(--andr-text-md);
+	font-weight: var(--andr-fw-normal);
+	line-height: 1;
 	color: var(--andr-color-text-strong);
 	box-shadow: none;
 	transition: border-color var(--andr-transition-fast), box-shadow var(--andr-transition-fast);
 }
 
 .andreani-search-input:focus {
-	border-color: var(--andr-color-brand);
+	border-color: var(--andr-color-text-meta);
 	outline: none;
-	box-shadow: 0 0 0 2px var(--andr-color-brand-soft, rgba(0, 0, 0, 0.08));
+	box-shadow: var(--andr-shadow-focus);
 }
 
 .andreani-search-input::placeholder {
@@ -2853,12 +2858,13 @@
 	display: inline-flex;
 	align-items: center;
 	gap: var(--andr-sp-2);
-	height: 34px;
-	padding: 0 var(--andr-sp-3);
+	height: var(--andr-control-h);
+	padding: 0 var(--andr-sp-4);
 	background: var(--andr-color-surface);
-	border: 1px solid var(--andr-color-border-strong);
-	border-radius: var(--andr-radius-pill);
+	border: 1.5px solid var(--andr-color-border-input);
+	border-radius: var(--andr-radius-button);
 	color: var(--andr-color-text-strong);
+	font-family: var(--andr-font-display);
 	font-size: var(--andr-text-sm);
 	font-weight: var(--andr-fw-medium);
 	cursor: pointer;
@@ -2904,7 +2910,7 @@
 	max-width: calc(100vw - var(--andr-sp-4) * 2);
 	background: var(--andr-color-surface);
 	border: 1px solid var(--andr-color-border-strong);
-	border-radius: var(--andr-radius-lg, 10px);
+	border-radius: var(--andr-radius-card);
 	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
 	overflow: hidden;
 }
@@ -2960,11 +2966,11 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 34px;
-	height: 34px;
+	width: var(--andr-control-h);
+	height: var(--andr-control-h);
 	padding: 0;
-	background: transparent;
-	border: 1px solid transparent;
+	background: var(--andr-color-surface);
+	border: 1.5px solid var(--andr-color-border-input);
 	border-radius: 50%;
 	color: var(--andr-color-text-subtle);
 	cursor: pointer;
@@ -2972,23 +2978,16 @@
 	text-decoration: none;
 }
 
-.andreani-icon-btn:hover,
-.andreani-icon-btn:focus-visible {
-	color: var(--andr-color-text-strong);
-	background: var(--andr-color-surface-subtle, rgba(0, 0, 0, 0.04));
-	border-color: var(--andr-color-border-strong);
-	outline: none;
-}
-
-.andreani-icon-btn--bordered {
-	border-color: var(--andr-color-border-strong);
-	background: var(--andr-color-surface);
-}
-
-.andreani-icon-btn--bordered:hover,
-.andreani-icon-btn--bordered:focus-visible {
+.andreani-icon-btn:hover {
 	color: var(--andr-color-brand);
+	background: var(--andr-color-brand-subtle);
 	border-color: var(--andr-color-brand);
+}
+
+.andreani-icon-btn:focus-visible {
+	border-color: var(--andr-color-text-meta);
+	box-shadow: var(--andr-shadow-focus);
+	outline: none;
 }
 
 .andreani-icon-btn svg {
@@ -3000,13 +2999,14 @@
 	display: inline-flex;
 	align-items: center;
 	gap: var(--andr-sp-2);
-	height: 34px;
-	padding: 0 var(--andr-sp-3);
+	height: var(--andr-control-h);
+	padding: 0 var(--andr-sp-4);
 	margin-right: var(--andr-sp-1);
 	background: var(--andr-color-surface);
-	border: 1px solid var(--andr-color-border-strong);
-	border-radius: var(--andr-radius-pill);
+	border: 1.5px solid var(--andr-color-border-input);
+	border-radius: var(--andr-radius-button);
 	color: var(--andr-color-text-strong);
+	font-family: var(--andr-font-display);
 	font-size: var(--andr-text-sm);
 	font-weight: var(--andr-fw-medium);
 	white-space: nowrap;
@@ -3382,18 +3382,19 @@
 
 /* ----- TIMELINE HERO (compact con iconos) ----- */
 .andreani-shipments-wrap .andreani-detail__timeline {
-	background: var(--andr-color-surface-subtle);
+	background: var(--andr-color-surface);
 	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-md);
-	padding: var(--andr-sp-3) var(--andr-sp-4);
-	margin-bottom: var(--andr-sp-3);
+	border-radius: var(--andr-radius-card);
+	padding: 14px 18px;
+	margin-bottom: 14px;
 }
 
 /* Título compuesto: label uppercase rojo + tracking number mono normal (legible). */
 .andreani-shipments-wrap .andreani-detail__timeline-title {
-	display: inline-flex;
+	display: flex;
+	width: 100%;
 	align-items: baseline;
-	gap: var(--andr-sp-2);
+	gap: 6px;
 	flex-wrap: wrap;
 }
 
@@ -3406,7 +3407,7 @@
 .andreani-shipments-wrap .andreani-detail__timeline-title-value {
 	color: var(--andr-color-text);
 	font-family: var(--andr-font-mono);
-	font-weight: var(--andr-fw-medium);
+	font-weight: var(--andr-fw-normal);
 	font-size: var(--andr-text-sm);
 	text-transform: none;
 	letter-spacing: 0;
@@ -3441,9 +3442,9 @@
 .andreani-shipments-wrap .andreani-detail__step:not(:last-child)::after {
 	content: '';
 	position: absolute;
-	top: 13px;
-	left: calc(50% + 16px);
-	right: calc(-50% + 16px);
+	top: 14px;
+	left: calc(50% + 19px);
+	right: calc(-50% + 19px);
 	height: 2px;
 	background: var(--andr-color-border);
 	z-index: 0;
@@ -3455,8 +3456,8 @@
 }
 
 .andreani-shipments-wrap .andreani-detail__step-marker {
-	width: 26px;
-	height: 26px;
+	width: 30px;
+	height: 30px;
 	border-radius: 50%;
 	background: var(--andr-color-surface);
 	border: 2px solid var(--andr-color-border);
@@ -3471,8 +3472,8 @@
 }
 
 .andreani-shipments-wrap .andreani-detail__step-marker svg {
-	width: 12px;
-	height: 12px;
+	width: 15px;
+	height: 15px;
 }
 
 .andreani-shipments-wrap .andreani-detail__step--active .andreani-detail__step-marker {
@@ -3509,8 +3510,8 @@
 }
 
 .andreani-shipments-wrap .andreani-detail__step-label {
-	font-size: var(--andr-text-xs);
-	font-weight: var(--andr-fw-semibold);
+	font-size: var(--andr-text-sm);
+	font-weight: var(--andr-fw-medium);
 	color: var(--andr-color-text-muted);
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -3523,25 +3524,13 @@
 
 .andreani-shipments-wrap .andreani-detail__step-date {
 	font-size: var(--andr-text-xs);
-	color: var(--andr-color-text-disabled);
-}
-
-.andreani-shipments-wrap .andreani-detail__step--active .andreani-detail__step-date {
-	color: var(--andr-color-text-subtle);
-}
-
-.andreani-shipments-wrap .andreani-detail__timeline-note {
-	margin: var(--andr-sp-2) 0 0 0;
-	font-size: var(--andr-text-xs);
-	color: var(--andr-color-text-muted);
-	font-style: italic;
-	text-align: center;
+	color: var(--andr-color-text-meta);
 }
 
 /* ----- CARDS GRID (auto-fit: 1-4 columnas según ancho) ----- */
 .andreani-shipments-wrap .andreani-detail__cards-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 	gap: var(--andr-sp-3);
 	margin-bottom: var(--andr-sp-3);
 	align-items: stretch;
@@ -3550,23 +3539,23 @@
 .andreani-shipments-wrap .andreani-detail__card {
 	background: var(--andr-color-surface);
 	border: 1px solid var(--andr-color-border);
-	border-left: 3px solid var(--andr-color-brand);
-	border-radius: var(--andr-radius-md);
-	padding: var(--andr-sp-4);
+	border-radius: var(--andr-radius-card);
+	padding: 14px 18px;
 	min-width: 0;
 }
 
-.andreani-shipments-wrap .andreani-detail__card--full {
-	grid-column: 1 / -1;
-}
-
-.andreani-shipments-wrap .andreani-detail__card-title {
-	margin: 0 0 var(--andr-sp-3) 0;
-	font-size: var(--andr-text-xs);
+.andreani-shipments-wrap .andreani-detail__card-title,
+.andreani-shipments-wrap .andreani-detail__timeline-title {
+	margin: 0 0 10px 0;
+	padding: 0 0 10px;
+	border-bottom: 1px solid var(--andr-color-border-soft);
+	font-family: var(--andr-font-display);
+	font-size: var(--andr-text-base);
 	font-weight: var(--andr-fw-semibold);
-	color: var(--andr-color-brand);
-	text-transform: uppercase;
-	letter-spacing: 0.06em;
+	line-height: 1.3;
+	color: var(--andr-color-text-strong);
+	text-transform: none;
+	letter-spacing: 0;
 }
 
 /* ----- RUTA DEL ENVÍO ----- */
@@ -3580,6 +3569,12 @@
 	display: flex;
 	align-items: flex-start;
 	gap: var(--andr-sp-2);
+	padding: 6px 0;
+	border-bottom: 1px solid var(--andr-color-border-soft);
+}
+
+.andreani-shipments-wrap .andreani-detail__route-point:last-child {
+	border-bottom: 0;
 }
 
 .andreani-shipments-wrap .andreani-detail__route-marker {
@@ -3604,22 +3599,22 @@
 .andreani-shipments-wrap .andreani-detail__route-label {
 	font-size: var(--andr-text-xs);
 	font-weight: var(--andr-fw-semibold);
-	color: var(--andr-color-text-muted);
+	color: var(--andr-color-brand);
 	text-transform: uppercase;
-	letter-spacing: 0.04em;
+	letter-spacing: 0.4px;
 	margin-bottom: 2px;
 }
 
 .andreani-shipments-wrap .andreani-detail__route-address {
-	font-size: var(--andr-text-sm);
-	color: var(--andr-color-text);
+	font-size: var(--andr-text-base);
+	color: var(--andr-color-text-strong);
 	line-height: 1.4;
 	word-break: break-word;
 }
 
 .andreani-shipments-wrap .andreani-detail__route-extra {
-	font-size: var(--andr-text-xs);
-	color: var(--andr-color-text-subtle);
+	font-size: var(--andr-text-sm);
+	color: var(--andr-color-text-meta);
 	margin-top: 2px;
 	line-height: 1.4;
 }
@@ -3642,9 +3637,15 @@
 	display: flex;
 	align-items: center;
 	gap: var(--andr-sp-2);
-	font-size: var(--andr-text-sm);
-	color: var(--andr-color-text);
+	padding: 6px 0;
+	border-bottom: 1px solid var(--andr-color-border-soft);
+	font-size: var(--andr-text-base);
+	color: var(--andr-color-text-strong);
 	word-break: break-word;
+}
+
+.andreani-shipments-wrap .andreani-detail__contact-row:last-child {
+	border-bottom: 0;
 }
 
 .andreani-shipments-wrap .andreani-detail__contact-row svg {
@@ -3850,20 +3851,34 @@
 
 .andreani-shipments-wrap .andreani-detail__info dt {
 	font-size: var(--andr-text-xs);
-	color: var(--andr-color-text-muted);
-	font-weight: var(--andr-fw-medium);
+	color: var(--andr-color-brand);
+	font-weight: var(--andr-fw-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.4px;
 	margin: 0;
 }
 
 .andreani-shipments-wrap .andreani-detail__info dd {
 	margin: 0;
-	font-size: var(--andr-text-sm);
-	color: var(--andr-color-text);
+	font-size: var(--andr-text-base);
+	color: var(--andr-color-text-strong);
 }
 
 .andreani-shipments-wrap .andreani-detail__info-price {
 	color: var(--andr-color-brand);
 	font-weight: var(--andr-fw-semibold);
+}
+
+.andreani-shipments-wrap .andreani-detail__info-copy {
+	font-family: var(--andr-font-mono);
+	font-size: var(--andr-text-sm);
+	overflow-wrap: anywhere;
+	cursor: pointer;
+	transition: color var(--andr-transition-fast);
+}
+
+.andreani-shipments-wrap .andreani-detail__info-copy:hover {
+	color: var(--andr-color-brand);
 }
 
 /* ----- CONTENIDO DEL ENVÍO ----- */
@@ -3889,88 +3904,6 @@
 	height: 14px;
 	color: var(--andr-color-brand);
 	flex-shrink: 0;
-}
-
-/* ----- IDENTIFICADORES (full-width card, auto-fit en multi-columna) ----- */
-.andreani-shipments-wrap .andreani-detail__ids {
-	list-style: none;
-	padding: 0;
-	margin: 0;
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-	gap: 0 var(--andr-sp-5);
-}
-
-.andreani-shipments-wrap .andreani-detail__id-row {
-	display: grid;
-	grid-template-columns: 18px 130px 1fr;
-	gap: var(--andr-sp-2);
-	align-items: center;
-	padding: var(--andr-sp-2) 0;
-	border-bottom: 1px solid var(--andr-color-border-subtle);
-	min-width: 0;
-}
-
-.andreani-shipments-wrap .andreani-detail__id-icon {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.andreani-shipments-wrap .andreani-detail__id-icon svg {
-	width: 14px;
-	height: 14px;
-	color: var(--andr-color-brand);
-}
-
-.andreani-shipments-wrap .andreani-detail__id-label {
-	font-size: var(--andr-text-xs);
-	color: var(--andr-color-text-muted);
-	font-weight: var(--andr-fw-semibold);
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-}
-
-.andreani-shipments-wrap .andreani-detail__id-value {
-	font-size: var(--andr-text-sm);
-	color: var(--andr-color-text);
-	font-family: var(--andr-font-mono);
-	word-break: break-all;
-	min-width: 0;
-}
-
-.andreani-shipments-wrap .andreani-detail__id-value--text {
-	font-family: inherit;
-	word-break: normal;
-	display: inline-flex;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: var(--andr-sp-1);
-}
-
-.andreani-shipments-wrap .andreani-detail__id-value.andreani-copy-click {
-	cursor: pointer;
-	transition: color var(--andr-transition-fast);
-}
-
-.andreani-shipments-wrap .andreani-detail__id-value.andreani-copy-click:hover {
-	color: var(--andr-color-brand);
-}
-
-.andreani-shipments-wrap .andreani-detail__id-separator {
-	color: var(--andr-color-text-disabled);
-}
-
-.andreani-shipments-wrap .andreani-detail__payment {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	font-size: var(--andr-text-xs);
-}
-
-.andreani-shipments-wrap .andreani-detail__payment svg {
-	width: 12px;
-	height: 12px;
 }
 
 /* ----- Responsive: 1 columna en pantallas chicas ----- */
@@ -4000,18 +3933,5 @@
 	.andreani-shipments-wrap .andreani-detail__step-marker {
 		margin-bottom: 0;
 		flex-shrink: 0;
-	}
-
-	.andreani-shipments-wrap .andreani-detail__id-row {
-		grid-template-columns: 18px 1fr;
-		gap: var(--andr-sp-2);
-	}
-
-	.andreani-shipments-wrap .andreani-detail__id-label {
-		grid-column: 2 / -1;
-	}
-
-	.andreani-shipments-wrap .andreani-detail__id-value {
-		grid-column: 2 / -1;
 	}
 }

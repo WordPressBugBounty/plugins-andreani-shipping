@@ -5,7 +5,7 @@ Copyright: 2025 Andreani.com
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.6.12
+Stable tag: 1.7.0
 Contributors: integracionandreani
 Donate link:
 Tags: woocommerce, shipping, andreani, envio, etiquetas
@@ -166,12 +166,14 @@ Activá el modo debug en la configuración del plugin. Los registros quedan disp
 
 == Screenshots ==
 
-1. Grilla de envíos: gestioná todos tus envíos de Andreani desde un solo lugar, con estado logístico, filtros y descarga de etiquetas.
-2. Detalle del pedido: número de seguimiento, línea de tiempo del envío y estado de pago siempre al día.
-3. Configuración del método de envío "Andreani Envios": Credential ID, contratos y opciones.
-4. Selección de sucursal Andreani durante el checkout.
-5. Configuración del formato de impresión de etiquetas (A4 o térmica Zebra).
-6. Cotizador de envío en la página de producto.
+1. Grilla de envíos: gestioná todos tus envíos de Andreani desde un solo lugar, con estado logístico, pago y descarga de etiquetas.
+2. Detalle del envío en la grilla: seguimiento paso a paso, direcciones, destinatario y datos del contrato.
+3. Detalle del pedido: número de seguimiento, línea de tiempo del envío y estado siempre al día.
+4. Modos de entrega: habilitá cada servicio y configurá costo adicional o envío gratis a partir de un monto.
+5. Configuración de la cuenta Andreani con tu Credencial ID.
+6. Selección de sucursal Andreani durante el checkout.
+7. Cotizador de envío en la página de producto.
+8. Formato de impresión de etiquetas (A4 o térmica Zebra), con vista previa de cómo salen.
 
 == External services ==
 
@@ -320,6 +322,9 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * El checkbox *Forzar carga de assets*: **sigue funcionando** pero casi nunca es necesario. Úsalo solo como último recurso.
 
 == Changelog ==
+
+= 1.7.0 =
+* Mejora: Nuevo diseño del panel de Andreani, más claro y alineado a la imagen de Andreani
 
 = 1.6.12 =
 * Fix: La cotización ahora usa las medidas reales del producto, con decimales. Antes cada medida se redondeaba a centímetros enteros con un mínimo de 1 cm, y un producto muy fino, como un sticker o una lámina, se cotizaba como si ocupara mucho más espacio: al comprar muchas unidades el envío salía bastante más caro de lo que correspondía. Ahora la cotización declara las mismas medidas que el envío. Si tus productos tienen medidas con decimales (por ejemplo 2,4 cm), el costo de envío puede variar levemente, porque ya no se redondean
@@ -491,6 +496,9 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * Versión inicial publicada en el repositorio de WordPress
 
 == Upgrade Notice ==
+
+= 1.7.0 =
+Nuevo diseño del panel de Andreani. Todo sigue funcionando igual y no tenés que configurar nada.
 
 = 1.6.12 =
 La cotización pasa a usar las medidas reales del producto, con decimales. Si vendés productos muy finos o muy chicos, el costo de envío que ven tus clientes puede bajar; si tus medidas tienen decimales, puede variar levemente. No tenés que configurar nada.

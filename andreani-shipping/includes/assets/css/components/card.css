@@ -9,7 +9,7 @@
 	flex-direction: column;
 	background: var(--andr-color-surface);
 	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-md);
+	border-radius: var(--andr-radius-card);
 	overflow: hidden;
 }
 

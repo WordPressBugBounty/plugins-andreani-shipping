@@ -317,6 +317,12 @@
 
 		$('#andreani-add-bulto').on('click', addRow);
 
+		$('#andreani-despacho-preview-toggle').on('click', function () {
+			var expanded = $(this).attr('aria-expanded') === 'true';
+			$(this).attr('aria-expanded', expanded ? 'false' : 'true');
+			$('#andreani-despacho-preview-content').prop('hidden', expanded);
+		});
+
 		$(document).on('click.andreaniBultos', '.andreani-despacho-section .andreani-remove-bulto', function () {
 			$(this).closest('.andreani-bulto-row').remove();
 			reindex();

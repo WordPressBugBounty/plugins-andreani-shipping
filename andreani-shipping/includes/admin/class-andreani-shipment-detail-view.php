@@ -209,10 +209,6 @@ class Andreani_Shipment_Detail_View {
 		$shipping_status  = ( is_array( $hydrated_item ) && ! empty( $hydrated_item['shipping_status'] ) )
 			? (string) $hydrated_item['shipping_status']
 			: Andreani_Shipments_List::compute_shipping_status( $order, (bool) $data['created'], (bool) $data['shipped'] );
-		$has_payment_step = $type_info ? $type_info->has_payment_step() : false;
-		$status_config    = Andreani_Shipments_List::get_shipping_status_config( $shipping_status, $has_payment_step );
-		$status_label    = $status_config['label'];
-		$status_class    = str_replace( 'andr-status--', '', $status_config['class'] );
 
 		$date_created = $order->get_date_created();
 		$created_at   = $date_created ? $date_created->date_i18n( 'd/m/Y H:i' ) : '';
@@ -244,9 +240,6 @@ class Andreani_Shipment_Detail_View {
 		$icon_package  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
 		$icon_scale    = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>';
 		$icon_file     = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>';
-		$icon_hash     = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>';
-		$icon_barcode  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5v14"/><path d="M8 5v14"/><path d="M12 5v14"/><path d="M17 5v14"/><path d="M21 5v14"/></svg>';
-		$icon_calendar = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
 		$icon_chevron  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
 
 		$html  = '<div class="andreani-detail" data-order-id="' . esc_attr( $order_id ) . '">';
@@ -280,8 +273,6 @@ class Andreani_Shipment_Detail_View {
 		}
 		$has_error = ! empty( $last_error );
 		$layout_class = $has_error ? ' andreani-detail__layout--has-error' : '';
-
-		$icon_card = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>';
 
 		$pedido_id_display = is_array( $hydrated_item ) && ! empty( $hydrated_item['pedido_id'] )
 			? (string) $hydrated_item['pedido_id']
@@ -367,13 +358,57 @@ class Andreani_Shipment_Detail_View {
 				$html .= '</li>';
 			}
 			$html .=   '</ol>';
-			$html .=   '<p class="andreani-detail__timeline-note">'
-				. esc_html__( 'El detalle de fechas por evento estará disponible próximamente.', 'andreani-shipping' )
-				. '</p>';
 			$html .= '</section>';
 		}
 
 		$html .= '<div class="andreani-detail__layout' . $layout_class . '">';
+
+		if ( $has_error ) {
+			$icon_alert   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+			$icon_copy    = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+			$has_body_tab = ! empty( $body_pretty );
+			$tabs_id      = 'andreani-error-' . absint( $order_id );
+
+			$support_data = array( 'message' => $last_error );
+			if ( ! empty( $last_error_body ) ) {
+				$decoded_body            = json_decode( $last_error_body, true );
+				$support_data['request'] = ( null !== $decoded_body ) ? $decoded_body : $last_error_body;
+			}
+			$support_payload = wp_json_encode( $support_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
+
+			$html .= '<aside class="andreani-detail__aside">';
+			$html .= '<div class="andreani-detail__error-card" role="alert">';
+			$html .=   '<div class="andreani-detail__error-card-header">';
+			$html .=     '<span class="andreani-detail__error-card-icon" aria-hidden="true">' . $icon_alert . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			$html .=     '<span class="andreani-detail__error-card-title">' . esc_html__( 'Error al crear envío', 'andreani-shipping' ) . '</span>';
+			$html .=     '<button type="button" class="andreani-detail__error-card-copy andreani-copy-click" data-copy-text="' . esc_attr( $support_payload ) . '" title="' . esc_attr__( 'Copiar reporte para soporte (mensaje + request)', 'andreani-shipping' ) . '" aria-label="' . esc_attr__( 'Copiar reporte para soporte', 'andreani-shipping' ) . '">';
+			$html .=       $icon_copy . '<span>' . esc_html__( 'Copiar', 'andreani-shipping' ) . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			$html .=     '</button>';
+			$html .=   '</div>';
+
+			$html .=   '<div class="andr-tabs andreani-detail__error-tabs" data-tabs="' . esc_attr( $tabs_id ) . '">';
+			$html .=     '<nav class="andr-tabs__list" role="tablist">';
+			$html .=       '<button type="button" class="andr-tabs__item andr-tabs__item--active" data-tab="mensaje" role="tab" aria-selected="true">' . esc_html__( 'Mensaje', 'andreani-shipping' ) . '</button>';
+			if ( $has_body_tab ) {
+				$html .=     '<button type="button" class="andr-tabs__item" data-tab="request" role="tab" aria-selected="false">' . esc_html__( 'Request', 'andreani-shipping' ) . '</button>';
+			}
+			$html .=     '</nav>';
+
+			$html .=     '<div class="andr-tabs__panel andr-tabs__panel--active andreani-detail__error-tab-content" data-panel="mensaje" role="tabpanel">';
+			$html .=       '<pre class="andreani-detail__error-tab-text andreani-detail__error-tab-text--message">' . esc_html( $last_error ) . '</pre>';
+			$html .=     '</div>';
+
+			if ( $has_body_tab ) {
+				$html .=   '<div class="andr-tabs__panel andreani-detail__error-tab-content" data-panel="request" role="tabpanel">';
+				$html .=     '<pre class="andreani-detail__error-tab-text andreani-detail__error-tab-text--code">' . esc_html( $body_pretty ) . '</pre>';
+				$html .=   '</div>';
+			}
+
+			$html .=   '</div>'; // .andr-tabs
+			$html .= '</div>'; // .andreani-detail__error-card
+			$html .= '</aside>';
+		}
+
 		$html .= '<div class="andreani-detail__main">';
 
 		$html .= '<div class="andreani-detail__cards-grid">';
@@ -472,118 +507,32 @@ class Andreani_Shipment_Detail_View {
 		$html .=     '<dd>' . esc_html( $tipo_label ) . '</dd></div>';
 		$html .=     '<div><dt>' . esc_html__( 'Costo envío', 'andreani-shipping' ) . '</dt>';
 		$html .=     '<dd class="andreani-detail__info-price">$ ' . esc_html( $shipping_total_formatted ) . '</dd></div>';
-		$html .=   '</dl>';
-		$html .= '</section>';
 
-		$html .= '</div>';
-
-		$html .= '<section class="andreani-detail__card andreani-detail__card--full">';
-		$html .=   '<h4 class="andreani-detail__card-title">' . esc_html__( 'Detalles', 'andreani-shipping' ) . '</h4>';
-		$html .=   '<ul class="andreani-detail__ids">';
+		$copy_title = esc_attr__( 'Click para copiar', 'andreani-shipping' );
 
 		if ( ! empty( $numero_interno_display ) ) {
 			$id_orden_label = ( $type_info && $type_info->can( 'id_orden_display' ) )
 				? __( 'ID Orden', 'andreani-shipping' )
 				: __( 'Número Interno', 'andreani-shipping' );
-			$html .= '<li class="andreani-detail__id-row">';
-			$html .=   '<span class="andreani-detail__id-icon" aria-hidden="true">' . $icon_hash . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
-			$html .=   '<span class="andreani-detail__id-label">' . esc_html( $id_orden_label ) . '</span>';
-			$html .=   '<span class="andreani-detail__id-value andreani-copy-click" data-copy-text="' . esc_attr( $numero_interno_display ) . '" title="' . esc_attr__( 'Click para copiar', 'andreani-shipping' ) . '" role="button" tabindex="0">'
-				. esc_html( $numero_interno_display ) . '</span>';
-			$html .= '</li>';
-		}
-
-		if ( ! empty( $display_tracking ) ) {
-			$html .= '<li class="andreani-detail__id-row">';
-			$html .=   '<span class="andreani-detail__id-icon" aria-hidden="true">' . $icon_barcode . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
-			$html .=   '<span class="andreani-detail__id-label">' . esc_html__( 'Nro Seguimiento', 'andreani-shipping' ) . '</span>';
-			$html .=   '<span class="andreani-detail__id-value andreani-copy-click" data-copy-text="' . esc_attr( $display_tracking ) . '" title="' . esc_attr__( 'Click para copiar', 'andreani-shipping' ) . '" role="button" tabindex="0">'
-				. esc_html( $display_tracking ) . '</span>';
-			$html .= '</li>';
+			$html .= '<div><dt>' . esc_html( $id_orden_label ) . '</dt>';
+			$html .=   '<dd class="andreani-detail__info-copy andreani-copy-click" data-copy-text="' . esc_attr( $numero_interno_display ) . '" title="' . $copy_title . '" role="button" tabindex="0">' . esc_html( $numero_interno_display ) . '</dd></div>';
 		}
 
 		if ( $type_info && $type_info->can( 'pedido_id_row' ) && '' !== $pedido_id_display ) {
-			$html .= '<li class="andreani-detail__id-row">';
-			$html .=   '<span class="andreani-detail__id-icon" aria-hidden="true">' . $icon_hash . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
-			$html .=   '<span class="andreani-detail__id-label">' . esc_html__( 'Pedido ID', 'andreani-shipping' ) . '</span>';
-			$html .=   '<span class="andreani-detail__id-value andreani-copy-click" data-copy-text="' . esc_attr( $pedido_id_display ) . '" title="' . esc_attr__( 'Click para copiar', 'andreani-shipping' ) . '" role="button" tabindex="0">'
-				. esc_html( $pedido_id_display ) . '</span>';
-			$html .= '</li>';
-		}
-
-		$icon_activity = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>';
-		$html .= '<li class="andreani-detail__id-row">';
-		$html .=   '<span class="andreani-detail__id-icon" aria-hidden="true">' . $icon_activity . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
-		$html .=   '<span class="andreani-detail__id-label">' . esc_html__( 'Estado', 'andreani-shipping' ) . '</span>';
-		$html .=   '<span class="andreani-detail__id-value andreani-detail__id-value--text">' . esc_html( $status_label ) . '</span>';
-		$html .= '</li>';
-
-		if ( $type_info && $type_info->can( 'payment_step' ) && ! empty( $data['payment_status'] ) ) {
-			$payment_config = Andreani_Shipments_List::get_payment_status_config( $data['payment_status'] );
-			$html .= '<li class="andreani-detail__id-row">';
-			$html .=   '<span class="andreani-detail__id-icon" aria-hidden="true">' . $icon_card . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
-			$html .=   '<span class="andreani-detail__id-label">' . esc_html__( 'Pago', 'andreani-shipping' ) . '</span>';
-			$html .=   '<span class="andreani-detail__id-value andreani-detail__id-value--text andreani-detail__payment--' . esc_attr( $data['payment_status'] ) . '">' . esc_html( $payment_config['label'] ) . '</span>';
-			$html .= '</li>';
+			$html .= '<div><dt>' . esc_html__( 'Pedido ID', 'andreani-shipping' ) . '</dt>';
+			$html .=   '<dd class="andreani-detail__info-copy andreani-copy-click" data-copy-text="' . esc_attr( $pedido_id_display ) . '" title="' . $copy_title . '" role="button" tabindex="0">' . esc_html( $pedido_id_display ) . '</dd></div>';
 		}
 
 		if ( ! empty( $created_at ) ) {
-			$html .= '<li class="andreani-detail__id-row">';
-			$html .=   '<span class="andreani-detail__id-icon" aria-hidden="true">' . $icon_calendar . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
-			$html .=   '<span class="andreani-detail__id-label">' . esc_html__( 'Creado', 'andreani-shipping' ) . '</span>';
-			$html .=   '<span class="andreani-detail__id-value andreani-detail__id-value--text">' . esc_html( $created_at ) . '</span>';
-			$html .= '</li>';
+			$html .= '<div><dt>' . esc_html__( 'Creado', 'andreani-shipping' ) . '</dt>';
+			$html .=   '<dd>' . esc_html( $created_at ) . '</dd></div>';
 		}
 
-		$html .=   '</ul>';
+		$html .=   '</dl>';
 		$html .= '</section>';
+
 		$html .= '</div>';
-
-		if ( $has_error ) {
-			$icon_alert   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
-			$icon_copy    = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-			$has_body_tab = ! empty( $body_pretty );
-			$tabs_id      = 'andreani-error-' . absint( $order_id );
-
-			$support_data = array( 'message' => $last_error );
-			if ( ! empty( $last_error_body ) ) {
-				$decoded_body            = json_decode( $last_error_body, true );
-				$support_data['request'] = ( null !== $decoded_body ) ? $decoded_body : $last_error_body;
-			}
-			$support_payload = wp_json_encode( $support_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
-
-			$html .= '<aside class="andreani-detail__aside">';
-			$html .= '<div class="andreani-detail__error-card" role="alert">';
-			$html .=   '<div class="andreani-detail__error-card-header">';
-			$html .=     '<span class="andreani-detail__error-card-icon" aria-hidden="true">' . $icon_alert . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			$html .=     '<span class="andreani-detail__error-card-title">' . esc_html__( 'Error al crear envío', 'andreani-shipping' ) . '</span>';
-			$html .=     '<button type="button" class="andreani-detail__error-card-copy andreani-copy-click" data-copy-text="' . esc_attr( $support_payload ) . '" title="' . esc_attr__( 'Copiar reporte para soporte (mensaje + request)', 'andreani-shipping' ) . '" aria-label="' . esc_attr__( 'Copiar reporte para soporte', 'andreani-shipping' ) . '">';
-			$html .=       $icon_copy . '<span>' . esc_html__( 'Copiar', 'andreani-shipping' ) . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			$html .=     '</button>';
-			$html .=   '</div>';
-
-			$html .=   '<div class="andr-tabs andreani-detail__error-tabs" data-tabs="' . esc_attr( $tabs_id ) . '">';
-			$html .=     '<nav class="andr-tabs__list" role="tablist">';
-			$html .=       '<button type="button" class="andr-tabs__item andr-tabs__item--active" data-tab="mensaje" role="tab" aria-selected="true">' . esc_html__( 'Mensaje', 'andreani-shipping' ) . '</button>';
-			if ( $has_body_tab ) {
-				$html .=     '<button type="button" class="andr-tabs__item" data-tab="request" role="tab" aria-selected="false">' . esc_html__( 'Request', 'andreani-shipping' ) . '</button>';
-			}
-			$html .=     '</nav>';
-
-			$html .=     '<div class="andr-tabs__panel andr-tabs__panel--active andreani-detail__error-tab-content" data-panel="mensaje" role="tabpanel">';
-			$html .=       '<pre class="andreani-detail__error-tab-text andreani-detail__error-tab-text--message">' . esc_html( $last_error ) . '</pre>';
-			$html .=     '</div>';
-
-			if ( $has_body_tab ) {
-				$html .=   '<div class="andr-tabs__panel andreani-detail__error-tab-content" data-panel="request" role="tabpanel">';
-				$html .=     '<pre class="andreani-detail__error-tab-text andreani-detail__error-tab-text--code">' . esc_html( $body_pretty ) . '</pre>';
-				$html .=   '</div>';
-			}
-
-			$html .=   '</div>'; // .andr-tabs
-			$html .= '</div>'; // .andreani-detail__error-card
-			$html .= '</aside>';
-		}
+		$html .= '</div>';
 
 		$html .= '</div>'; // .andreani-detail__layout
 

@@ -2554,6 +2554,72 @@
     config: window.andreani_admin || {},
     loaded: false,
 
+    previewLabel(x, y, w, h) {
+      const r = (n) => +n.toFixed(2);
+      const pad = Math.min(w, h) * 0.09;
+      const inner = w - pad * 2;
+      const bars = Math.max(8, Math.round(inner / 4));
+      const barW = inner / bars;
+      const barH = h * 0.16;
+      const barY = y + h - pad - barH;
+      const headH = h * 0.12;
+      const headX = x + pad;
+      const headY = y + pad;
+      const logoR = headH * 0.34;
+      const logoCx = headX + headH * 0.72;
+      const logoCy = headY + headH / 2;
+      const strokeW = r(logoR * 0.26);
+
+      let svg = `<rect x="${r(x)}" y="${r(y)}" width="${r(w)}" height="${r(h)}" rx="2" style="fill:var(--andr-color-surface);stroke:var(--andr-color-border)"/>`;
+      svg += `<rect x="${r(headX)}" y="${r(headY)}" width="${r(inner)}" height="${r(headH)}" rx="1" style="fill:var(--andr-color-text-strong)"/>`;
+      svg += `<g transform="rotate(-20 ${r(logoCx)} ${r(logoCy)})"><ellipse cx="${r(logoCx)}" cy="${r(logoCy)}" rx="${r(logoR)}" ry="${r(logoR * 0.6)}" stroke-width="${strokeW}" style="fill:none;stroke:var(--andr-color-surface)"/></g>`;
+      svg += `<path d="M ${r(logoCx - logoR * 0.48)} ${r(logoCy + logoR * 0.5)} L ${r(logoCx)} ${r(logoCy - logoR * 0.5)} L ${r(logoCx + logoR * 0.48)} ${r(logoCy + logoR * 0.5)}" stroke-linejoin="round" stroke-width="${strokeW}" style="fill:none;stroke:var(--andr-color-surface)"/>`;
+      [0.34, 0.46, 0.58].forEach((f, i) => {
+        svg += `<rect x="${r(x + pad)}" y="${r(y + h * f)}" width="${r(inner * (0.9 - i * 0.22))}" height="${r(h * 0.035)}" rx="1" opacity="0.45" style="fill:var(--andr-color-text-subtle)"/>`;
+      });
+      for (let i = 0; i < bars; i++) {
+        svg += `<rect x="${r(x + pad + i * barW)}" y="${r(barY)}" width="${r(barW * (i % 3 === 0 ? 0.7 : 0.34))}" height="${r(barH)}" style="fill:var(--andr-color-text-strong)"/>`;
+      }
+      return svg;
+    },
+
+    previewSvg(shape) {
+      const zebra = shape === 'zebra';
+      const paper = zebra ? { w: 150, h: 225 } : { w: 208, h: 294 };
+      const vb = { w: 300, h: 320 };
+      const ox = (vb.w - paper.w) / 2;
+      const oy = (vb.h - paper.h) / 2;
+      let labels = '';
+
+      if (zebra) {
+        const m = paper.w * 0.06;
+        labels = this.previewLabel(ox + m, oy + m, paper.w - m * 2, paper.h - m * 2);
+      } else {
+        const m = paper.w * 0.1;
+        const gap = paper.w * 0.06;
+        const lw = (paper.w - m * 2 - gap) / 2;
+        const lh = (paper.h - m * 2 - gap) / 2;
+        if (shape === 'a4-4') {
+          for (let row = 0; row < 2; row++) {
+            for (let col = 0; col < 2; col++) {
+              labels += this.previewLabel(ox + m + col * (lw + gap), oy + m + row * (lh + gap), lw, lh);
+            }
+          }
+        } else {
+          labels = this.previewLabel(ox + (paper.w - lw) / 2, oy + (paper.h - lh) / 2, lw, lh);
+        }
+      }
+
+      return `<svg viewBox="0 0 ${vb.w} ${vb.h}" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><rect x="${ox}" y="${oy}" width="${paper.w}" height="${paper.h}" rx="6" style="fill:var(--andr-color-surface);stroke:var(--andr-color-border)"/>${labels}</svg>`;
+    },
+
+    renderPreview() {
+      const $modal = $('#andreani-print-settings-modal');
+      const $radio = $modal.find('.andreani-print-option__radio:checked');
+      $modal.find('[data-print-preview]').html($radio.length ? this.previewSvg($radio.data('preview-shape')) : '');
+      $modal.find('[data-print-preview-caption]').text($radio.length ? $radio.data('preview-caption') : '');
+    },
+
     init() {
       const $modal = $('#andreani-print-settings-modal');
       if (!$modal.length) return;
@@ -2568,6 +2634,7 @@
       $modal.on('click', '.andr-modal__backdrop, .andreani-modal__backdrop, .andr-modal__close, .andreani-modal__close', () => self.close());
       $modal.on('change', '.andreani-print-option__radio', function() {
         $('#andreani-print-settings-save').prop('disabled', !$(this).is(':checked'));
+        self.renderPreview();
       });
       $modal.on('click', '#andreani-print-settings-save', () => self.save());
 
@@ -2612,6 +2679,7 @@
             $modal.find('.andreani-print-option__radio').prop('checked', false);
             $modal.find(`.andreani-print-option__radio[value="${key}"]`).prop('checked', true);
             $('#andreani-print-settings-save').prop('disabled', false);
+            self.renderPreview();
             self.showLoader(false);
             self.loaded = true;
           } else {

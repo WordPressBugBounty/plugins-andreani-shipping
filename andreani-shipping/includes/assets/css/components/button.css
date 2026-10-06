@@ -8,11 +8,12 @@
 	align-items: center;
 	justify-content: center;
 	gap: var(--andr-sp-2);
-	padding: var(--andr-sp-2) var(--andr-sp-4);
+	min-height: var(--andr-control-h);
+	padding: 0 var(--andr-sp-5);
 	border: 1px solid transparent;
-	border-radius: var(--andr-radius-sm);
-	font-family: var(--andr-font-body);
-	font-size: var(--andr-text-sm);
+	border-radius: var(--andr-radius-button);
+	font-family: var(--andr-font-display);
+	font-size: var(--andr-text-md);
 	font-weight: var(--andr-fw-medium);
 	line-height: 1.2;
 	cursor: pointer;
@@ -107,7 +108,8 @@
 }
 
 .andr-btn--sm {
-	padding: var(--andr-sp-1) var(--andr-sp-3);
+	min-height: var(--andr-control-h-sm);
+	padding: 0 var(--andr-sp-4);
 	font-size: var(--andr-text-xs);
 	gap: var(--andr-sp-1);
 }
@@ -119,7 +121,8 @@
 }
 
 .andr-btn--lg {
-	padding: var(--andr-sp-3) var(--andr-sp-5);
+	min-height: 48px;
+	padding: 0 var(--andr-sp-6);
 	font-size: var(--andr-text-md);
 	gap: var(--andr-sp-2);
 }
@@ -131,22 +134,24 @@
 }
 
 .andr-btn--icon {
-	padding: var(--andr-sp-2);
-	width: 32px;
-	height: 32px;
+	padding: 0;
+	width: var(--andr-control-h);
+	min-height: 0;
+	height: var(--andr-control-h);
+	border-radius: 50%;
 	gap: 0;
 }
 
 .andr-btn--icon.andr-btn--sm {
-	width: 28px;
-	height: 28px;
-	padding: var(--andr-sp-1);
+	width: var(--andr-control-h-sm);
+	height: var(--andr-control-h-sm);
+	padding: 0;
 }
 
 .andr-btn--icon.andr-btn--lg {
-	width: 40px;
-	height: 40px;
-	padding: var(--andr-sp-3);
+	width: 48px;
+	height: 48px;
+	padding: 0;
 }
 
 .andr-btn--block {

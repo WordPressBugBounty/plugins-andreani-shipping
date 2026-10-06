@@ -175,12 +175,28 @@
 	--andr-radius-lg:   24px;
 	--andr-radius-pill: 999px;
 
+	/* Component tokens */
+	--andr-radius-card:    var(--andr-radius-md);
+	--andr-radius-control: var(--andr-radius-sm);
+	--andr-radius-button:  var(--andr-radius-lg);
+	--andr-control-h:      40px;
+	--andr-control-h-sm:   32px;
+	--andr-radius-box:     12px;
+	--andr-tab-h:          48px;
+	--andr-tab-inset:      14px;
+	--andr-color-border-input: var(--andr-gray-200);
+	--andr-color-border-soft:  #eef0f2;
+	--andr-color-text-meta:    var(--andr-gray-400);
+	--andr-color-brand-strong: var(--andr-red-700);
+
 	/* Shadows */
 	--andr-shadow-xs: 0 1px 1px rgba(29, 32, 35, 0.04);
 	--andr-shadow-sm: 0 1px 2px rgba(29, 32, 35, 0.06);
 	--andr-shadow-md: 0 4px 12px rgba(29, 32, 35, 0.08);
 	--andr-shadow-lg: 0 12px 32px rgba(29, 32, 35, 0.12);
 	--andr-shadow-xl: 0 24px 48px rgba(29, 32, 35, 0.16);
+	--andr-shadow-card:  0 1px 9px 0 rgb(195 195 195 / 30%);
+	--andr-shadow-focus: 0 0 0 4px rgb(0 0 0 / 8%);
 
 	/* Z-index (max 300, para coexistir con WP admin sin guerra de z-index) */
 	--andr-z-base:           1;

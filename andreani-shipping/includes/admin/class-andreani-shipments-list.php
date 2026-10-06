@@ -93,6 +93,7 @@ class Andreani_Shipments_List extends WP_List_Table {
 	public function get_columns() {
 		$columns = array(
 			'cb'           => '<input type="checkbox" />',
+			'date'         => __( 'Fecha', 'andreani-shipping' ),
 			'order_number' => __( 'Pedido', 'andreani-shipping' ),
 			'customer'     => __( 'Cliente', 'andreani-shipping' ),
 			'destination'  => __( 'Destino', 'andreani-shipping' ),
@@ -100,7 +101,6 @@ class Andreani_Shipments_List extends WP_List_Table {
 			'payment'      => __( 'Pago', 'andreani-shipping' ),
 			'status'       => __( 'Estado', 'andreani-shipping' ),
 			'tracking'     => __( 'Seguimiento', 'andreani-shipping' ),
-			'date'         => __( 'Fecha', 'andreani-shipping' ),
 			'actions'      => __( 'Acciones', 'andreani-shipping' ),
 		);
 
@@ -170,16 +170,11 @@ class Andreani_Shipments_List extends WP_List_Table {
 	public function column_customer( $item ) {
 		$name  = esc_html( $item['customer_name'] );
 		$email = isset( $item['customer_email'] ) ? trim( (string) $item['customer_email'] ) : '';
-		$dni   = isset( $item['dni'] ) ? trim( (string) $item['dni'] ) : '';
 
 		$meta_lines = array();
 
 		if ( '' !== $email ) {
 			$meta_lines[] = '<a href="mailto:' . esc_attr( $email ) . '" class="andreani-customer__email">' . esc_html( $email ) . '</a>';
-		}
-
-		if ( '' !== $dni ) {
-			$meta_lines[] = '<span class="andreani-customer__dni">' . esc_html__( 'DNI:', 'andreani-shipping' ) . ' ' . esc_html( $dni ) . '</span>';
 		}
 
 		$meta = '';
@@ -366,9 +361,9 @@ class Andreani_Shipments_List extends WP_List_Table {
 
 	private function build_identifier_row( $label, $value ) {
 		return sprintf(
-			'<span class="andreani-identifier andreani-copy-click" data-tracking="%1$s" title="%2$s"><span class="andreani-identifier__label">%3$s</span><span class="andreani-identifier__value">%1$s</span></span>',
+			'<span class="andreani-identifier andreani-copy-click" data-tracking="%1$s" data-copied="%2$s" role="button" tabindex="0"><span class="andreani-identifier__label">%3$s</span><span class="andreani-identifier__value">%1$s</span></span>',
 			esc_attr( $value ),
-			esc_attr__( 'Click para copiar', 'andreani-shipping' ),
+			esc_attr__( 'Copiado', 'andreani-shipping' ),
 			esc_html( $label )
 		);
 	}

@@ -302,18 +302,17 @@ class Andreani_Product_Bultos {
 				. '<td data-col="units">' . esc_html( $row['quantity'] ) . '</td>'
 				. '<td data-col="bultos">' . esc_html( $row['bultos'] ) . '</td>'
 				. '<td data-col="volume">' . esc_html( self::format_preview_number( $row['volume_cm3'] ) . ' cm³' ) . '</td>'
-				. self::preview_weight_cell( 'real', $row['weight_kg'], 'real' === $row['charged'], $strings['preview_charged'] )
-				. self::preview_weight_cell( 'aforado', $row['aforado_kg'], 'aforado' === $row['charged'], $strings['preview_charged'] )
+				. self::preview_weight_cell( 'real', $row['weight_kg'], 'real' === $row['charged'] )
+				. self::preview_weight_cell( 'aforado', $row['aforado_kg'], 'aforado' === $row['charged'] )
 				. '</tr>';
 		}
 
 		return $html . '</tbody></table>';
 	}
 
-	private static function preview_weight_cell( $column, $weight_kg, $charged, $label ) {
+	private static function preview_weight_cell( $column, $weight_kg, $charged ) {
 		return '<td data-col="' . esc_attr( $column ) . '"' . ( $charged ? ' class="andreani-despacho-preview__cell--charged"' : '' ) . '>'
 			. esc_html( self::format_preview_weight( $weight_kg ) )
-			. ( $charged ? ' <span class="andreani-despacho-preview__badge">' . esc_html( $label ) . '</span>' : '' )
 			. '</td>';
 	}
 
@@ -347,7 +346,7 @@ class Andreani_Product_Bultos {
 			'preview_title'            => __( 'Así se cotiza', 'andreani-shipping' ),
 			'preview_help'             => sprintf(
 				/* translators: %s: kilos por metro cúbico que se usan para calcular el peso aforado */
-				__( 'Esto es lo que se le declara a Andreani según cuántas unidades te compren, con lo que tenés cargado en pantalla. El peso aforado es el que le corresponde al envío por el espacio que ocupa (%s kg por cada m³). Andreani cobra por el mayor de los dos pesos.', 'andreani-shipping' ),
+				__( 'Esto es lo que se le declara a Andreani según cuántas unidades te compren, con lo que tenés cargado en pantalla. El peso aforado es el que le corresponde al envío por el espacio que ocupa (%s kg por cada m³). Andreani cobra por el mayor de los dos pesos: en rojo, el que se cobra.', 'andreani-shipping' ),
 				self::format_measure( Andreani_Api_Config::AFORO_KG_M3 )
 			),
 			'preview_empty'            => __( 'Cargá el peso y las tres medidas del producto, y completá la opción de despacho elegida, para ver el ejemplo.', 'andreani-shipping' ),
@@ -356,7 +355,6 @@ class Andreani_Product_Bultos {
 			'preview_col_volume'       => __( 'Volumen total', 'andreani-shipping' ),
 			'preview_col_weight'       => __( 'Peso real', 'andreani-shipping' ),
 			'preview_col_aforado'      => __( 'Peso aforado', 'andreani-shipping' ),
-			'preview_charged'          => __( 'es el que se cobra', 'andreani-shipping' ),
 		);
 	}
 

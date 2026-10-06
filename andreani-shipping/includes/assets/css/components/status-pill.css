@@ -8,13 +8,13 @@
 	display: inline-flex;
 	align-items: center;
 	gap: var(--andr-sp-1);
-	padding: var(--andr-sp-1) var(--andr-sp-3);
+	padding: 3px 10px;
 	border-radius: var(--andr-radius-pill);
 	font-family: var(--andr-font-body);
-	font-size: var(--andr-text-xs);
-	font-weight: var(--andr-fw-semibold);
-	line-height: 1.4;
-	letter-spacing: 0.02em;
+	font-size: var(--andr-text-sm);
+	font-weight: var(--andr-fw-medium);
+	line-height: 1.2;
+	letter-spacing: 0;
 	white-space: nowrap;
 	user-select: none;
 }
@@ -98,12 +98,12 @@
 
 .andr-status--sm {
 	padding: 2px var(--andr-sp-2);
-	font-size: 10px;
+	font-size: var(--andr-text-xs);
 }
 
 .andr-status--lg {
-	padding: var(--andr-sp-2) var(--andr-sp-4);
-	font-size: var(--andr-text-sm);
+	padding: var(--andr-sp-1) var(--andr-sp-4);
+	font-size: var(--andr-text-md);
 	gap: var(--andr-sp-2);
 }
 
