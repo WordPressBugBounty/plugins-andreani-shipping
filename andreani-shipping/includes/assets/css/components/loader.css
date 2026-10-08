@@ -1,0 +1,57 @@
+/**
+ * Componente: loader de Andreani (animación oficial + texto debajo).
+ * Depende de: core/01-variables.css
+ */
+
+.andr-loader {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: var(--andr-sp-5) var(--andr-sp-4);
+	text-align: center;
+}
+
+.andr-loader--lg {
+	padding: var(--andr-sp-7) var(--andr-sp-4);
+}
+
+.andr-loader__img {
+	display: block;
+	max-width: 100%;
+	height: auto;
+}
+
+.andr-loader--lg .andr-loader__img {
+	width: 229px;
+}
+
+.andr-loader--sm .andr-loader__img {
+	width: 96px;
+}
+
+.andr-loader__text {
+	margin-top: var(--andr-sp-2);
+	font-size: var(--andr-text-base);
+	color: var(--andr-color-text-subtle);
+}
+
+.andr-loader__text:empty,
+.andr-loader__text[hidden] {
+	display: none;
+}
+
+.andr-loader-busy {
+	position: fixed;
+	right: var(--andr-sp-5);
+	bottom: var(--andr-sp-5);
+	z-index: calc(var(--andr-z-toast) + 99999);
+	background: var(--andr-color-surface);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-md);
+	box-shadow: var(--andr-shadow-lg);
+}
+
+.andr-loader-busy:empty {
+	display: none;
+}

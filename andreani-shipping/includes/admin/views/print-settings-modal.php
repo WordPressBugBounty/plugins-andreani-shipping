@@ -48,10 +48,7 @@ $andreani_print_formats = array(
 		<div class="andr-modal__body andreani-modal__body">
 			<p class="andr-modal__hint andreani-print-settings__intro"><?php esc_html_e( 'Elegí el formato en el que querés imprimir las etiquetas de tus envíos. Se aplica a toda la cuenta.', 'andreani-shipping' ); ?></p>
 
-			<div class="andreani-print-settings__loader" data-print-loader>
-				<span class="spinner is-active"></span>
-				<span><?php esc_html_e( 'Cargando configuración...', 'andreani-shipping' ); ?></span>
-			</div>
+			<div class="andreani-print-settings__loader" data-print-loader></div>
 
 			<div class="andreani-print-settings__layout" data-print-options hidden>
 			<fieldset class="andreani-print-settings__options">

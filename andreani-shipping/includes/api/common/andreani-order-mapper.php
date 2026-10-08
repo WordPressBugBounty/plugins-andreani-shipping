@@ -175,11 +175,7 @@ class Andreani_Order_Mapper {
 				);
 			}
 
-			$bultos_adicionales = self::get_bultos_adicionales( $product_id );
-
-			if ( empty( $bultos_adicionales ) && $product->is_type( 'variation' ) ) {
-				$bultos_adicionales = self::get_bultos_adicionales( $product->get_parent_id() );
-			}
+			$bultos_adicionales = Andreani_Package_Builder::resolve_bultos( $product );
 
 			$total_bultos    = 1 + count( $bultos_adicionales );
 			$price_per_bulto = floatval( $price ) / $total_bultos;

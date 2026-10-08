@@ -112,6 +112,9 @@ class Andreani_Admin_Assets {
 					Andreani_Core_Assets::HANDLE_C_STATUS,
 					Andreani_Core_Assets::HANDLE_C_MODAL,
 					Andreani_Core_Assets::HANDLE_C_TABS,
+					Andreani_Core_Assets::HANDLE_C_DISPATCH,
+					Andreani_Core_Assets::HANDLE_C_LOADER,
+					Andreani_Core_Assets::HANDLE_C_PAGE_HEADER,
 				),
 				ANDREANI_PLUGIN_VERSION
 			);
@@ -130,6 +133,9 @@ class Andreani_Admin_Assets {
 					Andreani_Core_Assets::HANDLE_C_STATUS,
 					Andreani_Core_Assets::HANDLE_C_MODAL,
 					Andreani_Core_Assets::HANDLE_C_TABS,
+					Andreani_Core_Assets::HANDLE_C_DISPATCH,
+					Andreani_Core_Assets::HANDLE_C_LOADER,
+					Andreani_Core_Assets::HANDLE_C_PAGE_HEADER,
 				),
 				ANDREANI_PLUGIN_VERSION
 			);
@@ -155,6 +161,8 @@ class Andreani_Admin_Assets {
 					Andreani_Core_Assets::HANDLE_C_CARD,
 					Andreani_Core_Assets::HANDLE_C_TABS,
 					Andreani_Core_Assets::HANDLE_C_MODAL,
+					Andreani_Core_Assets::HANDLE_C_LOADER,
+					Andreani_Core_Assets::HANDLE_C_PAGE_HEADER,
 				),
 				ANDREANI_PLUGIN_VERSION
 			);
@@ -170,6 +178,7 @@ class Andreani_Admin_Assets {
 					Andreani_Core_Assets::HANDLE_C_BADGE,
 					Andreani_Core_Assets::HANDLE_C_BUTTON,
 					Andreani_Core_Assets::HANDLE_C_STATUS,
+					Andreani_Core_Assets::HANDLE_C_LOADER,
 				),
 				ANDREANI_PLUGIN_VERSION
 			);
@@ -185,7 +194,7 @@ class Andreani_Admin_Assets {
 		wp_enqueue_script(
 			self::HANDLE,
 			ANDREANI_PLUGIN_URL . 'includes/assets/js/admin.js',
-			array( 'jquery' ),
+			array( 'jquery', Andreani_Core_Assets::HANDLE_LOADER, Andreani_Core_Assets::HANDLE_BOX_PREVIEW ),
 			ANDREANI_PLUGIN_VERSION,
 			true
 		);
@@ -206,33 +215,25 @@ class Andreani_Admin_Assets {
 			'nonce_save_dims'      => wp_create_nonce( 'andreani_save_product_dims' ),
 			'nonce_test_quote'     => wp_create_nonce( 'andreani_test_quote' ),
 			'nonce_preview_bultos' => wp_create_nonce( 'andreani_preview_bultos' ),
-			'nonce_toggle_sync'    => wp_create_nonce( 'andreani_toggle_tracking_sync' ),
+			'nonce_order_packing'  => wp_create_nonce( Andreani_Order_Packing::NONCE ),
+			'nonce_sim_search'     => wp_create_nonce( 'andreani_sim_search' ),
+			'nonce_simulate_cart'  => wp_create_nonce( 'andreani_simulate_cart' ),
 			'nonce_origen_sucursales' => wp_create_nonce( Andreani_Origen_Ajax::NONCE_SUCURSALES ),
 			'nonce_origen_default'    => wp_create_nonce( Andreani_Origen_Ajax::NONCE_DEFAULT ),
-			'tracking_sync_enabled' => class_exists( 'Andreani_Tracking_Sync' ) ? Andreani_Tracking_Sync::is_enabled() : true,
 			'pyme_historial_url'   => ANDREANI_PYME_HISTORIAL_URL,
-			'bigger_thresholds'    => class_exists( 'Andreani_Product_Bultos' )
-				? Andreani_Product_Bultos::get_bigger_thresholds()
-				: array( 'weight' => 50, 'sum_sides' => 300, 'max_side' => 165 ),
-			'thresholds_canonical' => class_exists( 'Andreani_Product_Bultos' )
-				? Andreani_Product_Bultos::get_canonical_thresholds()
-				: array( 'weight' => 50, 'sum_sides' => 300, 'max_side' => 165 ),
-			'kg_factor'            => class_exists( 'Andreani_Order_Mapper' )
-				? (float) Andreani_Order_Mapper::convert_weight_to_unit( 1, 'kg' )
-				: 1.0,
+			'box_preview'          => class_exists( 'Andreani_Product_Bultos' )
+				? Andreani_Product_Bultos::get_preview_config()
+				: array(),
+			'services_icons_url'   => ANDREANI_PLUGIN_URL . 'includes/assets/img/services/',
 			'units'                => array(
 				'weight'    => get_option( 'woocommerce_weight_unit', 'kg' ),
 				'dimension' => get_option( 'woocommerce_dimension_unit', 'cm' ),
 			),
-			'cm_factor'            => class_exists( 'Andreani_Order_Mapper' )
-				? (float) Andreani_Order_Mapper::convert_cm_to_dimension_unit( 1 )
-				: 1.0,
-			'logo_path'           => 'M1852 2575 c-35 -8 -75 -16 -90 -18 -87 -14 -331 -87 -407 -122 -190 -87 -263 -126 -368 -197 -318 -214 -521 -466 -571 -711 -29 -137 -18 -233 40 -352 73 -154 253 -283 470 -340 150 -39 469 -43 674 -9 459 77 963 364 1209 687 244 321 252 631 22 854 -41 40 -78 73 -83 73 -5 0 -26 11 -47 25 -48 32 -176 82 -261 101 -96 22 -504 29 -588 9z m498 -95 c215 -32 400 -150 477 -308 36 -73 38 -80 38 -176 0 -56 -6 -123 -14 -151 -37 -132 -133 -277 -274 -411 -87 -84 -127 -110 -150 -101 -16 6 -37 71 -92 282 -111 431 -180 661 -204 689 -21 24 -59 43 -101 51 -46 8 -56 -3 -161 -180 -180 -306 -670 -1077 -712 -1122 -27 -30 -81 -30 -150 -1 -186 78 -299 217 -320 393 -9 70 -7 91 11 163 62 243 254 463 567 647 52 30 96 55 99 55 2 0 34 14 69 30 36 17 69 30 74 30 4 0 20 6 35 14 42 22 201 66 333 92 104 21 140 23 265 19 80 -3 174 -9 210 -15z m-428 -573 c29 -118 76 -320 82 -354 l6 -33 -195 0 c-107 0 -195 3 -195 7 0 14 274 462 280 457 3 -3 13 -38 22 -77z m-26 -516 l150 -1 17 -72 c38 -172 33 -193 -56 -233 -67 -29 -248 -74 -362 -91 -22 -3 -51 -7 -64 -9 -61 -10 -192 -17 -215 -11 -51 13 -51 38 -1 134 25 48 72 130 103 182 l57 95 65 5 c36 3 85 4 110 4 25 -1 113 -2 196 -3z',
 			'i18n'                => array(
-				'retry_loading'      => __( 'Reintentando...', 'andreani-shipping' ),
+				'retry_loading'      => __( 'Reintentando el alta…', 'andreani-shipping' ),
 				'retry_success'      => __( 'Envio reintentado correctamente.', 'andreani-shipping' ),
 				'retry_error'        => __( 'Error al reintentar. Intenta nuevamente.', 'andreani-shipping' ),
-				'label_loading'      => __( 'Generando etiqueta...', 'andreani-shipping' ),
+				'label_loading'      => __( 'Preparando tus etiquetas…', 'andreani-shipping' ),
 				'label_success'      => __( 'Etiqueta descargada correctamente.', 'andreani-shipping' ),
 				'label_error'        => __( 'Error al obtener la etiqueta.', 'andreani-shipping' ),
 				'copy_success'       => __( 'Copiado!', 'andreani-shipping' ),
@@ -241,33 +242,68 @@ class Andreani_Admin_Assets {
 				'network_error'      => __( 'Error de red. Intenta nuevamente.', 'andreani-shipping' ),
 				'bulk_pay_label'           => __( 'Pagar', 'andreani-shipping' ),
 				'bulk_labels_label'        => __( 'Descargar etiquetas', 'andreani-shipping' ),
-				'bulk_labels_loading'      => __( 'Generando etiquetas...', 'andreani-shipping' ),
+				'bulk_labels_loading'      => __( 'Preparando tus etiquetas…', 'andreani-shipping' ),
 				'bulk_labels_error'        => __( 'Error al descargar las etiquetas.', 'andreani-shipping' ),
 				'bulk_labels_none'         => __( 'Ninguna de las órdenes seleccionadas tiene seguimiento todavía.', 'andreani-shipping' ),
-				'export_loading'           => __( 'Exportando...', 'andreani-shipping' ),
+				'export_loading'           => __( 'Preparando el archivo…', 'andreani-shipping' ),
 				'export_success'           => __( 'Exportación completada.', 'andreani-shipping' ),
 				'export_error'             => __( 'Error al exportar.', 'andreani-shipping' ),
-				'table_loading'            => __( 'Cargando envíos...', 'andreani-shipping' ),
 				'table_error'              => __( 'Error al cargar los envíos. Intentá de nuevo.', 'andreani-shipping' ),
-				'table_refreshing'         => __( 'Actualizando...', 'andreani-shipping' ),
+				'loader_shipments_phrases' => Andreani_Admin_Loader::shipments_phrases(),
+				'loader_shipments_update'  => __( 'Actualizando tus envíos…', 'andreani-shipping' ),
+				'loader_products_phrases'  => Andreani_Admin_Loader::products_phrases(),
+				'loader_products_update'   => __( 'Buscando productos…', 'andreani-shipping' ),
+				'loader_print'             => __( 'Cargando la configuración de impresión…', 'andreani-shipping' ),
+				'loader_contracts'         => __( 'Actualizando tus contratos…', 'andreani-shipping' ),
 				'table_retry'              => __( 'Reintentar', 'andreani-shipping' ),
 				'print_load_error'         => __( 'No se pudo cargar la configuración de impresión.', 'andreani-shipping' ),
-				'print_save_loading'       => __( 'Guardando...', 'andreani-shipping' ),
+				'print_save_loading'       => __( 'Guardando…', 'andreani-shipping' ),
 				'print_save_success'       => __( 'Configuración de impresión guardada.', 'andreani-shipping' ),
 				'print_save_error'         => __( 'No se pudo guardar la configuración de impresión.', 'andreani-shipping' ),
-				'products_loading'         => __( 'Cargando productos...', 'andreani-shipping' ),
 				'products_error'           => __( 'Error al cargar los productos. Intentá de nuevo.', 'andreani-shipping' ),
-				'save_dims_loading'        => __( 'Guardando...', 'andreani-shipping' ),
+				'save_dims_loading'        => __( 'Guardando…', 'andreani-shipping' ),
 				'save_dims_success'        => __( 'Dimensiones guardadas.', 'andreani-shipping' ),
 				'save_dims_error'          => __( 'Error al guardar las dimensiones.', 'andreani-shipping' ),
-				'quote_loading'            => __( 'Cotizando...', 'andreani-shipping' ),
+				'quote_loading'            => __( 'Consultando tarifas de Andreani…', 'andreani-shipping' ),
 				'quote_error'              => __( 'Error al cotizar.', 'andreani-shipping' ),
-				'sync_on'                  => __( 'Seguimiento automático activado.', 'andreani-shipping' ),
-				'sync_off'                 => __( 'Seguimiento automático desactivado.', 'andreani-shipping' ),
-				'sync_toggle_error'        => __( 'No se pudo cambiar la sincronización. Intentá de nuevo.', 'andreani-shipping' ),
+				'rate_home'                => __( 'A domicilio', 'andreani-shipping' ),
+				'rate_branch'              => __( 'A sucursal', 'andreani-shipping' ),
+				'rate_today'               => __( 'Llega hoy', 'andreani-shipping' ),
+				'rate_bigger'              => __( 'Bigger', 'andreani-shipping' ),
+				'rate_cheapest'            => __( 'Más económico', 'andreani-shipping' ),
+				'editor_saved'             => __( 'Producto actualizado.', 'andreani-shipping' ),
+				'sim_remove'               => __( 'Restar una unidad', 'andreani-shipping' ),
+				'sim_add'                  => __( 'Sumar una unidad', 'andreani-shipping' ),
+				'sim_remove_line'          => __( 'Quitar del carrito', 'andreani-shipping' ),
+				'sim_missing'              => __( 'Faltan medidas', 'andreani-shipping' ),
+				'sim_no_results'           => __( 'No encontramos productos.', 'andreani-shipping' ),
+				/* translators: %d: máximo de resultados */
+				'sim_limit'                => __( 'Mostrando los primeros %d — refiná la búsqueda', 'andreani-shipping' ),
+				'sim_skipped'              => __( 'No se incluyen en la simulación por no tener medidas completas:', 'andreani-shipping' ),
+				'sim_empty_preview'        => __( 'Agregá productos para ver cómo viajan.', 'andreani-shipping' ),
+				'packing_loading'          => __( 'Armando la caja…', 'andreani-shipping' ),
+				'packing_error'            => __( 'No pudimos armar la sugerencia. Probá de nuevo.', 'andreani-shipping' ),
+				'packing_stage'            => __( 'Cómo se acomoda el envío', 'andreani-shipping' ),
+				/* translators: 1: largo, 2: ancho, 3: alto, en cm */
+				'packing_use_box'          => __( 'Usá una caja de aprox. %1$s × %2$s × %3$s cm', 'andreani-shipping' ),
+				/* translators: %s: peso total */
+				'packing_fits_one'         => __( 'Entra 1 producto · Peso total %s', 'andreani-shipping' ),
+				/* translators: 1: cantidad de productos, 2: peso total */
+				'packing_fits_many'        => __( 'Entran %1$s productos · Peso total %2$s', 'andreani-shipping' ),
+				'packing_big_one'          => __( 'Este envío es 1 caja, con su etiqueta', 'andreani-shipping' ),
+				/* translators: %s: cantidad de cajas */
+				'packing_big_title'        => __( 'Este envío son %s cajas, cada una con su etiqueta', 'andreani-shipping' ),
+				'packing_box'              => __( 'Caja', 'andreani-shipping' ),
+				/* translators: %s: unidades en la pila */
+				'packing_units'            => __( '%s unidades', 'andreani-shipping' ),
+				'packing_hint'             => __( 'Es una sugerencia según las medidas que cargaste en tus productos.', 'andreani-shipping' ),
+				'packing_empty'            => __( 'Este pedido no tiene productos para enviar.', 'andreani-shipping' ),
+				/* translators: %s: nombre del producto */
+				'packing_missing'          => __( 'No podemos sugerir una caja: %s no tiene medidas', 'andreani-shipping' ),
+				'packing_complete'         => __( 'Completar', 'andreani-shipping' ),
 				'origen_vacio'             => __( 'Cargá tu código postal de origen para ver las sucursales disponibles.', 'andreani-shipping' ),
 				'origen_cp_invalido'       => __( 'El código postal no tiene un formato válido (ej: 1425 o C1425ABC).', 'andreani-shipping' ),
-				'origen_cargando'          => __( 'Buscando sucursales...', 'andreani-shipping' ),
+				'origen_cargando'          => __( 'Buscando sucursales…', 'andreani-shipping' ),
 				'origen_sin_resultados'    => __( 'No encontramos sucursales habilitadas como origen para ese código postal.', 'andreani-shipping' ),
 				'origen_error'             => __( 'No pudimos traer las sucursales. Probá de nuevo en unos minutos.', 'andreani-shipping' ),
 				'origen_auto'              => __( 'Por defecto — la asigna Andreani por tu código postal', 'andreani-shipping' ),

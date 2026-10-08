@@ -105,6 +105,8 @@
 	background: transparent;
 	color: var(--andr-color-text-subtle);
 	border-radius: 50%;
+	font-size: var(--andr-text-xl);
+	line-height: 1;
 	cursor: pointer;
 	transition: background var(--andr-transition-fast), color var(--andr-transition-fast);
 }
@@ -163,18 +165,8 @@
 	margin: 0 0 var(--andr-sp-4);
 }
 
-.andreani-print-settings__loader {
-	display: flex;
-	align-items: center;
-	gap: var(--andr-sp-2);
-	padding: var(--andr-sp-4) 0;
-	color: var(--andr-color-text-subtle);
-	font-size: var(--andr-text-sm);
-}
-
-.andreani-print-settings__loader .spinner {
-	float: none;
-	margin: 0;
+.andreani-print-settings__loader:empty {
+	display: none;
 }
 
 .andreani-print-settings__layout {

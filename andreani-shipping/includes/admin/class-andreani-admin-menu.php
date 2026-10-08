@@ -24,6 +24,38 @@ class Andreani_Admin_Menu {
 	private function __construct() {
 		add_action( 'admin_menu', array( $this, 'register_menu' ), 20 );
 		add_action( 'admin_menu', array( $this, 'fix_submenu_urls' ), 999 );
+		add_filter( 'submenu_file', array( $this, 'highlight_settings_submenu' ), 999 );
+		add_action( 'adminmenu', array( $this, 'print_settings_menu_highlight' ) );
+	}
+
+	private function is_andreani_settings_screen() {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended
+		$page        = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+		$tab         = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : '';
+		$instance_id = isset( $_GET['instance_id'] ) ? absint( $_GET['instance_id'] ) : 0;
+		// phpcs:enable
+
+		if ( 'wc-settings' !== $page || 'shipping' !== $tab || ! $instance_id || ! class_exists( 'WC_Shipping_Zones' ) ) {
+			return false;
+		}
+
+		$method = WC_Shipping_Zones::get_shipping_method( $instance_id );
+
+		return $method && ANDREANI_SHIPPING_METHOD_ID === $method->id;
+	}
+
+	public function highlight_settings_submenu( $submenu_file ) {
+		return $this->is_andreani_settings_screen() ? $this->get_andreani_settings_url() : $submenu_file;
+	}
+
+	public function print_settings_menu_highlight() {
+		if ( ! $this->is_andreani_settings_screen() ) {
+			return;
+		}
+
+		$script = "(function(){var o=document.getElementById('toplevel_page_woocommerce'),a=document.getElementById('toplevel_page_" . self::MENU_SLUG . "');if(!a){return;}[o,a].forEach(function(li){if(!li){return;}var on=li===a;li.classList.toggle('wp-has-current-submenu',on);li.classList.toggle('wp-menu-open',on);li.classList.toggle('wp-not-current-submenu',!on);var l=li.querySelector(':scope > a');if(l){l.classList.toggle('wp-has-current-submenu',on);l.classList.toggle('wp-not-current-submenu',!on);}});})();";
+
+		wp_print_inline_script_tag( $script );
 	}
 
 	public function register_menu() {
@@ -93,7 +125,7 @@ class Andreani_Admin_Menu {
 	/**
 	 * Busca la instancia activa del shipping method en zonas para construir su URL de settings.
 	 */
-	private function get_andreani_settings_url() {
+	public function get_andreani_settings_url() {
 		$fallback_url = admin_url( 'admin.php?page=wc-settings&tab=shipping' );
 
 		if ( ! class_exists( 'WC_Shipping_Zones' ) ) {

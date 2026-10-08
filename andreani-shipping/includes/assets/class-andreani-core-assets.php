@@ -23,6 +23,15 @@ class Andreani_Core_Assets {
 	const HANDLE_C_MODAL  = 'andreani-component-modal';
 	const HANDLE_C_CARD   = 'andreani-component-card';
 	const HANDLE_C_TABS   = 'andreani-component-tabs';
+	const HANDLE_C_DISPATCH = 'andreani-component-dispatch';
+
+	const HANDLE_C_LOADER = 'andreani-component-loader';
+
+	const HANDLE_C_PAGE_HEADER = 'andreani-component-page-header';
+
+	const HANDLE_LOADER = 'andreani-loader';
+
+	const HANDLE_BOX_PREVIEW = 'andreani-box-preview';
 
 	public static function get_instance() {
 		if ( null === self::$instance ) {
@@ -39,6 +48,7 @@ class Andreani_Core_Assets {
 	public function register() {
 		$this->register_core();
 		$this->register_components();
+		$this->register_scripts();
 	}
 
 	private function register_core() {
@@ -72,6 +82,9 @@ class Andreani_Core_Assets {
 			self::HANDLE_C_MODAL  => 'modal.css',
 			self::HANDLE_C_CARD   => 'card.css',
 			self::HANDLE_C_TABS   => 'tabs.css',
+			self::HANDLE_C_DISPATCH => 'dispatch.css',
+			self::HANDLE_C_LOADER => 'loader.css',
+			self::HANDLE_C_PAGE_HEADER => 'page-header.css',
 		);
 
 		foreach ( $components as $handle => $file ) {
@@ -82,5 +95,29 @@ class Andreani_Core_Assets {
 				ANDREANI_PLUGIN_VERSION
 			);
 		}
+	}
+
+	private function register_scripts() {
+		wp_register_script(
+			self::HANDLE_LOADER,
+			ANDREANI_PLUGIN_URL . 'includes/assets/js/andreani-loader.js',
+			array( 'jquery' ),
+			ANDREANI_PLUGIN_VERSION,
+			true
+		);
+
+		wp_localize_script(
+			self::HANDLE_LOADER,
+			'AndreaniLoaderConfig',
+			array( 'gif' => ANDREANI_PLUGIN_URL . 'includes/assets/img/andreani-loading.gif' )
+		);
+
+		wp_register_script(
+			self::HANDLE_BOX_PREVIEW,
+			ANDREANI_PLUGIN_URL . 'includes/assets/js/andreani-box-preview.js',
+			array( 'jquery', self::HANDLE_LOADER ),
+			ANDREANI_PLUGIN_VERSION,
+			true
+		);
 	}
 }

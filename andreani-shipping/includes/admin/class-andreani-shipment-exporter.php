@@ -83,48 +83,18 @@ class Andreani_Shipment_Exporter {
 			$args['date_before'] = $filters['date_to'];
 		}
 
-		$meta_conditions = array();
-
 		if ( '' !== $filters['search'] ) {
-			if ( is_numeric( $filters['search'] ) ) {
+			if ( ctype_digit( $filters['search'] ) && strlen( $filters['search'] ) <= 8 ) {
 				$args['post__in'] = array( absint( $filters['search'] ) );
 			} else {
-				$meta_conditions[] = array(
-					'relation' => 'OR',
-					array(
-						'key'     => '_order_andreani_tracking_number',
-						'value'   => $filters['search'],
-						'compare' => 'LIKE',
-					),
-					array(
-						'key'     => '_billing_last_name',
-						'value'   => $filters['search'],
-						'compare' => 'LIKE',
-					),
-					array(
-						'key'     => '_order_andreani_pedido_id',
-						'value'   => $filters['search'],
-						'compare' => 'LIKE',
-					),
-				);
+				$ids              = Andreani_Shipments_List::search_order_ids( $filters['search'], ! ctype_digit( $filters['search'] ) );
+				$args['post__in'] = $ids ? $ids : array( 0 );
 			}
 		}
 
-		$type_status_conditions = Andreani_Shipments_List::build_filter_meta_query(
-			$filters['client_type'],
-			$filters['andreani_status']
-		);
-		foreach ( $type_status_conditions as $condition ) {
-			$meta_conditions[] = $condition;
-		}
-
-		if ( 1 === count( $meta_conditions ) ) {
-			$args['meta_query'] = $meta_conditions[0]; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-		} elseif ( count( $meta_conditions ) > 1 ) {
-			$args['meta_query'] = array_merge( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-				array( 'relation' => 'AND' ),
-				$meta_conditions
-			);
+		$scope = Andreani_Shipments_List::build_filter_scope( $filters['client_type'], $filters['andreani_status'] );
+		if ( ! empty( $scope ) ) {
+			$args['andreani_filter'] = $scope;
 		}
 
 		return wc_get_orders( $args );

@@ -1,6 +1,6 @@
 <?php
 /**
- * Template: Página Ver mis productos
+ * Template: Página Productos
  *
  * @package AndreaniPlugin
  */
@@ -11,6 +11,24 @@ defined( 'ABSPATH' ) || exit;
 
 	<hr class="wp-header-end">
 
+	<div class="andreani-page-card">
+		<?php
+		$andreani_page_title = __( 'Ver mis productos', 'andreani-shipping' );
+		require ANDREANI_PLUGIN_DIR . 'includes/admin/views/page-card-header.php';
+		?>
+		<div class="andreani-page-card__body">
+
+	<?php
+	Andreani_Products_Stats::finish_small_backfill();
+	$counts    = Andreani_Products_Stats::get_counts();
+	$analyzing = Andreani_Products_Stats::progress();
+	?>
+	<p id="andreani-products-analyzing" class="andreani-products-inline-msg andreani-products-inline-msg--info" <?php echo $analyzing ? '' : 'hidden'; ?>>
+		<?php
+		/* translators: 1: productos analizados, 2: total de productos */
+		printf( esc_html__( 'Analizando tu catálogo… (%1$s de %2$s)', 'andreani-shipping' ), '<span data-analyzing="done">' . esc_html( number_format_i18n( $analyzing ? $analyzing['done'] : 0 ) ) . '</span>', '<span data-analyzing="total">' . esc_html( number_format_i18n( $analyzing ? $analyzing['total'] : 0 ) ) . '</span>' );
+		?>
+	</p>
 	<form method="get" id="andreani-products-form">
 		<input type="hidden" name="page" value="andreani-products" />
 
@@ -26,31 +44,84 @@ defined( 'ABSPATH' ) || exit;
 			</div>
 
 			<div class="andreani-toolbar__filters">
-				<button type="button"
-					class="andreani-chip"
-					id="andreani-products-missing-filter"
-					aria-pressed="false"
-					data-filter="missing_dims">
-					<?php esc_html_e( 'Sin dimensiones/peso', 'andreani-shipping' ); ?>
+				<button type="button" class="andreani-filter-trigger" id="andreani-products-filters-trigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="andreani-products-filters-popover">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+					<span class="andreani-filter-trigger__label"><?php esc_html_e( 'Filtros', 'andreani-shipping' ); ?></span>
+					<span class="andreani-filter-trigger__count" hidden>0</span>
 				</button>
+
+				<div id="andreani-products-filters-popover" class="andreani-filters-popover" role="dialog" aria-label="<?php esc_attr_e( 'Filtros de productos', 'andreani-shipping' ); ?>" hidden>
+					<div class="andreani-filters-popover__body">
+						<?php
+						$filter_groups = array(
+							'service' => array(
+								__( 'Servicio', 'andreani-shipping' ),
+								array(
+									Andreani_Products_Stats::CLASS_PAQUETERIA => __( 'Paquetería', 'andreani-shipping' ),
+									Andreani_Products_Stats::CLASS_BIGGER     => __( 'Bigger', 'andreani-shipping' ),
+									Andreani_Products_Stats::CLASS_MISSING    => __( 'Faltan medidas', 'andreani-shipping' ),
+								),
+							),
+							'mode'    => array(
+								__( 'Despacho', 'andreani-shipping' ),
+								array(
+									Andreani_Product_Bultos::MODE_SINGLE     => __( 'Cada una en su caja', 'andreani-shipping' ),
+									Andreani_Product_Bultos::MODE_APILADO    => __( 'Se apilan', 'andreani-shipping' ),
+									Andreani_Product_Bultos::MODE_MULTIBULTO => __( 'Varias cajas', 'andreani-shipping' ),
+								),
+							),
+						);
+						foreach ( $filter_groups as $group_key => $group ) :
+							?>
+							<section class="andreani-filters-section">
+								<header class="andreani-filters-section__header">
+									<h4 class="andreani-filters-section__title"><?php echo esc_html( $group[0] ); ?></h4>
+								</header>
+								<div class="andreani-filters-section__body">
+									<div class="andreani-quick-filters__group" role="group" aria-label="<?php echo esc_attr( $group[0] ); ?>">
+										<?php foreach ( $group[1] as $value => $label ) : ?>
+											<button type="button" class="andreani-chip" aria-pressed="false" data-filter-group="<?php echo esc_attr( $group_key ); ?>" data-filter-value="<?php echo esc_attr( $value ); ?>" data-filter-label="<?php echo esc_attr( $label ); ?>"><?php echo esc_html( $label ); ?> <span data-count="<?php echo esc_attr( $value ); ?>"><?php echo esc_html( number_format_i18n( $counts[ $value ] ) ); ?></span></button>
+										<?php endforeach; ?>
+									</div>
+								</div>
+							</section>
+						<?php endforeach; ?>
+					</div>
+					<footer class="andreani-filters-popover__footer">
+						<button type="button" class="andr-btn andr-btn--ghost andr-btn--sm" id="andreani-products-filters-clear"><?php esc_html_e( 'Limpiar', 'andreani-shipping' ); ?></button>
+						<button type="button" class="andr-btn andr-btn--primary andr-btn--sm" id="andreani-products-filters-close"><?php esc_html_e( 'Cerrar', 'andreani-shipping' ); ?></button>
+					</footer>
+				</div>
 			</div>
+
+			<button type="button" class="andr-btn andr-btn--primary andreani-toolbar__sim" id="andreani-cart-sim-open">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2.5 3.5h2.6l2.4 11.2a1.6 1.6 0 0 0 1.6 1.3h8.6a1.6 1.6 0 0 0 1.6-1.2l1.7-7.3H6.1"/></svg>
+				<?php esc_html_e( 'Simular un carrito', 'andreani-shipping' ); ?>
+			</button>
+		</div>
+
+		<div class="andreani-active-pills" id="andreani-products-pills">
+			<div class="andreani-active-pills__list" id="andreani-products-pills-list"></div>
+			<button type="button" class="andreani-active-pills__clear" id="andreani-products-pills-clear">
+				<?php esc_html_e( 'Limpiar todo', 'andreani-shipping' ); ?>
+			</button>
+		</div>
+
+		<div class="andr-dispatch__warnbox" id="andreani-products-missing"<?php echo $counts[ Andreani_Products_Stats::FILTER_MISSING ] > 0 ? '' : ' hidden'; ?>>
+			<span>
+				<?php
+				printf(
+					/* translators: %s: cantidad de productos sin medidas */
+					esc_html__( 'Productos sin medidas: %s. No se pueden enviar con Andreani', 'andreani-shipping' ),
+					'<span data-count="missing">' . esc_html( number_format_i18n( $counts[ Andreani_Products_Stats::FILTER_MISSING ] ) ) . '</span>'
+				); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				?>
+				&middot; <button type="button" class="andr-pem__hint-action" id="andreani-products-missing-link"><?php esc_html_e( 'Ver', 'andreani-shipping' ); ?></button>
+			</span>
 		</div>
 
 		<div id="andreani-products-table-container">
-			<div class="andreani-table-loader">
-				<div class="andreani-table-loader__spinner">
-					<svg class="andreani-table-loader__logo andreani-table-loader__logo--bg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 341 341" style="color: var(--andr-color-border-strong);">
-						<g transform="translate(0,341) scale(0.1,-0.1)" fill="currentColor">
-							<path d="M1852 2575 c-35 -8 -75 -16 -90 -18 -87 -14 -331 -87 -407 -122 -190 -87 -263 -126 -368 -197 -318 -214 -521 -466 -571 -711 -29 -137 -18 -233 40 -352 73 -154 253 -283 470 -340 150 -39 469 -43 674 -9 459 77 963 364 1209 687 244 321 252 631 22 854 -41 40 -78 73 -83 73 -5 0 -26 11 -47 25 -48 32 -176 82 -261 101 -96 22 -504 29 -588 9z m498 -95 c215 -32 400 -150 477 -308 36 -73 38 -80 38 -176 0 -56 -6 -123 -14 -151 -37 -132 -133 -277 -274 -411 -87 -84 -127 -110 -150 -101 -16 6 -37 71 -92 282 -111 431 -180 661 -204 689 -21 24 -59 43 -101 51 -46 8 -56 -3 -161 -180 -180 -306 -670 -1077 -712 -1122 -27 -30 -81 -30 -150 -1 -186 78 -299 217 -320 393 -9 70 -7 91 11 163 62 243 254 463 567 647 52 30 96 55 99 55 2 0 34 14 69 30 36 17 69 30 74 30 4 0 20 6 35 14 42 22 201 66 333 92 104 21 140 23 265 19 80 -3 174 -9 210 -15z m-428 -573 c29 -118 76 -320 82 -354 l6 -33 -195 0 c-107 0 -195 3 -195 7 0 14 274 462 280 457 3 -3 13 -38 22 -77z m-26 -516 l150 -1 17 -72 c38 -172 33 -193 -56 -233 -67 -29 -248 -74 -362 -91 -22 -3 -51 -7 -64 -9 -61 -10 -192 -17 -215 -11 -51 13 -51 38 -1 134 25 48 72 130 103 182 l57 95 65 5 c36 3 85 4 110 4 25 -1 113 -2 196 -3z"/>
-						</g>
-					</svg>
-					<svg class="andreani-table-loader__logo andreani-table-loader__logo--fill" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 341 341" style="color: var(--andr-color-brand);">
-						<g transform="translate(0,341) scale(0.1,-0.1)" fill="currentColor">
-							<path d="M1852 2575 c-35 -8 -75 -16 -90 -18 -87 -14 -331 -87 -407 -122 -190 -87 -263 -126 -368 -197 -318 -214 -521 -466 -571 -711 -29 -137 -18 -233 40 -352 73 -154 253 -283 470 -340 150 -39 469 -43 674 -9 459 77 963 364 1209 687 244 321 252 631 22 854 -41 40 -78 73 -83 73 -5 0 -26 11 -47 25 -48 32 -176 82 -261 101 -96 22 -504 29 -588 9z m498 -95 c215 -32 400 -150 477 -308 36 -73 38 -80 38 -176 0 -56 -6 -123 -14 -151 -37 -132 -133 -277 -274 -411 -87 -84 -127 -110 -150 -101 -16 6 -37 71 -92 282 -111 431 -180 661 -204 689 -21 24 -59 43 -101 51 -46 8 -56 -3 -161 -180 -180 -306 -670 -1077 -712 -1122 -27 -30 -81 -30 -150 -1 -186 78 -299 217 -320 393 -9 70 -7 91 11 163 62 243 254 463 567 647 52 30 96 55 99 55 2 0 34 14 69 30 36 17 69 30 74 30 4 0 20 6 35 14 42 22 201 66 333 92 104 21 140 23 265 19 80 -3 174 -9 210 -15z m-428 -573 c29 -118 76 -320 82 -354 l6 -33 -195 0 c-107 0 -195 3 -195 7 0 14 274 462 280 457 3 -3 13 -38 22 -77z m-26 -516 l150 -1 17 -72 c38 -172 33 -193 -56 -233 -67 -29 -248 -74 -362 -91 -22 -3 -51 -7 -64 -9 -61 -10 -192 -17 -215 -11 -51 13 -51 38 -1 134 25 48 72 130 103 182 l57 95 65 5 c36 3 85 4 110 4 25 -1 113 -2 196 -3z"/>
-						</g>
-					</svg>
-				</div>
-			</div>
+			<?php Andreani_Admin_Loader::render( '', Andreani_Admin_Loader::SIZE_LG, Andreani_Admin_Loader::products_phrases() ); ?>
 		</div>
 
 		<?php $current_per_page = Andreani_Products_List::resolve_per_page(); ?>
@@ -66,7 +137,9 @@ defined( 'ABSPATH' ) || exit;
 			<?php endforeach; ?>
 		</div>
 	</form>
+		</div>
+	</div>
 </div>
 
-<?php require ANDREANI_PLUGIN_DIR . 'includes/admin/views/product-edit-modal.php'; ?>
-<?php require ANDREANI_PLUGIN_DIR . 'includes/admin/views/product-quote-modal.php'; ?>
+<?php require ANDREANI_PLUGIN_DIR . 'includes/admin/views/product-editor-panel.php'; ?>
+<?php require ANDREANI_PLUGIN_DIR . 'includes/admin/views/product-simulator-modal.php'; ?>

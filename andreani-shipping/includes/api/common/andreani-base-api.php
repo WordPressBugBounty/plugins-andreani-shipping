@@ -65,17 +65,27 @@ abstract class Andreani_Base_Api implements Andreani_API_Interface {
 	public function validate_hash( $hash ) {
 		$this->last_validation_error = null;
 
+		$fail_key = 'andreani_login_fail_' . md5( static::$client_type . '|' . $hash );
+		$failed   = get_transient( $fail_key );
+		if ( is_string( $failed ) && '' !== $failed ) {
+			$this->last_validation_error = new WP_Error( 'andreani_invalid_credential', $failed );
+			return false;
+		}
+
 		$headers = array(
 			'Authorization' => $hash,
 			'Content-Type'  => 'application/json',
 		);
 
-		$response = Andreani_Utils::make_request( 'POST', $this->api_endpoints['login'], null, $headers );
+		$response = Andreani_Utils::make_request( 'POST', $this->api_endpoints['login'], null, $headers, 0, 10 );
 		$response = Andreani_Api_Response::decode( $response );
 
 		if ( is_wp_error( $response ) || ! isset( $response['response'] ) ) {
 			$tipo = ucfirst( static::$client_type );
 			$this->last_validation_error = self::classify_validation_error( $response );
+			if ( 'andreani_invalid_credential' === $this->last_validation_error->get_error_code() ) {
+				set_transient( $fail_key, $this->last_validation_error->get_error_message(), 5 * MINUTE_IN_SECONDS );
+			}
 			Andreani_Utils::andreani_log(
 				"[AUTH] Credencial ID {$tipo} no validada [{$this->last_validation_error->get_error_code()}]: " . $this->last_validation_error->get_error_message(),
 				'error'
@@ -275,7 +285,7 @@ abstract class Andreani_Base_Api implements Andreani_API_Interface {
 			'info'
 		);
 
-		$response = Andreani_Utils::make_request( 'POST', $this->api_endpoints['cotizacion'], $body, $headers );
+		$response = Andreani_Utils::make_request( 'POST', $this->api_endpoints['cotizacion'], $body, $headers, 0, 10 );
 		$response = Andreani_Api_Response::decode( $response );
 		$result   = Andreani_Api_Response::process_cotizacion( $response );
 

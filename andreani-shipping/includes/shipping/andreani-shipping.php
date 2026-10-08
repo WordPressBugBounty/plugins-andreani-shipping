@@ -2,6 +2,8 @@
 defined( 'ABSPATH' ) || exit;
 
 class Andreani_Shipping extends WC_Shipping_Method {
+	const TRACKING_SYNC_FIELD = 'tracking_sync_enabled';
+
 	public $init_form_fields = array();
 	public $instance_form_fields = array();
 	public $tipo_cliente;
@@ -37,6 +39,14 @@ class Andreani_Shipping extends WC_Shipping_Method {
 		$this->cp_origen = apply_filters( 'andreani_origin_postal_code', str_replace( ' ', '', strtoupper( $cp_origen_value ) ) );
 		$this->mostrar_sin_decimales = $this->get_option( 'mostrar_sin_decimales', 'no' ) === 'yes';
 		$this->hash_andreani = $this->get_option( 'hash_andreani', '' );
+	}
+
+	public function get_option( $key, $empty_value = null ) {
+		if ( self::TRACKING_SYNC_FIELD === $key ) {
+			return Andreani_Tracking_Sync::is_enabled() ? 'yes' : 'no';
+		}
+
+		return parent::get_option( $key, $empty_value );
 	}
 
 	public function generate_hidden_html( $key, $data ) {
@@ -317,7 +327,7 @@ class Andreani_Shipping extends WC_Shipping_Method {
 		?>
 		<div class="andreani-settings-wrapper">
 			<?php $this->render_settings_loader(); ?>
-			<?php $this->render_settings_header( $ctx['logo_url'] ); ?>
+			<?php $this->render_settings_header(); ?>
 
 			<table class="form-table andreani-settings-hidden-fields" aria-hidden="true">
 				<?php $this->generate_settings_html( $ctx['hidden_fields'] ); ?>
@@ -361,7 +371,6 @@ class Andreani_Shipping extends WC_Shipping_Method {
 		$all_fields = $this->get_instance_form_fields();
 
 		return array(
-			'logo_url'         => ANDREANI_PLUGIN_URL . 'includes/assets/img/andreani.png',
 			'tipo_cliente'     => $tipo_cliente,
 			'hash_andreani'    => $hash_andreani,
 			'tipo_label'       => $tipo_label,
@@ -382,27 +391,16 @@ class Andreani_Shipping extends WC_Shipping_Method {
 	private function render_settings_loader() {
 		?>
 		<div class="andreani-settings-loader" aria-hidden="true">
-			<div class="andreani-settings-loader__spinner">
-				<svg class="andreani-settings-loader__logo andreani-settings-loader__logo--bg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 341 341">
-					<g transform="translate(0,341) scale(0.1,-0.1)" fill="currentColor">
-						<path d="M1852 2575 c-35 -8 -75 -16 -90 -18 -87 -14 -331 -87 -407 -122 -190 -87 -263 -126 -368 -197 -318 -214 -521 -466 -571 -711 -29 -137 -18 -233 40 -352 73 -154 253 -283 470 -340 150 -39 469 -43 674 -9 459 77 963 364 1209 687 244 321 252 631 22 854 -41 40 -78 73 -83 73 -5 0 -26 11 -47 25 -48 32 -176 82 -261 101 -96 22 -504 29 -588 9z m498 -95 c215 -32 400 -150 477 -308 36 -73 38 -80 38 -176 0 -56 -6 -123 -14 -151 -37 -132 -133 -277 -274 -411 -87 -84 -127 -110 -150 -101 -16 6 -37 71 -92 282 -111 431 -180 661 -204 689 -21 24 -59 43 -101 51 -46 8 -56 -3 -161 -180 -180 -306 -670 -1077 -712 -1122 -27 -30 -81 -30 -150 -1 -186 78 -299 217 -320 393 -9 70 -7 91 11 163 62 243 254 463 567 647 52 30 96 55 99 55 2 0 34 14 69 30 36 17 69 30 74 30 4 0 20 6 35 14 42 22 201 66 333 92 104 21 140 23 265 19 80 -3 174 -9 210 -15z m-428 -573 c29 -118 76 -320 82 -354 l6 -33 -195 0 c-107 0 -195 3 -195 7 0 14 274 462 280 457 3 -3 13 -38 22 -77z m-26 -516 l150 -1 17 -72 c38 -172 33 -193 -56 -233 -67 -29 -248 -74 -362 -91 -22 -3 -51 -7 -64 -9 -61 -10 -192 -17 -215 -11 -51 13 -51 38 -1 134 25 48 72 130 103 182 l57 95 65 5 c36 3 85 4 110 4 25 -1 113 -2 196 -3z"/>
-					</g>
-				</svg>
-				<svg class="andreani-settings-loader__logo andreani-settings-loader__logo--fill" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 341 341">
-					<g transform="translate(0,341) scale(0.1,-0.1)" fill="currentColor">
-						<path d="M1852 2575 c-35 -8 -75 -16 -90 -18 -87 -14 -331 -87 -407 -122 -190 -87 -263 -126 -368 -197 -318 -214 -521 -466 -571 -711 -29 -137 -18 -233 40 -352 73 -154 253 -283 470 -340 150 -39 469 -43 674 -9 459 77 963 364 1209 687 244 321 252 631 22 854 -41 40 -78 73 -83 73 -5 0 -26 11 -47 25 -48 32 -176 82 -261 101 -96 22 -504 29 -588 9z m498 -95 c215 -32 400 -150 477 -308 36 -73 38 -80 38 -176 0 -56 -6 -123 -14 -151 -37 -132 -133 -277 -274 -411 -87 -84 -127 -110 -150 -101 -16 6 -37 71 -92 282 -111 431 -180 661 -204 689 -21 24 -59 43 -101 51 -46 8 -56 -3 -161 -180 -180 -306 -670 -1077 -712 -1122 -27 -30 -81 -30 -150 -1 -186 78 -299 217 -320 393 -9 70 -7 91 11 163 62 243 254 463 567 647 52 30 96 55 99 55 2 0 34 14 69 30 36 17 69 30 74 30 4 0 20 6 35 14 42 22 201 66 333 92 104 21 140 23 265 19 80 -3 174 -9 210 -15z m-428 -573 c29 -118 76 -320 82 -354 l6 -33 -195 0 c-107 0 -195 3 -195 7 0 14 274 462 280 457 3 -3 13 -38 22 -77z m-26 -516 l150 -1 17 -72 c38 -172 33 -193 -56 -233 -67 -29 -248 -74 -362 -91 -22 -3 -51 -7 -64 -9 -61 -10 -192 -17 -215 -11 -51 13 -51 38 -1 134 25 48 72 130 103 182 l57 95 65 5 c36 3 85 4 110 4 25 -1 113 -2 196 -3z"/>
-					</g>
-				</svg>
-			</div>
+			<?php Andreani_Admin_Loader::render( __( 'Guardando la configuración…', 'andreani-shipping' ) ); ?>
 		</div>
 		<?php
 	}
 
-	private function render_settings_header( $logo_url ) {
+	private function render_settings_header() {
+		$andreani_page_title = __( 'Configuración', 'andreani-shipping' );
 		?>
 		<div class="andreani-settings-header">
-			<h2 class="andreani-settings-header__title"><?php esc_html_e( 'Configuración de envíos', 'andreani-shipping' ); ?></h2>
-			<img class="andreani-settings-header__logo" src="<?php echo esc_url( $logo_url ); ?>" alt="Andreani" />
+			<?php require ANDREANI_PLUGIN_DIR . 'includes/admin/views/page-card-header.php'; ?>
 		</div>
 		<?php
 	}
@@ -1058,8 +1056,17 @@ class Andreani_Shipping extends WC_Shipping_Method {
 				</h3>
 				<p class="andreani-section-description"><?php esc_html_e( 'Configuración para diagnóstico y formato de costos. Solo activá el modo debug si estás resolviendo un problema concreto.', 'andreani-shipping' ); ?></p>
 				<table class="form-table">
-					<?php $this->generate_settings_html( $avanzado_fields ); ?>
+					<?php
+					$this->generate_settings_html( $avanzado_fields );
+					$this->settings[ self::TRACKING_SYNC_FIELD ] = Andreani_Tracking_Sync::is_enabled() ? 'yes' : 'no';
+					echo $this->generate_checkbox_html( self::TRACKING_SYNC_FIELD, array( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+						'title'       => __( 'Seguimiento automático', 'andreani-shipping' ),
+						'label'       => __( 'Actualizar el seguimiento automáticamente', 'andreani-shipping' ),
+						'description' => __( 'Consulta el estado de tus envíos en segundo plano. No cambia el estado de tus pedidos ni envía mails.', 'andreani-shipping' ),
+					) );
+					?>
 				</table>
+				<input type="hidden" name="<?php echo esc_attr( $this->get_field_key( self::TRACKING_SYNC_FIELD ) ); ?>_present" value="1">
 			</div>
 		</div>
 		<?php
@@ -1088,12 +1095,12 @@ class Andreani_Shipping extends WC_Shipping_Method {
 	private function render_products_warning() {
 		$productos_sin_datos = $this->get_productos_sin_datos();
 
-		if ( empty( $productos_sin_datos ) ) {
+		if ( empty( $productos_sin_datos['total'] ) ) {
 			return;
 		}
 
-		$total_productos   = count( $productos_sin_datos );
-		$productos_mostrar = array_slice( $productos_sin_datos, 0, 20 );
+		$total_productos   = $productos_sin_datos['total'];
+		$productos_mostrar = $productos_sin_datos['ids'];
 		?>
 		<div class="andreani-products-warning andreani-products-warning--collapsed">
 			<div class="andreani-products-warning__header">
@@ -1126,7 +1133,7 @@ class Andreani_Shipping extends WC_Shipping_Method {
 					?>
 						<li class="andreani-products-warning__item">
 							<span class="andreani-products-warning__product-name"><?php echo esc_html( $product->get_name() ); ?></span>
-							<a href="<?php echo esc_url( get_edit_post_link( $product_id ) ); ?>" class="andreani-products-warning__edit-link" target="_blank" rel="noopener noreferrer">
+							<a href="<?php echo esc_url( get_edit_post_link( $product->get_parent_id() ? $product->get_parent_id() : $product_id ) ); ?>" class="andreani-products-warning__edit-link" target="_blank" rel="noopener noreferrer">
 								<?php esc_html_e( 'Editar', 'andreani-shipping' ); ?>
 							</a>
 						</li>
@@ -1244,6 +1251,12 @@ class Andreani_Shipping extends WC_Shipping_Method {
 				Andreani_Utils::show_error_message( $error, 'error' );
 			}
 			return false;
+		}
+
+		$sync_key = $prefix . self::TRACKING_SYNC_FIELD;
+
+		if ( isset( $post_data[ $sync_key . '_present' ] ) ) {
+			Andreani_Tracking_Sync::set_enabled( isset( $post_data[ $sync_key ] ) );
 		}
 
 		$hash_andreani = $this->get_post_field( $post_data, $prefix . 'hash_andreani' );
@@ -1453,17 +1466,32 @@ class Andreani_Shipping extends WC_Shipping_Method {
 	private function get_productos_sin_datos() {
 		global $wpdb;
 
-		return $wpdb->get_col(
-			"SELECT DISTINCT p.ID
-			FROM {$wpdb->posts} p
-			WHERE p.post_type = 'product'
-			AND p.post_status = 'publish'
-			AND (
-				NOT EXISTS (SELECT 1 FROM {$wpdb->postmeta} pm WHERE pm.post_id = p.ID AND pm.meta_key = '_weight' AND pm.meta_value != '')
-				OR NOT EXISTS (SELECT 1 FROM {$wpdb->postmeta} pm WHERE pm.post_id = p.ID AND pm.meta_key = '_length' AND pm.meta_value != '')
-				OR NOT EXISTS (SELECT 1 FROM {$wpdb->postmeta} pm WHERE pm.post_id = p.ID AND pm.meta_key = '_width' AND pm.meta_value != '')
-				OR NOT EXISTS (SELECT 1 FROM {$wpdb->postmeta} pm WHERE pm.post_id = p.ID AND pm.meta_key = '_height' AND pm.meta_value != '')
-			)"
+		$counts = Andreani_Products_Stats::get_counts();
+		$total  = (int) $counts[ Andreani_Products_Stats::FILTER_MISSING ];
+
+		if ( $total <= 0 ) {
+			return array(
+				'total' => 0,
+				'ids'   => array(),
+			);
+		}
+
+		$ids = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT p.ID
+				FROM {$wpdb->postmeta} cls
+				INNER JOIN {$wpdb->posts} p ON p.ID = cls.post_id
+				WHERE cls.meta_key = %s AND cls.meta_value = %s
+				AND p.post_type IN ('product', 'product_variation') AND p.post_status = 'publish'
+				LIMIT 20",
+				Andreani_Products_Stats::META_CLASS,
+				Andreani_Products_Stats::CLASS_MISSING
+			)
+		);
+
+		return array(
+			'total' => $total,
+			'ids'   => array_map( 'intval', $ids ),
 		);
 	}
 

@@ -30,7 +30,9 @@ class Andreani_Tracking_Sync {
 	const STATUS_META   = '_order_andreani_tracking_status';
 
 	const ENABLED_OPTION = 'andreani_tracking_sync_enabled';
-	const LOCK_TRANSIENT = 'andreani_tracking_sync_lock';
+	const LOCK_OPTION    = 'andreani_tracking_sync_lock';
+	const BACKOFF_TRANSIENT = 'andreani_tracking_sync_backoff';
+	const BACKOFF_TTL    = 900;
 
 	// "No entregado" NO es terminal: la API puede revisitarlo a "Entregado"; lo cierra
 	// el abandono por inactividad, no este array.
@@ -105,22 +107,55 @@ class Andreani_Tracking_Sync {
 	 * ejecuciones no se solapen; el trabajo real esta en run_batch().
 	 */
 	public function run() {
-		if ( ! self::is_enabled() ) {
+		if ( ! self::is_enabled() || get_transient( self::BACKOFF_TRANSIENT ) ) {
 			return;
 		}
 
-		// Un solo run() a la vez: evita que el tick recurrente y un lote encadenado se solapen
-		// y vuelvan a presionar la DB en paralelo. El TTL lo auto-libera si un run() muere.
-		if ( get_transient( self::LOCK_TRANSIENT ) ) {
+		if ( ! $this->acquire_lock() ) {
 			return;
 		}
-		set_transient( self::LOCK_TRANSIENT, 1, self::LOCK_TTL );
 
 		try {
 			$this->run_batch();
 		} finally {
-			delete_transient( self::LOCK_TRANSIENT );
+			delete_option( self::LOCK_OPTION );
 		}
+	}
+
+	/**
+	 * add_option falla si la fila ya existe: es el test-and-set atomico que un transient no da.
+	 * El valor es el instante de toma, para auto-liberar el lock de un run() que murio.
+	 */
+	private function acquire_lock() {
+		if ( add_option( self::LOCK_OPTION, time(), '', 'no' ) ) {
+			return true;
+		}
+
+		wp_cache_delete( self::LOCK_OPTION, 'options' );
+		if ( (int) get_option( self::LOCK_OPTION, 0 ) > time() - self::LOCK_TTL ) {
+			return false;
+		}
+
+		delete_option( self::LOCK_OPTION );
+		return (bool) add_option( self::LOCK_OPTION, time(), '', 'no' );
+	}
+
+	private function has_pending_batch() {
+		if ( ! function_exists( 'as_get_scheduled_actions' ) ) {
+			return false;
+		}
+
+		$pending = as_get_scheduled_actions(
+			array(
+				'hook'     => self::HOOK,
+				'group'    => self::GROUP,
+				'status'   => ActionScheduler_Store::STATUS_PENDING,
+				'per_page' => 1,
+			),
+			'ids'
+		);
+
+		return ! empty( $pending );
 	}
 
 	/**
@@ -136,6 +171,7 @@ class Andreani_Tracking_Sync {
 		$shipments = Andreani_Shipments_Api::get_instance()->lookup_shipments( $order_ids );
 		if ( is_wp_error( $shipments ) ) {
 			Andreani_Utils::andreani_log( '[TRACKING_SYNC] lookup fallo: ' . $shipments->get_error_message(), 'warning' );
+			set_transient( self::BACKOFF_TRANSIENT, 1, self::BACKOFF_TTL );
 			return;
 		}
 
@@ -158,7 +194,7 @@ class Andreani_Tracking_Sync {
 
 		// Lote lleno => probablemente queda mas cola. El proximo lote se encadena con un delay
 		// (no async inmediato): con cola grande el sync avanza mas lento pero no satura la DB.
-		if ( count( $order_ids ) >= self::BATCH && function_exists( 'as_schedule_single_action' ) ) {
+		if ( count( $order_ids ) >= self::BATCH && function_exists( 'as_schedule_single_action' ) && ! $this->has_pending_batch() ) {
 			as_schedule_single_action( time() + self::CHAIN_DELAY, self::HOOK, array(), self::GROUP );
 		}
 	}
@@ -179,7 +215,10 @@ class Andreani_Tracking_Sync {
 		global $wpdb;
 
 		// Identificadores de tabla/columna de este whitelist, nunca de input => interpolarlos es seguro.
-		if ( Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled() ) {
+		$hpos = class_exists( 'Automattic\WooCommerce\Utilities\OrderUtil' )
+			&& Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled();
+
+		if ( $hpos ) {
 			$orders   = "{$wpdb->prefix}wc_orders";
 			$meta     = "{$wpdb->prefix}wc_orders_meta";
 			$id_col   = 'id';
@@ -198,12 +237,14 @@ class Andreani_Tracking_Sync {
 		$sql = $wpdb->prepare(
 			"SELECT o.{$id_col} FROM {$orders} o
 			 WHERE o.{$type_col} = 'shop_order'
+			   AND o.{$date_col} >= %s
 			   AND EXISTS     (SELECT 1 FROM {$meta} mc  WHERE mc.{$fk_col}  = o.{$id_col} AND mc.meta_key  = '_order_andreani_created' AND mc.meta_value = '1')
 			   AND NOT EXISTS (SELECT 1 FROM {$meta} md  WHERE md.{$fk_col}  = o.{$id_col} AND md.meta_key  = %s)
 			   AND ( NOT EXISTS (SELECT 1 FROM {$meta} mn  WHERE mn.{$fk_col}  = o.{$id_col} AND mn.meta_key  = %s)
 			         OR EXISTS  (SELECT 1 FROM {$meta} mn2 WHERE mn2.{$fk_col} = o.{$id_col} AND mn2.meta_key = %s AND CAST(mn2.meta_value AS UNSIGNED) <= %d) )
 			 ORDER BY o.{$date_col} ASC
 			 LIMIT %d",
+			gmdate( 'Y-m-d H:i:s', time() - self::ABANDON_AFTER ),
 			self::DONE_META,
 			self::NEXT_META,
 			self::NEXT_META,

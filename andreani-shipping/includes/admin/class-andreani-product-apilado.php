@@ -59,7 +59,7 @@ class Andreani_Product_Apilado {
 
 		if ( empty( $config ) ) {
 			$product = wc_get_product( $product_id );
-			if ( $product && $product->is_type( 'variation' ) ) {
+			if ( $product && Andreani_Product_Bultos::inherits_from_parent( $product ) ) {
 				$config = self::read_config( $product->get_parent_id() );
 			}
 		}
@@ -118,7 +118,7 @@ class Andreani_Product_Apilado {
 			: '';
 
 		if ( ! class_exists( 'Andreani_Product_Bultos' ) || Andreani_Product_Bultos::MODE_APILADO !== $mode ) {
-			if ( class_exists( 'Andreani_Product_Bultos' ) && Andreani_Product_Bultos::MODE_MULTIBULTO === $mode && empty( Andreani_Product_Bultos::posted_pieces() ) ) {
+			if ( class_exists( 'Andreani_Product_Bultos' ) && Andreani_Product_Bultos::MODE_MULTIBULTO === $mode && ! Andreani_Product_Bultos::posted_pieces_are_valid() ) {
 				return;
 			}
 

@@ -108,3 +108,63 @@
 	border-right-color: var(--andr-color-brand);
 	background: var(--andr-color-brand-subtle);
 }
+
+/* Solapas de línea (Configuración y panel de producto) */
+
+.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item,
+.andreani-detail__tabs > .andr-tabs__list .andr-tabs__item,
+.andr-pem__bar .andr-tabs__list .andr-tabs__item {
+	flex: 0 0 auto;
+	justify-content: flex-start;
+	gap: var(--andr-sp-2);
+	min-width: 0;
+	min-height: var(--andr-tab-h);
+	margin: 0;
+	padding: 0 var(--andr-tab-inset);
+	font-size: var(--andr-text-md);
+	line-height: 1;
+	color: var(--andr-gray-500);
+	border: 0;
+	border-radius: var(--andr-radius-sm) var(--andr-radius-sm) 0 0;
+	position: relative;
+}
+
+.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item span,
+.andreani-detail__tabs > .andr-tabs__list .andr-tabs__item span,
+.andr-pem__bar .andr-tabs__list .andr-tabs__item span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item svg,
+.andreani-detail__tabs > .andr-tabs__list .andr-tabs__item svg,
+.andr-pem__bar .andr-tabs__list .andr-tabs__item svg {
+	width: 18px;
+	height: 18px;
+	color: var(--andr-gray-400);
+}
+
+.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item:hover,
+.andreani-detail__tabs > .andr-tabs__list .andr-tabs__item:hover,
+.andr-pem__bar .andr-tabs__list .andr-tabs__item:hover {
+	background: var(--andr-color-surface-hover);
+	color: var(--andr-gray-700);
+}
+
+.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item--active,
+.andreani-detail__tabs > .andr-tabs__list .andr-tabs__item--active,
+.andr-pem__bar .andr-tabs__list .andr-tabs__item--active,
+.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item--active:hover,
+.andreani-detail__tabs > .andr-tabs__list .andr-tabs__item--active:hover,
+.andr-pem__bar .andr-tabs__list .andr-tabs__item--active:hover {
+	color: var(--andr-gray-800);
+	background: transparent;
+	box-shadow: inset 0 -3px 0 var(--andr-color-brand);
+}
+
+.andreani-settings-wrapper > .andr-tabs > .andr-tabs__list .andr-tabs__item--active svg,
+.andreani-detail__tabs > .andr-tabs__list .andr-tabs__item--active svg,
+.andr-pem__bar .andr-tabs__list .andr-tabs__item--active svg {
+	color: var(--andr-color-brand);
+}

@@ -1,337 +1,57 @@
 /**
- * Vista: Panel de modo de despacho en la ficha de producto. Radios + repeater
- * dentro de #woocommerce-product-data.
- * Scope estricto en `.andreani-despacho-section` para evitar leaks al admin de WC
- * y otros plugins.
- * Depende de: andreani-core-variables
+ * Vista: bloque de Andreani en el tab Envío de la ficha de producto.
+ * Los estilos del bloque viven en components/dispatch.css; acá solo se anulan las
+ * reglas de WooCommerce que pisan labels e inputs dentro de #woocommerce-product-data.
+ * Depende de: andreani-component-dispatch
  */
 
-#woocommerce-product-data .andreani-despacho-section {
-	padding: var(--andr-sp-2) var(--andr-sp-3) !important;
-	border-top: 1px solid var(--andr-color-border);
-	margin-top: var(--andr-sp-2);
+#woocommerce-product-data .andr-dispatch {
+	margin: var(--andr-sp-3);
 }
 
-.andreani-despacho-section .andreani-despacho-status {
-	display: inline-block;
-	margin: 0;
-	padding: 2px var(--andr-sp-2);
-	border-radius: 999px;
-	font-size: var(--andr-text-xs);
-	font-weight: var(--andr-fw-semibold);
-	line-height: 1.5;
-	background: var(--andr-color-surface-muted);
-	color: var(--andr-color-text-subtle);
+#woocommerce-product-data .andr-dispatch .andr-dispatch__toggle {
+	min-height: 0;
+	line-height: inherit;
+	box-shadow: none;
 }
 
-.andreani-despacho-section .andreani-despacho-status--bigger {
-	background: var(--andr-color-success-subtle);
-	color: var(--andr-color-success-strong);
-}
-
-.andreani-despacho-section .andreani-despacho-header {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	margin: 0 0 var(--andr-sp-2);
-	gap: var(--andr-sp-2) var(--andr-sp-3);
-}
-
-.andreani-despacho-section .andreani-despacho-title {
-	display: inline-flex;
-	align-items: center;
-	gap: var(--andr-sp-2);
-	font-family: var(--andr-font-display);
-	font-weight: var(--andr-fw-semibold);
-	font-size: var(--andr-text-md);
-	color: var(--andr-color-text-strong);
-}
-
-.andreani-despacho-section .andreani-despacho-logo {
-	height: 22px;
-	width: 22px;
-	display: inline-block;
-	flex-shrink: 0;
-}
-
-.andreani-despacho-section .andreani-despacho-options {
-	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
-	gap: var(--andr-sp-2);
-	margin: 0 0 var(--andr-sp-3);
-}
-
-@media (max-width: 960px) {
-	.andreani-despacho-section .andreani-despacho-options {
-		grid-template-columns: 1fr;
-	}
-}
-
-.woocommerce_options_panel .andreani-despacho-section .andreani-despacho-option {
-	display: flex !important;
-	align-items: flex-start;
-	gap: var(--andr-sp-2);
-	float: none !important;
-	width: auto !important;
-	margin: 0 !important;
-	padding: var(--andr-sp-2) var(--andr-sp-3);
-	background: var(--andr-color-surface-subtle);
-	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-xs);
-	cursor: pointer;
-}
-
-.woocommerce_options_panel .andreani-despacho-section .andreani-despacho-option:has(.andreani-despacho-option__input:checked) {
-	border-color: var(--andr-color-brand);
-	background: var(--andr-red-50);
-}
-
-.woocommerce_options_panel .andreani-despacho-section .andreani-despacho-option__input {
-	width: auto !important;
-	float: none !important;
-	margin: 3px 0 0 !important;
-	flex-shrink: 0;
-}
-
-.andreani-despacho-section .andreani-despacho-option__copy {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-}
-
-.andreani-despacho-section .andreani-despacho-option__title {
-	font-weight: var(--andr-fw-semibold);
-	font-size: var(--andr-text-base);
-	color: var(--andr-color-text);
-}
-
-.andreani-despacho-section .andreani-despacho-option__desc {
-	font-size: var(--andr-text-sm);
-	color: var(--andr-color-text-subtle);
-	line-height: 1.45;
-}
-
-#woocommerce-product-data .andreani-despacho-panel {
-	display: none;
-}
-
-#woocommerce-product-data .andreani-despacho-panel.active {
-	display: block;
-}
-
-.andreani-despacho-section .andreani-bultos-warning {
-	background: var(--andr-color-warning-subtle);
-	color: var(--andr-color-warning-strong);
-	padding: var(--andr-sp-2) var(--andr-sp-3);
-	border-radius: var(--andr-radius-xs);
-	font-size: var(--andr-text-sm);
-	line-height: 1.45;
-	margin: 0 0 var(--andr-sp-3);
-}
-
-#woocommerce-product-data .andreani-despacho-section .andreani-bulto-row {
-	display: flex;
-	align-items: flex-end;
-	flex-wrap: wrap;
-	gap: var(--andr-sp-2);
-	margin-bottom: var(--andr-sp-2);
-	padding: var(--andr-sp-2);
-	background: var(--andr-color-surface-subtle);
-	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-xs);
-}
-
-#woocommerce-product-data .andreani-despacho-section .andreani-bulto-row label {
-	display: flex;
-	flex-direction: column;
-	font-size: var(--andr-text-sm);
-	color: var(--andr-color-text-subtle);
-	flex: 1;
+#woocommerce-product-data .andr-dispatch label {
 	float: none;
 	width: auto;
 	margin: 0;
 	padding: 0;
 }
 
-#woocommerce-product-data .andreani-despacho-section .andreani-bulto-row input[type="number"],
-#woocommerce-product-data .andreani-despacho-section .andreani-bulto-row input[type="text"] {
-	width: 100% !important;
-	margin-top: 2px;
+#woocommerce-product-data .andr-dispatch .andr-seg__option {
+	padding: var(--andr-sp-1);
+}
+
+#woocommerce-product-data .andr-dispatch input[type="number"],
+#woocommerce-product-data .andr-dispatch input[type="text"] {
 	float: none;
+	width: 100%;
 	min-height: 0;
-}
-
-#woocommerce-product-data .andreani-despacho-section .andreani-bulto-row__name {
-	flex: 2;
-}
-
-#woocommerce-product-data .andreani-despacho-section .andreani-bulto-label {
-	font-weight: var(--andr-fw-semibold);
-	font-size: var(--andr-text-sm);
-	min-width: 55px;
-	color: var(--andr-color-text);
-	align-self: center;
-}
-
-#woocommerce-product-data .andreani-despacho-section .andreani-bulto-warning {
-	flex: 1 0 100%;
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: var(--andr-sp-2);
-	margin-top: var(--andr-sp-1);
-	padding: var(--andr-sp-2) var(--andr-sp-3);
-	background: var(--andr-color-warning-subtle);
-	color: var(--andr-color-warning-strong);
-	border-radius: var(--andr-radius-xs);
-	font-size: var(--andr-text-sm);
-	line-height: 1.45;
-}
-
-#woocommerce-product-data .andreani-despacho-section .andreani-bulto-warning__text {
-	flex: 1 1 260px;
-}
-
-#woocommerce-product-data .andreani-despacho-section .andreani-remove-bulto {
-	color: var(--andr-color-error-strong) !important;
-	border-color: var(--andr-color-error-strong) !important;
-	font-size: var(--andr-text-lg);
-	line-height: 1;
-	padding: 2px var(--andr-sp-2) !important;
-	min-height: 28px;
-	cursor: pointer;
-	flex-shrink: 0;
-	transition: background-color var(--andr-transition-fast), color var(--andr-transition-fast);
-}
-
-#woocommerce-product-data .andreani-despacho-section .andreani-remove-bulto:hover {
-	background: var(--andr-color-error-strong) !important;
-	color: var(--andr-color-text-inverse) !important;
-}
-
-#woocommerce-product-data .andreani-despacho-section #andreani-add-bulto {
-	margin-top: var(--andr-sp-2);
-}
-
-/* --- Apilado: campos dentro del panel del modo "varias unidades viajan juntas" --- */
-
-.andreani-despacho-section .andreani-apilado-help {
-	font-size: var(--andr-text-xs);
-	color: var(--andr-color-text-subtle);
-	background: var(--andr-color-surface-muted);
-	padding: var(--andr-sp-2) var(--andr-sp-3);
-	border-radius: var(--andr-radius-xs);
-	margin: 0 0 var(--andr-sp-2);
-	line-height: 1.45;
-}
-
-.andreani-despacho-section .andreani-apilado-help--warn {
-	background: var(--andr-color-warning-subtle);
-	color: var(--andr-color-warning-strong);
-	padding: var(--andr-sp-2) var(--andr-sp-3);
-	border-radius: var(--andr-radius-xs);
-	margin: var(--andr-sp-2) 0 0;
-}
-
-.andreani-despacho-section .andreani-apilado-fields {
-	display: flex;
-	align-items: flex-end;
-	flex-wrap: wrap;
-	gap: var(--andr-sp-2);
-	padding: var(--andr-sp-2);
-	background: var(--andr-color-surface-subtle);
-	border: 1px solid var(--andr-color-border);
-	border-radius: var(--andr-radius-xs);
-}
-
-.woocommerce_options_panel .andreani-despacho-section .andreani-apilado-fields label {
-	display: flex;
-	flex-direction: column;
-	font-size: var(--andr-text-sm);
-	color: var(--andr-color-text-subtle);
-	flex: 1 1 120px;
-	float: none;
-	width: auto;
 	margin: 0;
-	padding: 0;
 }
 
-.woocommerce_options_panel .andreani-despacho-section .andreani-apilado-fields input[type="number"] {
-	width: 100% !important;
-	margin-top: 2px;
+#woocommerce-product-data .andr-dispatch input[type="range"] {
 	float: none;
-	min-height: 0;
-}
-
-
-.andreani-despacho-section .andreani-despacho-preview {
-	margin-top: var(--andr-sp-3);
-	padding-top: var(--andr-sp-3);
-	border-top: 1px solid var(--andr-color-border);
-}
-
-.andreani-despacho-section .andreani-despacho-preview__toggle {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
 	width: 100%;
-	padding: 0;
-	border: 0;
-	background: none;
-	cursor: pointer;
-	text-align: left;
 }
 
-.andreani-despacho-section .andreani-despacho-preview__toggle:focus-visible {
-	outline: 2px solid var(--andr-color-brand);
-	outline-offset: 2px;
+#woocommerce-product-data .andr-dispatch input[type="number"].andr-stack__input {
+	width: 72px;
 }
 
-.andreani-despacho-section .andreani-despacho-preview__chevron {
-	width: 16px;
-	height: 16px;
-	color: var(--andr-color-text-subtle);
-	transition: transform var(--andr-transition-fast);
+#woocommerce-product-data .andr-dispatch .andr-dispatch__qty .andr-dispatch__qty-input[type="number"] {
+	flex: none;
+	width: 64px;
+	height: var(--andr-control-h-sm);
+	min-height: var(--andr-control-h-sm);
+	padding: 0 var(--andr-sp-2);
+	border-radius: var(--andr-radius-button);
 }
 
-.andreani-despacho-section .andreani-despacho-preview__toggle[aria-expanded="true"] .andreani-despacho-preview__chevron {
-	transform: rotate(180deg);
-}
-
-.andreani-despacho-section .andreani-despacho-preview__title {
-	display: block;
-	font-weight: 600;
-	color: var(--andr-color-text);
-}
-
-.andreani-despacho-section .andreani-despacho-preview__help,
-.andreani-despacho-section .andreani-despacho-preview__message {
-	font-size: var(--andr-text-sm);
-	color: var(--andr-color-text-subtle);
-	margin: var(--andr-sp-1) 0 var(--andr-sp-2);
-	line-height: 1.45;
-}
-
-.andreani-despacho-section .andreani-despacho-preview__table {
-	width: 100%;
-	border-collapse: collapse;
-	font-size: var(--andr-text-sm);
-}
-
-.andreani-despacho-section .andreani-despacho-preview__table th,
-.andreani-despacho-section .andreani-despacho-preview__table td {
-	padding: var(--andr-sp-1) var(--andr-sp-2);
-	border-bottom: 1px solid var(--andr-color-border);
-	text-align: left;
-	vertical-align: top;
-}
-
-.andreani-despacho-section .andreani-despacho-preview__table th {
-	color: var(--andr-color-text-subtle);
-	font-weight: 600;
-}
-
-.andreani-despacho-section .andreani-despacho-preview__cell--charged {
-	font-weight: 600;
-	color: var(--andr-color-brand);
+#woocommerce-product-data .andr-dispatch .andr-seg__input {
+	width: auto;
 }

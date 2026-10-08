@@ -43,6 +43,7 @@ class Andreani_Plugin {
             'includes/cotizador/class-andreani-cotizador-widget.php',
             'includes/admin/class-andreani-product-bultos.php',
             'includes/admin/class-andreani-product-apilado.php',
+            'includes/admin/class-andreani-products-stats.php',
         );
 
         foreach ( $files as $file ) {
@@ -58,12 +59,14 @@ class Andreani_Plugin {
             $admin_files = array(
                 'includes/admin/class-andreani-admin-menu.php',
                 'includes/admin/class-andreani-shipment-detail-view.php',
+                'includes/admin/class-andreani-order-packing.php',
                 'includes/admin/class-andreani-shipments-list.php',
                 'includes/admin/class-andreani-products-list.php',
                 'includes/admin/class-andreani-shipments-hydrator.php',
                 'includes/admin/class-andreani-order-metabox.php',
                 'includes/admin/class-andreani-ajax-handler.php',
                 'includes/admin/class-andreani-origen-ajax.php',
+                'includes/admin/class-andreani-admin-loader.php',
                 'includes/admin/class-andreani-admin-assets.php',
             );
 
@@ -162,6 +165,10 @@ class Andreani_Plugin {
 
         $this->init_frontend_classes();
         $this->init_admin_classes();
+
+        if ( class_exists( 'Andreani_Products_Stats' ) ) {
+            Andreani_Products_Stats::register();
+        }
 
         // Sincronizacion de tracking en segundo plano (Action Scheduler). Incondicional:
         // su handler debe estar enganchado en cualquier contexto donde corra la accion.

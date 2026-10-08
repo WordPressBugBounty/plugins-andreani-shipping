@@ -16,11 +16,17 @@ $andreani_awaiting_label = $andreani_has_payment
 	? __( 'Por pagar', 'andreani-shipping' )
 	: __( 'Listos', 'andreani-shipping' );
 $andreani_awaiting_count = $andreani_has_payment ? $andreani_stats['awaiting'] : $andreani_stats['ready'];
-$andreani_sync_enabled   = ! class_exists( 'Andreani_Tracking_Sync' ) || Andreani_Tracking_Sync::is_enabled();
 ?>
 <div class="wrap andreani-shipments-wrap" data-async-load="true">
 
 	<hr class="wp-header-end">
+
+	<div class="andreani-page-card">
+		<?php
+		$andreani_page_title = __( 'Ver mis envíos', 'andreani-shipping' );
+		require ANDREANI_PLUGIN_DIR . 'includes/admin/views/page-card-header.php';
+		?>
+		<div class="andreani-page-card__body">
 
 	<form method="get" id="andreani-shipments-form">
 		<input type="hidden" name="page" value="<?php echo esc_attr( Andreani_Admin_Menu::MENU_SLUG ); ?>" />
@@ -59,11 +65,11 @@ $andreani_sync_enabled   = ! class_exists( 'Andreani_Tracking_Sync' ) || Andrean
 								<div class="andreani-date-range" role="group" aria-label="<?php esc_attr_e( 'Rango personalizado', 'andreani-shipping' ); ?>">
 									<label class="andreani-date-range__field">
 										<span class="andreani-date-range__label"><?php esc_html_e( 'Desde', 'andreani-shipping' ); ?></span>
-										<input type="date" name="andreani_date_from" class="andreani-date-range__input" value="" aria-label="<?php esc_attr_e( 'Fecha desde', 'andreani-shipping' ); ?>" />
+										<input type="date" lang="es-AR" name="andreani_date_from" class="andreani-date-range__input" value="" aria-label="<?php esc_attr_e( 'Fecha desde', 'andreani-shipping' ); ?>" />
 									</label>
 									<label class="andreani-date-range__field">
 										<span class="andreani-date-range__label"><?php esc_html_e( 'Hasta', 'andreani-shipping' ); ?></span>
-										<input type="date" name="andreani_date_to" class="andreani-date-range__input" value="" aria-label="<?php esc_attr_e( 'Fecha hasta', 'andreani-shipping' ); ?>" />
+										<input type="date" lang="es-AR" name="andreani_date_to" class="andreani-date-range__input" value="" aria-label="<?php esc_attr_e( 'Fecha hasta', 'andreani-shipping' ); ?>" />
 									</label>
 								</div>
 							</div>
@@ -96,18 +102,6 @@ $andreani_sync_enabled   = ! class_exists( 'Andreani_Tracking_Sync' ) || Andrean
 			</div>
 
 			<div class="andreani-toolbar__utils">
-				<span class="andreani-sync-pill" title="<?php esc_attr_e( 'Actualiza el estado de los envíos automáticamente en segundo plano', 'andreani-shipping' ); ?>">
-					<span class="andreani-sync-pill__label"><?php esc_html_e( 'Seguimiento automático', 'andreani-shipping' ); ?></span>
-					<label class="andreani-sync-switch">
-						<input type="checkbox" role="switch"
-							id="andreani-tracking-sync-toggle"
-							class="andreani-sync-switch__input"
-							<?php checked( $andreani_sync_enabled ); ?>
-							aria-checked="<?php echo $andreani_sync_enabled ? 'true' : 'false'; ?>"
-							aria-label="<?php esc_attr_e( 'Seguimiento automático de envíos', 'andreani-shipping' ); ?>" />
-						<span class="andreani-sync-switch__slider"></span>
-					</label>
-				</span>
 				<button type="button"
 					class="andreani-icon-btn andreani-icon-btn--bordered"
 					id="andreani-print-settings-trigger"
@@ -150,20 +144,7 @@ $andreani_sync_enabled   = ! class_exists( 'Andreani_Tracking_Sync' ) || Andrean
 		</div>
 
 		<div id="andreani-table-container">
-			<div class="andreani-table-loader">
-				<div class="andreani-table-loader__spinner">
-					<svg class="andreani-table-loader__logo andreani-table-loader__logo--bg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 341 341" style="color: var(--andr-color-border-strong);">
-						<g transform="translate(0,341) scale(0.1,-0.1)" fill="currentColor">
-							<path d="M1852 2575 c-35 -8 -75 -16 -90 -18 -87 -14 -331 -87 -407 -122 -190 -87 -263 -126 -368 -197 -318 -214 -521 -466 -571 -711 -29 -137 -18 -233 40 -352 73 -154 253 -283 470 -340 150 -39 469 -43 674 -9 459 77 963 364 1209 687 244 321 252 631 22 854 -41 40 -78 73 -83 73 -5 0 -26 11 -47 25 -48 32 -176 82 -261 101 -96 22 -504 29 -588 9z m498 -95 c215 -32 400 -150 477 -308 36 -73 38 -80 38 -176 0 -56 -6 -123 -14 -151 -37 -132 -133 -277 -274 -411 -87 -84 -127 -110 -150 -101 -16 6 -37 71 -92 282 -111 431 -180 661 -204 689 -21 24 -59 43 -101 51 -46 8 -56 -3 -161 -180 -180 -306 -670 -1077 -712 -1122 -27 -30 -81 -30 -150 -1 -186 78 -299 217 -320 393 -9 70 -7 91 11 163 62 243 254 463 567 647 52 30 96 55 99 55 2 0 34 14 69 30 36 17 69 30 74 30 4 0 20 6 35 14 42 22 201 66 333 92 104 21 140 23 265 19 80 -3 174 -9 210 -15z m-428 -573 c29 -118 76 -320 82 -354 l6 -33 -195 0 c-107 0 -195 3 -195 7 0 14 274 462 280 457 3 -3 13 -38 22 -77z m-26 -516 l150 -1 17 -72 c38 -172 33 -193 -56 -233 -67 -29 -248 -74 -362 -91 -22 -3 -51 -7 -64 -9 -61 -10 -192 -17 -215 -11 -51 13 -51 38 -1 134 25 48 72 130 103 182 l57 95 65 5 c36 3 85 4 110 4 25 -1 113 -2 196 -3z"/>
-						</g>
-					</svg>
-					<svg class="andreani-table-loader__logo andreani-table-loader__logo--fill" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 341 341" style="color: var(--andr-color-brand);">
-						<g transform="translate(0,341) scale(0.1,-0.1)" fill="currentColor">
-							<path d="M1852 2575 c-35 -8 -75 -16 -90 -18 -87 -14 -331 -87 -407 -122 -190 -87 -263 -126 -368 -197 -318 -214 -521 -466 -571 -711 -29 -137 -18 -233 40 -352 73 -154 253 -283 470 -340 150 -39 469 -43 674 -9 459 77 963 364 1209 687 244 321 252 631 22 854 -41 40 -78 73 -83 73 -5 0 -26 11 -47 25 -48 32 -176 82 -261 101 -96 22 -504 29 -588 9z m498 -95 c215 -32 400 -150 477 -308 36 -73 38 -80 38 -176 0 -56 -6 -123 -14 -151 -37 -132 -133 -277 -274 -411 -87 -84 -127 -110 -150 -101 -16 6 -37 71 -92 282 -111 431 -180 661 -204 689 -21 24 -59 43 -101 51 -46 8 -56 -3 -161 -180 -180 -306 -670 -1077 -712 -1122 -27 -30 -81 -30 -150 -1 -186 78 -299 217 -320 393 -9 70 -7 91 11 163 62 243 254 463 567 647 52 30 96 55 99 55 2 0 34 14 69 30 36 17 69 30 74 30 4 0 20 6 35 14 42 22 201 66 333 92 104 21 140 23 265 19 80 -3 174 -9 210 -15z m-428 -573 c29 -118 76 -320 82 -354 l6 -33 -195 0 c-107 0 -195 3 -195 7 0 14 274 462 280 457 3 -3 13 -38 22 -77z m-26 -516 l150 -1 17 -72 c38 -172 33 -193 -56 -233 -67 -29 -248 -74 -362 -91 -22 -3 -51 -7 -64 -9 -61 -10 -192 -17 -215 -11 -51 13 -51 38 -1 134 25 48 72 130 103 182 l57 95 65 5 c36 3 85 4 110 4 25 -1 113 -2 196 -3z"/>
-						</g>
-					</svg>
-				</div>
-			</div>
+			<?php Andreani_Admin_Loader::render( '', Andreani_Admin_Loader::SIZE_LG, Andreani_Admin_Loader::shipments_phrases() ); ?>
 		</div>
 
 		<?php $current_per_page = Andreani_Shipments_List::resolve_per_page(); ?>
@@ -179,6 +160,8 @@ $andreani_sync_enabled   = ! class_exists( 'Andreani_Tracking_Sync' ) || Andrean
 			<?php endforeach; ?>
 		</div>
 	</form>
+		</div>
+	</div>
 </div>
 
 <div id="andreani-error-modal" class="andr-modal andreani-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="andreani-error-modal-title">
@@ -213,7 +196,7 @@ $andreani_sync_enabled   = ! class_exists( 'Andreani_Tracking_Sync' ) || Andrean
 <div id="andreani-bulk-bar" class="andreani-bulk-bar" role="region" aria-label="<?php esc_attr_e( 'Acciones sobre los envíos seleccionados', 'andreani-shipping' ); ?>" hidden>
 	<span class="andreani-bulk-bar__count">
 		<strong id="andreani-bulk-bar-count">0</strong>
-		<span><?php esc_html_e( 'envíos seleccionados', 'andreani-shipping' ); ?></span>
+		<span id="andreani-bulk-bar-label" data-one="<?php echo esc_attr__( 'envío seleccionado', 'andreani-shipping' ); ?>" data-many="<?php echo esc_attr__( 'envíos seleccionados', 'andreani-shipping' ); ?>"><?php esc_html_e( 'envíos seleccionados', 'andreani-shipping' ); ?></span>
 	</span>
 	<div class="andreani-bulk-bar__actions" id="andreani-bulk-bar-actions">
 		<!-- Acciones contextuales renderizadas por AndreaniBulkBar.renderActions()

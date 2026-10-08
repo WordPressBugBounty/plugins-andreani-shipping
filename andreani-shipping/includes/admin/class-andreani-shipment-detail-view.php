@@ -100,7 +100,7 @@ class Andreani_Shipment_Detail_View {
 			$w = (float) $product->get_width();
 			$h = (float) $product->get_height();
 			$dims = ( $l > 0 && $w > 0 && $h > 0 )
-				? sprintf( '%s×%s×%s %s', self::format_number( $l ), self::format_number( $w ), self::format_number( $h ), $dim_unit )
+				? sprintf( '%s × %s × %s %s', self::format_number( $l ), self::format_number( $w ), self::format_number( $h ), $dim_unit )
 				: '';
 
 			$line_total = (float) $item->get_total();
@@ -240,6 +240,8 @@ class Andreani_Shipment_Detail_View {
 		$icon_package  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
 		$icon_scale    = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>';
 		$icon_file     = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>';
+		$icon_summary  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>';
+		$icon_tracking = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>';
 		$icon_chevron  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
 
 		$html  = '<div class="andreani-detail" data-order-id="' . esc_attr( $order_id ) . '">';
@@ -284,6 +286,8 @@ class Andreani_Shipment_Detail_View {
 
 		$tracking_updated_iso   = ( is_array( $hydrated_item ) && ! empty( $hydrated_item['tracking_updated_at'] ) ) ? (string) $hydrated_item['tracking_updated_at'] : '';
 		$tracking_updated_short = '' !== $tracking_updated_iso ? date_i18n( 'd/m/Y', strtotime( $tracking_updated_iso ) ) : '';
+
+		$timeline_html = '';
 
 		$tracking_status = ( is_array( $hydrated_item ) && ! empty( $hydrated_item['tracking_status'] ) )
 			? (string) $hydrated_item['tracking_status']
@@ -341,24 +345,24 @@ class Andreani_Shipment_Detail_View {
 				);
 			}
 
-			$html .= '<section class="andreani-detail__timeline" aria-label="' . esc_attr__( 'Seguimiento del envío', 'andreani-shipping' ) . '">';
-			$html .=   '<h4 class="andreani-detail__section-title andreani-detail__timeline-title">';
-			$html .=     '<span class="andreani-detail__timeline-title-label">' . esc_html__( 'Seguimiento envío Nº:', 'andreani-shipping' ) . '</span>';
-			$html .=     '<span class="andreani-detail__timeline-title-value andreani-copy-click" data-copy-text="' . esc_attr( $display_tracking ) . '" title="' . esc_attr__( 'Click para copiar', 'andreani-shipping' ) . '" role="button" tabindex="0">' . esc_html( $display_tracking ) . '</span>';
-			$html .=   '</h4>';
-			$html .=   '<ol class="andreani-detail__steps">';
+			$timeline_html .= '<section class="andreani-detail__timeline" aria-label="' . esc_attr__( 'Seguimiento del envío', 'andreani-shipping' ) . '">';
+			$timeline_html .=   '<h4 class="andreani-detail__section-title andreani-detail__timeline-title">';
+			$timeline_html .=     '<span class="andreani-detail__timeline-title-label">' . esc_html__( 'Seguimiento envío Nº:', 'andreani-shipping' ) . '</span>';
+			$timeline_html .=     '<span class="andreani-detail__timeline-title-value andreani-copy-click" data-copy-text="' . esc_attr( $display_tracking ) . '" title="' . esc_attr__( 'Click para copiar', 'andreani-shipping' ) . '" role="button" tabindex="0">' . esc_html( $display_tracking ) . '</span>';
+			$timeline_html .=   '</h4>';
+			$timeline_html .=   '<ol class="andreani-detail__steps">';
 			foreach ( $timeline_steps as $step ) {
 				$step_class = 'andreani-detail__step andreani-detail__step--' . $step['state'];
-				$html .= '<li class="' . esc_attr( $step_class ) . '">';
-				$html .=   '<span class="andreani-detail__step-marker" aria-hidden="true">' . $step['icon'] . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
-				$html .=   '<span class="andreani-detail__step-text">';
-				$html .=     '<span class="andreani-detail__step-label">' . esc_html( $step['label'] ) . '</span>';
-				$html .=     '<span class="andreani-detail__step-date">' . esc_html( $step['date'] ) . '</span>';
-				$html .=   '</span>';
-				$html .= '</li>';
+				$timeline_html .= '<li class="' . esc_attr( $step_class ) . '">';
+				$timeline_html .=   '<span class="andreani-detail__step-marker" aria-hidden="true">' . $step['icon'] . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
+				$timeline_html .=   '<span class="andreani-detail__step-text">';
+				$timeline_html .=     '<span class="andreani-detail__step-label">' . esc_html( $step['label'] ) . '</span>';
+				$timeline_html .=     '<span class="andreani-detail__step-date">' . esc_html( $step['date'] ) . '</span>';
+				$timeline_html .=   '</span>';
+				$timeline_html .= '</li>';
 			}
-			$html .=   '</ol>';
-			$html .= '</section>';
+			$timeline_html .=   '</ol>';
+			$timeline_html .= '</section>';
 		}
 
 		$html .= '<div class="andreani-detail__layout' . $layout_class . '">';
@@ -411,6 +415,14 @@ class Andreani_Shipment_Detail_View {
 
 		$html .= '<div class="andreani-detail__main">';
 
+		$html .= '<div class="andr-tabs andreani-detail__tabs">';
+		$html .=   '<nav class="andr-tabs__list" role="tablist">';
+		$html .=     '<button type="button" class="andr-tabs__item andr-tabs__item--active" data-tab="resumen" role="tab" aria-selected="true">' . $icon_summary . '<span>' . esc_html__( 'Resumen', 'andreani-shipping' ) . '</span></button>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
+		$html .=     '<button type="button" class="andr-tabs__item" data-tab="seguimiento" role="tab" aria-selected="false">' . $icon_tracking . '<span>' . esc_html__( 'Seguimiento', 'andreani-shipping' ) . '</span></button>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
+		$html .=     '<button type="button" class="andr-tabs__item" data-tab="armado" role="tab" aria-selected="false">' . $icon_package . '<span>' . esc_html__( 'Cómo armarlo', 'andreani-shipping' ) . '</span></button>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
+		$html .=   '</nav>';
+
+		$html .= '<div class="andr-tabs__panel andr-tabs__panel--active" data-panel="resumen" role="tabpanel">';
 		$html .= '<div class="andreani-detail__cards-grid">';
 
 		$html .= '<section class="andreani-detail__card">';
@@ -531,8 +543,21 @@ class Andreani_Shipment_Detail_View {
 		$html .=   '</dl>';
 		$html .= '</section>';
 
+		$html .= '</div>'; // .andreani-detail__cards-grid
+		$html .= '</div>'; // panel resumen
+
+		$html .= '<div class="andr-tabs__panel" data-panel="seguimiento" role="tabpanel">';
+		$html .= '' !== $timeline_html
+			? $timeline_html
+			: '<p class="andreani-detail__empty">' . esc_html__( 'Todavía no hay seguimiento para este envío.', 'andreani-shipping' ) . '</p>';
 		$html .= '</div>';
+
+		$html .= '<div class="andr-tabs__panel andreani-detail__packing" data-panel="armado" data-packing-order="' . esc_attr( $order_id ) . '" role="tabpanel">';
+		$html .=   '<div class="andr-packing" data-andr="packing-body"></div>';
 		$html .= '</div>';
+
+		$html .= '</div>'; // .andreani-detail__tabs
+		$html .= '</div>'; // .andreani-detail__main
 
 		$html .= '</div>'; // .andreani-detail__layout
 
@@ -542,16 +567,16 @@ class Andreani_Shipment_Detail_View {
 	}
 
 	/**
-	 * Formatea un número decimal sin ceros innecesarios a la derecha.
-	 * Ej: 1.0 → "1", 1.50 → "1.5", 250.00 → "250".
-	 * Util para dimensiones del producto donde "1×1×250" lee mejor que "1.00×1.00×250.00".
+	 * Formatea una medida en es-AR sin ceros a la derecha y con 2 cifras significativas
+	 * cuando es menor a 1, para que 0,001 no se redondee a 0.
 	 */
 	private static function format_number( $value ) {
 		$value = (float) $value;
 		if ( floor( $value ) === $value ) {
 			return (string) (int) $value;
 		}
-		return rtrim( rtrim( number_format( $value, 2, '.', '' ), '0' ), '.' );
+		$decimals = abs( $value ) < 1 ? min( 6, 1 - (int) floor( log10( abs( $value ) ) ) ) : 2;
+		return str_replace( '.', ',', rtrim( rtrim( number_format( $value, $decimals, '.', '' ), '0' ), '.' ) );
 	}
 
 	private static function render_recipient_card( $order, $is_editable, $customer_name, $phone, $email, $dni, $icons ) {
@@ -577,11 +602,10 @@ class Andreani_Shipment_Detail_View {
 				$html .= '<li class="andreani-detail__contact-row">' . $icons['user'] . '<span>' . esc_html( $customer_name ) . '</span></li>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
 			}
 			if ( ! empty( $phone ) ) {
-				$tel_href = 'tel:' . preg_replace( '/[^+\d]/', '', $phone );
-				$html .= '<li class="andreani-detail__contact-row">' . $icons['phone'] . '<a href="' . esc_url( $tel_href ) . '">' . esc_html( $phone ) . '</a></li>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
+				$html .= '<li class="andreani-detail__contact-row">' . $icons['phone'] . '<span class="andreani-copy-click" data-copy-text="' . esc_attr( $phone ) . '" title="' . esc_attr__( 'Click para copiar', 'andreani-shipping' ) . '" role="button" tabindex="0">' . esc_html( $phone ) . '</span></li>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
 			}
 			if ( ! empty( $email ) ) {
-				$html .= '<li class="andreani-detail__contact-row">' . $icons['mail'] . '<a href="' . esc_url( 'mailto:' . $email ) . '">' . esc_html( $email ) . '</a></li>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
+				$html .= '<li class="andreani-detail__contact-row">' . $icons['mail'] . '<span class="andreani-copy-click" data-copy-text="' . esc_attr( $email ) . '" title="' . esc_attr__( 'Click para copiar', 'andreani-shipping' ) . '" role="button" tabindex="0">' . esc_html( $email ) . '</span></li>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
 			}
 			if ( ! empty( $dni ) ) {
 				$html .= '<li class="andreani-detail__contact-row">' . $icons['idcard'] . '<span>' . esc_html( $dni ) . '</span></li>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
@@ -608,7 +632,7 @@ class Andreani_Shipment_Detail_View {
 			$html .= '<li class="andreani-detail__contact-row">' . $icons['user'] . '<span>' . esc_html( $customer_name ) . '</span></li>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
 		}
 		if ( ! empty( $email ) ) {
-			$html .= '<li class="andreani-detail__contact-row">' . $icons['mail'] . '<a href="' . esc_url( 'mailto:' . $email ) . '">' . esc_html( $email ) . '</a></li>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
+			$html .= '<li class="andreani-detail__contact-row">' . $icons['mail'] . '<span class="andreani-copy-click" data-copy-text="' . esc_attr( $email ) . '" title="' . esc_attr__( 'Click para copiar', 'andreani-shipping' ) . '" role="button" tabindex="0">' . esc_html( $email ) . '</span></li>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
 		}
 
 		$html .= '<li class="andreani-detail__contact-row andreani-recipient-form__row">';

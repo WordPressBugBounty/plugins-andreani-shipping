@@ -33,12 +33,18 @@ class Andreani_Shipments_List extends WP_List_Table {
 	const META_SHIPPING_STATUS = '_order_andreani_shipping_status';
 	const META_TRACKING_STATUS = '_order_andreani_tracking_status';
 
-	/**
-	 * Cuando la primera carga (sin filtros del user) trae 0 envíos hoy y
-	 * caemos al fallback de los N últimos, esta propiedad guarda la cantidad
-	 * para que el template muestre un banner discreto. 0 = sin fallback.
-	 */
-	public $fallback_recent_count = 0;
+
+	const RUNTIME_FILTER_WINDOW = 500;
+
+	const FILTER_TRACKING_LABELS = array(
+		'pending_entry' => 'Listo para enviar',
+		'in_transit'    => 'En camino',
+		'ready_pickup'  => 'Listo para retirar',
+		'delivered'     => 'Entregado',
+		'not_delivered' => 'No entregado',
+	);
+
+	public $runtime_truncated = false;
 
 	/**
 	 * True si el último hydrate() falló contra la API (timeout, 5xx, token
@@ -102,6 +108,7 @@ class Andreani_Shipments_List extends WP_List_Table {
 			'status'       => __( 'Estado', 'andreani-shipping' ),
 			'tracking'     => __( 'Seguimiento', 'andreani-shipping' ),
 			'actions'      => __( 'Acciones', 'andreani-shipping' ),
+			'expand'       => '',
 		);
 
 		return $columns;
@@ -156,15 +163,16 @@ class Andreani_Shipments_List extends WP_List_Table {
 			)
 			: '';
 
-		$chevron = '<svg class="andreani-order-number__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
-
 		return sprintf(
-			'<div class="andreani-order-number-wrap"><a href="%1$s" target="_blank" rel="noopener" class="andreani-order-number"><span class="andreani-order-number__hash">#</span><span class="andreani-order-number__num">%2$s</span></a>%3$s%4$s</div>',
+			'<div class="andreani-order-number-wrap"><a href="%1$s" target="_blank" rel="noopener" class="andreani-order-number"><span class="andreani-order-number__hash">#</span><span class="andreani-order-number__num">%2$s</span></a>%3$s</div>',
 			esc_url( $order_url ),
 			esc_html( $item['order_number'] ),
-			$type_caption,
-			$chevron // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
+			$type_caption
 		);
+	}
+
+	public function column_expand( $item ) {
+		return '<svg class="andreani-order-number__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
 	}
 
 	public function column_customer( $item ) {
@@ -174,7 +182,7 @@ class Andreani_Shipments_List extends WP_List_Table {
 		$meta_lines = array();
 
 		if ( '' !== $email ) {
-			$meta_lines[] = '<a href="mailto:' . esc_attr( $email ) . '" class="andreani-customer__email">' . esc_html( $email ) . '</a>';
+			$meta_lines[] = '<span class="andreani-customer__email andreani-copy-click" data-copy-text="' . esc_attr( $email ) . '" title="' . esc_attr__( 'Click para copiar', 'andreani-shipping' ) . '" role="button" tabindex="0">' . esc_html( $email ) . '</span>';
 		}
 
 		$meta = '';
@@ -449,6 +457,17 @@ class Andreani_Shipments_List extends WP_List_Table {
 		return '<div class="andreani-actions">' . implode( '', $actions ) . '</div>';
 	}
 
+	protected function pagination( $which ) {
+		if ( 'bottom' !== $which ) {
+			return;
+		}
+
+		$paged       = $this->get_pagenum();
+		$total_pages = (int) $this->get_pagination_arg( 'total_pages' );
+
+		require ANDREANI_PLUGIN_DIR . 'includes/admin/views/pagination.php';
+	}
+
 	public function no_items() {
 		esc_html_e( 'No se encontraron envios de Andreani.', 'andreani-shipping' );
 	}
@@ -523,23 +542,16 @@ class Andreani_Shipments_List extends WP_List_Table {
 	 * a una vista limpia.
 	 */
 	public function get_fallback_notice_html() {
-		if ( $this->fallback_recent_count <= 0 ) {
-			return '';
+		if ( $this->runtime_truncated ) {
+			return '<div class="andreani-fallback-notice" role="status">'
+				. '<span class="andreani-fallback-notice__text">' . esc_html( sprintf(
+					/* translators: %d: cantidad de envíos revisados */
+					__( 'Este filtro revisa tus últimos %d envíos. Para ir más atrás, elegí un rango de fechas.', 'andreani-shipping' ),
+					self::RUNTIME_FILTER_WINDOW
+				) ) . '</span></div>';
 		}
 
-		$message = sprintf(
-			/* translators: %d: cantidad de envíos mostrados en el fallback */
-			esc_html__( 'Sin envíos hoy. Mostrando los últimos %d.', 'andreani-shipping' ),
-			(int) $this->fallback_recent_count
-		);
-
-		return '<div class="andreani-fallback-notice" role="status" data-auto-dismiss="6000">'
-			. '<svg class="andreani-fallback-notice__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
-			. '<span class="andreani-fallback-notice__text">' . $message . '</span>'
-			. '<button type="button" class="andreani-fallback-notice__close" aria-label="' . esc_attr__( 'Cerrar', 'andreani-shipping' ) . '">'
-			. '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
-			. '</button>'
-			. '</div>';
+		return '';
 	}
 
 	public function single_row( $item ) {
@@ -580,7 +592,6 @@ class Andreani_Shipments_List extends WP_List_Table {
 		$data = $this->get_shipments_data( $args );
 
 		$this->items                 = $data['items'];
-		$this->fallback_recent_count = isset( $data['fallback_recent_count'] ) ? (int) $data['fallback_recent_count'] : 0;
 		$this->api_failure           = ! empty( $data['api_failure'] );
 
 		$this->set_pagination_args( array(
@@ -620,22 +631,53 @@ class Andreani_Shipments_List extends WP_List_Table {
 			$args['date_to'] = sanitize_text_field( wp_unslash( $_REQUEST['andreani_date_to'] ) );
 		}
 
-		// Default UX: si el merchant abre la grilla sin ningún filtro, mostramos
-		// solo los envíos de hoy. Si no hay, get_shipments_data hace fallback a
-		// los 15 más recientes. Solo se aplica a la página 1 para no sabotear
-		// la paginación cuando el merchant ya está navegando.
-		$has_user_filter = isset( $args['date_from'] )
-			|| isset( $args['date_to'] )
-			|| ! empty( $args['andreani_status'] )
-			|| ! empty( $args['client_type'] )
-			|| ! empty( $args['search'] );
+		return $args;
+	}
 
-		if ( ! $has_user_filter && 1 === $current_page ) {
-			$args['date_from']        = wp_date( 'Y-m-d' );
-			$args['is_default_today'] = true;
+	const SEARCH_LIMIT = 200;
+
+	private static function search_meta_keys() {
+		$keys = array( '_order_andreani_pedido_id' );
+		foreach ( Andreani_Client_Type::all() as $type ) {
+			if ( $type->supports_label_pdf() ) {
+				$keys[] = $type->tracking_meta_key();
+			}
+			if ( $type->supports_manual_tracking() && $type->manual_tracking_meta_key() ) {
+				$keys[] = $type->manual_tracking_meta_key();
+			}
+		}
+		$keys[] = '_order_andreani_tracking_number';
+
+		return array_values( array_unique( array_filter( $keys ) ) );
+	}
+
+	public static function search_order_ids( $search, $include_customer ) {
+		global $wpdb;
+
+		$t    = self::order_tables();
+		$keys = self::search_meta_keys();
+		$in   = implode( ', ', array_fill( 0, count( $keys ), '%s' ) );
+
+		$ids = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT {$t['fk_col']} FROM {$t['meta']} WHERE meta_key IN ({$in}) AND meta_value LIKE %s ORDER BY {$t['fk_col']} DESC LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				array_merge( $keys, array( '%' . $wpdb->esc_like( $search ) . '%', self::SEARCH_LIMIT ) )
+			)
+		);
+
+		if ( $include_customer ) {
+			$customer_ids = wc_get_orders(
+				array(
+					'type'   => 'shop_order',
+					's'      => $search,
+					'limit'  => self::SEARCH_LIMIT,
+					'return' => 'ids',
+				)
+			);
+			$ids = array_merge( $ids, is_array( $customer_ids ) ? $customer_ids : array() );
 		}
 
-		return $args;
+		return array_slice( array_values( array_unique( array_map( 'absint', $ids ) ) ), 0, self::SEARCH_LIMIT );
 	}
 
 	private static function order_tables() {
@@ -689,15 +731,40 @@ class Andreani_Shipments_List extends WP_List_Table {
 		) . self::andreani_exists_sql( "o.{$t['id_col']}" );
 	}
 
-	private static function meta_exists_sql( $meta_key, $value_sql = '', $value_args = array() ) {
+	private static function meta_exists_sql( $meta_key, $value_sql = '', $value_args = array(), $id_expr = null ) {
 		global $wpdb;
 
-		$t = self::order_tables();
+		$t       = self::order_tables();
+		$id_expr = null === $id_expr ? "o.{$t['id_col']}" : $id_expr;
 
 		return $wpdb->prepare(
-			"EXISTS (SELECT 1 FROM {$t['meta']} m WHERE m.{$t['fk_col']} = o.{$t['id_col']} AND m.meta_key = %s{$value_sql})",
+			"EXISTS (SELECT 1 FROM {$t['meta']} m WHERE m.{$t['fk_col']} = {$id_expr} AND m.meta_key = %s{$value_sql})",
 			array_merge( array( $meta_key ), $value_args )
 		);
+	}
+
+	public static function filter_scope_sql( array $scope, $id_expr ) {
+		$sql = '';
+
+		if ( isset( $scope['client_type'] ) ) {
+			$sql .= ' AND ' . self::meta_exists_sql( '_order_andreani_client_type', ' AND m.meta_value = %s', array( $scope['client_type'] ), $id_expr );
+		}
+
+		if ( ! isset( $scope['status'] ) ) {
+			return $sql;
+		}
+
+		if ( 'not_packaged' === $scope['status'] || 'error' === $scope['status'] ) {
+			$sql .= ' AND NOT ' . self::meta_exists_sql( '_order_andreani_created', ' AND m.meta_value = %s', array( '1' ), $id_expr );
+		}
+
+		if ( 'error' === $scope['status'] ) {
+			$sql .= ' AND ' . self::meta_exists_sql( '_andreani_last_error', " AND m.meta_value <> ''", array(), $id_expr );
+		} elseif ( isset( self::FILTER_TRACKING_LABELS[ $scope['status'] ] ) ) {
+			$sql .= ' AND ' . self::meta_exists_sql( self::META_TRACKING_STATUS, ' AND m.meta_value = %s', array( self::FILTER_TRACKING_LABELS[ $scope['status'] ] ), $id_expr );
+		}
+
+		return $sql;
 	}
 
 	private static function count_andreani_orders_sql( $where_sql = '' ) {
@@ -716,7 +783,10 @@ class Andreani_Shipments_List extends WP_List_Table {
 			return $where;
 		}
 
-		return $where . ' AND ' . self::andreani_exists_sql( "{$wpdb->posts}.ID" );
+		$scope = $query->get( 'andreani_filter' );
+
+		return $where . ' AND ' . self::andreani_exists_sql( "{$wpdb->posts}.ID" )
+			. ( is_array( $scope ) ? self::filter_scope_sql( $scope, "{$wpdb->posts}.ID" ) : '' );
 	}
 
 	public static function scope_orders_table_clauses( $clauses, $query, $args ) {
@@ -724,7 +794,10 @@ class Andreani_Shipments_List extends WP_List_Table {
 			return $clauses;
 		}
 
-		$clauses['where'] .= ' AND ' . self::andreani_exists_sql( $query->get_table_name( 'orders' ) . '.id' );
+		$orders_id = $query->get_table_name( 'orders' ) . '.id';
+
+		$clauses['where'] .= ' AND ' . self::andreani_exists_sql( $orders_id )
+			. ( isset( $args['andreani_filter'] ) && is_array( $args['andreani_filter'] ) ? self::filter_scope_sql( $args['andreani_filter'], $orders_id ) : '' );
 
 		return $clauses;
 	}
@@ -847,44 +920,18 @@ class Andreani_Shipments_List extends WP_List_Table {
 		delete_transient( 'andreani_detail_' . absint( $object_id ) );
 	}
 
-
-	public static function build_filter_meta_query( $client_type = '', $andreani_status = '' ) {
-		$conditions = array();
+	public static function build_filter_scope( $client_type = '', $andreani_status = '' ) {
+		$scope = array();
 
 		if ( ! empty( $client_type ) ) {
-			$conditions[] = array(
-				'key'   => '_order_andreani_client_type',
-				'value' => $client_type,
-			);
+			$scope['client_type'] = $client_type;
 		}
 
-		$tracking_map = array(
-			'pending_entry' => 'Listo para enviar',
-			'in_transit'    => 'En camino',
-			'ready_pickup'  => 'Listo para retirar',
-			'delivered'     => 'Entregado',
-			'not_delivered' => 'No entregado',
-		);
-
-		if ( 'not_packaged' === $andreani_status || 'error' === $andreani_status ) {
-			// Sin generar en Andreani (incluye los que fallaron).
-			$conditions[] = array(
-				'relation' => 'OR',
-				array( 'key' => '_order_andreani_created', 'compare' => 'NOT EXISTS' ),
-				array( 'key' => '_order_andreani_created', 'value' => '1', 'compare' => '!=' ),
-			);
-			if ( 'error' === $andreani_status ) {
-				$conditions[] = array( 'key' => '_andreani_last_error', 'compare' => 'EXISTS' );
-				$conditions[] = array( 'key' => '_andreani_last_error', 'value' => '', 'compare' => '!=' );
-			}
-		} elseif ( isset( $tracking_map[ $andreani_status ] ) ) {
-			$conditions[] = array(
-				'key'   => self::META_TRACKING_STATUS,
-				'value' => $tracking_map[ $andreani_status ],
-			);
+		if ( 'not_packaged' === $andreani_status || 'error' === $andreani_status || isset( self::FILTER_TRACKING_LABELS[ $andreani_status ] ) ) {
+			$scope['status'] = $andreani_status;
 		}
 
-		return $conditions;
+		return $scope;
 	}
 
 	private function get_shipments_data( $args ) {
@@ -895,8 +942,6 @@ class Andreani_Shipments_List extends WP_List_Table {
 			'andreani_only' => true,
 		);
 
-		$meta_conditions = array();
-
 		if ( ! empty( $args['search'] ) ) {
 			$search = trim( $args['search'] );
 
@@ -904,36 +949,9 @@ class Andreani_Shipments_List extends WP_List_Table {
 				$orders_args['post__in'] = array( absint( $matches[1] ) );
 			} elseif ( ctype_digit( $search ) && strlen( $search ) <= 8 ) {
 				$orders_args['post__in'] = array( absint( $search ) );
-			} elseif ( ctype_digit( $search ) && strlen( $search ) > 8 ) {
-				$tracking_or = array( 'relation' => 'OR' );
-				foreach ( Andreani_Client_Type::all() as $type ) {
-					if ( $type->supports_label_pdf() ) {
-						$tracking_or[] = array( 'key' => $type->tracking_meta_key(), 'value' => $search, 'compare' => 'LIKE' );
-					}
-					if ( $type->supports_manual_tracking() && $type->manual_tracking_meta_key() ) {
-						$tracking_or[] = array( 'key' => $type->manual_tracking_meta_key(), 'value' => $search, 'compare' => 'LIKE' );
-					}
-				}
-				$meta_conditions[] = $tracking_or;
 			} else {
-				$meta_conditions[] = array(
-					'relation' => 'OR',
-					array(
-						'key'     => '_billing_first_name',
-						'value'   => $search,
-						'compare' => 'LIKE',
-					),
-					array(
-						'key'     => '_billing_last_name',
-						'value'   => $search,
-						'compare' => 'LIKE',
-					),
-					array(
-						'key'     => '_order_andreani_pedido_id',
-						'value'   => $search,
-						'compare' => 'LIKE',
-					),
-				);
+				$ids = self::search_order_ids( $search, ! ( ctype_digit( $search ) && strlen( $search ) > 8 ) );
+				$orders_args['post__in'] = $ids ? $ids : array( 0 );
 			}
 		}
 
@@ -967,18 +985,9 @@ class Andreani_Shipments_List extends WP_List_Table {
 			? $status_tokens[0]
 			: '';
 
-		$filter_conditions = self::build_filter_meta_query( $client_type, $legacy_status );
-		foreach ( $filter_conditions as $condition ) {
-			$meta_conditions[] = $condition;
-		}
-
-		if ( 1 === count( $meta_conditions ) ) {
-			$orders_args['meta_query'] = $meta_conditions[0];
-		} elseif ( count( $meta_conditions ) > 1 ) {
-			$orders_args['meta_query'] = array_merge(
-				array( 'relation' => 'AND' ),
-				$meta_conditions
-			);
+		$scope = self::build_filter_scope( $client_type, $legacy_status );
+		if ( ! empty( $scope ) ) {
+			$orders_args['andreani_filter'] = $scope;
 		}
 
 		// Filtros de fecha (quick chips Hoy / Esta semana / Últimos 15 días). Formato
@@ -1005,23 +1014,26 @@ class Andreani_Shipments_List extends WP_List_Table {
 			$orders_args['orderby'] = $db_sortable_fields[ $sort_field ];
 			$orders_args['order']   = $sort_order;
 
-			$count_args           = $orders_args;
-			$count_args['limit']  = -1;
-			$count_args['return'] = 'ids';
-			$total_ids            = wc_get_orders( $count_args );
-			$total                = count( $total_ids );
-
-			$orders_args['limit']  = $args['limit'];
-			$orders_args['offset'] = $args['offset'];
-			$orders = wc_get_orders( $orders_args );
+			$orders_args['limit']    = $args['limit'];
+			$orders_args['offset']   = $args['offset'];
+			$orders_args['paginate'] = true;
+			$result                  = wc_get_orders( $orders_args );
+			$total                   = (int) $result->total;
+			unset( $orders_args['paginate'] );
 
 			$items = array();
-			foreach ( $orders as $order ) {
+			foreach ( $result->orders as $order ) {
 				$items[] = $this->build_item_from_order( $order );
 			}
 		} else {
-			$orders_args['limit'] = -1;
+			$orders_args['limit']   = self::RUNTIME_FILTER_WINDOW + 1;
+			$orders_args['orderby'] = 'date';
+			$orders_args['order']   = 'DESC';
 			$orders = wc_get_orders( $orders_args );
+			if ( count( $orders ) > self::RUNTIME_FILTER_WINDOW ) {
+				$orders                  = array_slice( $orders, 0, self::RUNTIME_FILTER_WINDOW );
+				$this->runtime_truncated = true;
+			}
 
 			$items = array();
 			foreach ( $orders as $order ) {
@@ -1041,30 +1053,6 @@ class Andreani_Shipments_List extends WP_List_Table {
 			$items = array_slice( $items, $args['offset'], $args['limit'] );
 		}
 
-		$fallback_recent_count = 0;
-
-		// Si el default "hoy" no trajo nada, mostramos los 15 envíos más recientes
-		// para que la grilla no quede vacía en clientes con poco volumen diario.
-		// Aplica a AMBOS paths (DB-sort y runtime-filter), por eso vive después
-		// del branch.
-		if ( 0 === $total && ! empty( $args['is_default_today'] ) ) {
-			unset( $orders_args['date_after'], $orders_args['date_before'], $orders_args['offset'] );
-			$orders_args['limit']   = $args['limit'];
-			$orders_args['orderby'] = 'date';
-			$orders_args['order']   = 'DESC';
-			unset( $orders_args['return'] );
-
-			$orders = wc_get_orders( $orders_args );
-
-			$items = array();
-			foreach ( $orders as $order ) {
-				$items[] = $this->build_item_from_order( $order );
-			}
-
-			$total                 = count( $items );
-			$fallback_recent_count = $total;
-		}
-
 		$api_failure = false;
 
 		if ( class_exists( 'Andreani_Shipments_Hydrator' ) ) {
@@ -1076,7 +1064,6 @@ class Andreani_Shipments_List extends WP_List_Table {
 		return array(
 			'items'                 => $items,
 			'total'                 => $total,
-			'fallback_recent_count' => $fallback_recent_count,
 			'api_failure'           => $api_failure,
 		);
 	}

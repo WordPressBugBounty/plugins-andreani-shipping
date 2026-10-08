@@ -5,7 +5,7 @@ Copyright: 2025 Andreani.com
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.7.0
+Stable tag: 1.8.0
 Contributors: integracionandreani
 Donate link:
 Tags: woocommerce, shipping, andreani, envio, etiquetas
@@ -166,14 +166,17 @@ Activá el modo debug en la configuración del plugin. Los registros quedan disp
 
 == Screenshots ==
 
-1. Grilla de envíos: gestioná todos tus envíos de Andreani desde un solo lugar, con estado logístico, pago y descarga de etiquetas.
-2. Detalle del envío en la grilla: seguimiento paso a paso, direcciones, destinatario y datos del contrato.
-3. Detalle del pedido: número de seguimiento, línea de tiempo del envío y estado siempre al día.
-4. Modos de entrega: habilitá cada servicio y configurá costo adicional o envío gratis a partir de un monto.
-5. Configuración de la cuenta Andreani con tu Credencial ID.
-6. Selección de sucursal Andreani durante el checkout.
-7. Cotizador de envío en la página de producto.
-8. Formato de impresión de etiquetas (A4 o térmica Zebra), con vista previa de cómo salen.
+1. Ver mis productos: cómo viaja cada producto, con su servicio y su caja.
+2. Producto abierto en la grilla: cargá las cajas, mirá cómo se arma el envío y el resultado.
+3. Probar cotización: probá las tarifas de un producto con tu CP y la cantidad que quieras.
+4. Simulador de carrito: armá un pedido con varios productos y mirá cómo viajan juntos y cuánto sale.
+5. Ver mis envíos: gestioná todos tus envíos de Andreani desde un solo lugar, con estado logístico, pago y descarga de etiquetas.
+6. Detalle del envío: seguimiento paso a paso y la caja sugerida para armarlo (solapa Cómo armarlo).
+7. Ficha de producto de WooCommerce: elegí cómo se despacha (en su caja, apilado o en varias cajas) desde la pestaña Envío.
+8. Configuración de la cuenta Andreani con tu Credencial ID.
+9. Selección de sucursal Andreani durante el checkout.
+10. Cotizador de envío en la página de producto.
+11. Formato de impresión de etiquetas (A4 o térmica Zebra), con vista previa de cómo salen.
 
 == External services ==
 
@@ -322,6 +325,20 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * El checkbox *Forzar carga de assets*: **sigue funcionando** pero casi nunca es necesario. Úsalo solo como último recurso.
 
 == Changelog ==
+
+= 1.8.0 =
+* Nuevo: "Ver mis productos" muestra cómo viaja cada producto: el servicio (Paquetería o Bigger), cómo se acomodan varias unidades y un dibujo de la caja. Editás medidas y despacho en la misma fila, sin salir de la lista
+* Nuevo: Simulador de carrito para ver cuántas cajas y etiquetas genera una compra y cotizarla antes de vender
+* Nuevo: En "Ver mis envíos", cada pedido muestra cómo armar la caja, con una medida sugerida
+* Nuevo: Campo SKU opcional para tus productos en Andreani, sin tocar el SKU de WooCommerce
+* Mejora: La lista de productos, los filtros y los buscadores responden rápido aunque tengas miles de productos
+* Mejora: El seguimiento automático se configura desde Configuración › Avanzado
+* Mejora: El seguimiento automático consulta los envíos de los últimos 30 días y se pausa si la API de Andreani no responde. Los envíos más viejos se actualizan al verlos en "Ver mis envíos" o al abrir el pedido
+* Mejora: La cotización y la validación de la credencial esperan como máximo 10 segundos a la API
+* Fix: Una variación con su propia forma de despacho ya no toma las cajas del producto padre
+* Fix: El filtro por estado de "Ver mis envíos" y la exportación filtran correctamente con el almacenamiento de pedidos de alto rendimiento (HPOS)
+* Fix: El interruptor de seguimiento automático se mostraba vacío y se desactivaba al guardar
+* Cambio: Requiere WooCommerce 7.1 o superior
 
 = 1.7.0 =
 * Mejora: Nuevo diseño del panel de Andreani, más claro y alineado a la imagen de Andreani
@@ -496,6 +513,9 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * Versión inicial publicada en el repositorio de WordPress
 
 == Upgrade Notice ==
+
+= 1.8.0 =
+Nueva pantalla de productos: ves cómo viaja cada producto, simulás un carrito y en cada pedido te sugerimos la caja. Tus productos se analizan solos en segundo plano; no tenés que configurar nada.
 
 = 1.7.0 =
 Nuevo diseño del panel de Andreani. Todo sigue funcionando igual y no tenés que configurar nada.

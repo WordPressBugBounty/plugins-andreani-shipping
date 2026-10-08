@@ -1,9 +1,9 @@
 /**
- * Andreani — Panel de modo de despacho en la ficha de producto.
+ * Andreani — Bloque de acomodo de varias unidades en la ficha de producto.
  *
- * Un solo paquete, varias unidades apiladas en un bulto, o una unidad repartida
- * en varias piezas: el modo elegido decide qué se evalúa y qué se guarda.
- * Usa delegación de eventos para sobrevivir a redibujos del DOM de WC.
+ * Cada una en su caja, apiladas, o una unidad repartida en varias cajas: el modo
+ * elegido decide qué se evalúa y qué se guarda. Usa delegación de eventos para
+ * sobrevivir a redibujos del DOM de WC.
  */
 (function ($) {
 	'use strict';
@@ -23,23 +23,23 @@
 		}
 
 		var config = window.AndreaniBultosConfig || {};
-		var thresholds = config.thresholds || { weight: 50, sum_sides: 300, max_side: 165 };
-		var canonical = config.thresholds_canonical || { weight: 50, sum_sides: 300, max_side: 165 };
-		var i18n = config.i18n || {};
+		var Preview = window.AndreaniBoxPreview;
+		var i18n = ( config.preview || {} ).i18n || {};
 
-		var cmFactor = config.cm_factor || 1;
-		var kgFactor = config.kg_factor || 1;
+		Preview.configure( config.preview );
 
-		var $modeInputs = $section.find('.andreani-despacho-option__input');
+		var $modeInputs = $section.find('.andr-seg__input');
 		var $status = $('#andreani-despacho-status');
+		var $main = $('#andreani-despacho-main');
+		var $mainTitle = $('#andreani-despacho-main-title');
+		var $mainSummary = $('#andreani-despacho-main-summary');
+		var $toggle = $('#andreani-despacho-toggle');
+		var $body = $('#andreani-despacho-body');
 		var $list = $('#andreani-bultos-list');
 		var $apiladoPanel = $('#andreani-despacho-panel-apilado');
 		var $multibultoPanel = $('#andreani-despacho-panel-multibulto');
 		var $apiladoInvalid = $('#andreani-apilado-invalid');
 		var $bultosInvalid = $('#andreani-bultos-invalid');
-		var $previewBody = $('#andreani-despacho-preview-body');
-		var previewTimer = null;
-		var previewRequest = 0;
 
 		var tmpl = null;
 		if ( typeof window.wp !== 'undefined' && window.wp.template ) {
@@ -63,22 +63,8 @@
 			return Math.round( ( parseFloat( value ) || 0 ) * 100 ) / 100;
 		}
 
-		function format( value ) {
-			return String( round2( value ) );
-		}
-
-		function toCm( value ) {
-			return cmFactor ? value / cmFactor : value;
-		}
-
-		function toKg( value ) {
-			return value * kgFactor;
-		}
-
-		function fill( template, first, second ) {
-			return String( template || '' )
-				.replace( '%1$s', first )
-				.replace( '%2$s', second );
+		function rowValue( $row, field ) {
+			return parseFloat( $row.find('input[name="andreani_bulto_' + field + '[]"]').val() ) || 0;
 		}
 
 		function apiladoConfig() {
@@ -94,142 +80,172 @@
 			return { maxUnits: maxUnits, incH: incH, incW: incW, incD: incD };
 		}
 
-		function evaluateBigger() {
-			var mode = currentMode();
-			var weight = num('input[name="_weight"]');
-			var width = num('input[name="_width"]');
-			var height = num('input[name="_height"]');
-			var length = num('input[name="_length"]');
-
-			var totalWeight = weight;
-			var maxSumSides = width + height + length;
-			var maxSide = Math.max( width, height, length );
-
-			if ( mode === MODE_APILADO ) {
-				var apilado = apiladoConfig();
-
-				if ( apilado ) {
-					var extra = apilado.maxUnits - 1;
-					var pilaW = width + apilado.incW * cmFactor * extra;
-					var pilaH = height + apilado.incH * cmFactor * extra;
-					var pilaL = length + apilado.incD * cmFactor * extra;
-
-					totalWeight = weight * apilado.maxUnits;
-					maxSumSides = pilaW + pilaH + pilaL;
-					maxSide = Math.max( pilaW, pilaH, pilaL );
-				}
-			}
-
-			if ( mode === MODE_MULTIBULTO ) {
-				$list.find('.andreani-bulto-row').each(function () {
-					var $row = $(this);
-					var bW = parseFloat( $row.find('input[name="andreani_bulto_weight[]"]').val() ) || 0;
-					var bX = parseFloat( $row.find('input[name="andreani_bulto_width[]"]').val() ) || 0;
-					var bY = parseFloat( $row.find('input[name="andreani_bulto_height[]"]').val() ) || 0;
-					var bZ = parseFloat( $row.find('input[name="andreani_bulto_depth[]"]').val() ) || 0;
-
-					totalWeight += bW;
-
-					var bultoSumSides = bX + bY + bZ;
-					if ( bultoSumSides > maxSumSides ) {
-						maxSumSides = bultoSumSides;
-					}
-
-					var bultoMaxSide = Math.max( bX, bY, bZ );
-					if ( bultoMaxSide > maxSide ) {
-						maxSide = bultoMaxSide;
-					}
-				});
-			}
-
-			if ( totalWeight > thresholds.weight ) {
-				return { isBigger: true, text: fill( i18n.bigger_reason_weight, format( toKg( totalWeight ) ), format( canonical.weight ) ) };
-			}
-
-			if ( maxSumSides > thresholds.sum_sides ) {
-				return { isBigger: true, text: fill( i18n.bigger_reason_sum_sides, format( toCm( maxSumSides ) ), format( canonical.sum_sides ) ) };
-			}
-
-			if ( maxSide > thresholds.max_side ) {
-				return { isBigger: true, text: fill( i18n.bigger_reason_max_side, format( toCm( maxSide ) ), format( canonical.max_side ) ) };
-			}
-
-			return { isBigger: false, text: '' };
+		function bultoFilled( $row ) {
+			return [ 'weight', 'width', 'height', 'depth' ].filter(function ( field ) {
+				return rowValue( $row, field ) > 0;
+			}).length;
 		}
 
-		function previewDraft() {
-			var mode = currentMode();
-			var apilado = mode === MODE_APILADO ? apiladoConfig() : null;
-			var bultos = [];
+		function partialRows() {
+			return $list.find('.andreani-bulto-row').filter(function () {
+				var filled = bultoFilled( $(this) );
 
-			if ( mode === MODE_MULTIBULTO ) {
-				$list.find('.andreani-bulto-row').each(function () {
-					var $row = $(this);
+				return filled > 0 && filled < 4;
+			});
+		}
 
-					bultos.push({
-						name: '',
-						height: parseFloat( $row.find('input[name="andreani_bulto_height[]"]').val() ) || 0,
-						width: parseFloat( $row.find('input[name="andreani_bulto_width[]"]').val() ) || 0,
-						depth: parseFloat( $row.find('input[name="andreani_bulto_depth[]"]').val() ) || 0,
-						weight: parseFloat( $row.find('input[name="andreani_bulto_weight[]"]').val() ) || 0
-					});
+		function sortedDims( a, b, c ) {
+			return [ round2( a ), round2( b ), round2( c ) ].sort(function ( x, y ) { return x - y; }).join('|');
+		}
+
+		function bultos() {
+			var rows = [];
+
+			$list.find('.andreani-bulto-row').each(function () {
+				var $row = $(this);
+
+				rows.push({
+					name: '',
+					height: rowValue( $row, 'height' ),
+					width: rowValue( $row, 'width' ),
+					depth: rowValue( $row, 'depth' ),
+					weight: rowValue( $row, 'weight' )
 				});
+			});
+
+			return rows;
+		}
+
+		var preview = Preview.createPreview({
+			root: $section.get(0),
+			ajaxUrl: config.ajax_url,
+			nonce: config.nonce_preview,
+			hint: function () {
+				return currentMode() === MODE_MULTIBULTO ? Preview.ignoredHint( bultos() ) : '';
+			},
+			getDraft: function () {
+				var mode = currentMode();
+				var apilado = mode === MODE_APILADO ? apiladoConfig() : null;
+
+				return {
+					weight: num('input[name="_weight"]'),
+					length: num('input[name="_length"]'),
+					width: num('input[name="_width"]'),
+					height: num('input[name="_height"]'),
+					dispatch_mode: mode,
+					bultos_json: JSON.stringify( mode === MODE_MULTIBULTO ? Preview.completeBultos( bultos() ) : [] ),
+					apilado_json: JSON.stringify( apilado ? {
+						maxStackableUnits: apilado.maxUnits,
+						unitIncrementHeight: apilado.incH,
+						unitIncrementWidth: apilado.incW,
+						unitIncrementDepth: apilado.incD
+					} : {} )
+				};
+			}
+		});
+
+		function updateMain() {
+			var length = round2( num('input[name="_length"]') );
+			var width = round2( num('input[name="_width"]') );
+			var height = round2( num('input[name="_height"]') );
+			var weight = round2( num('input[name="_weight"]') );
+			var complete = length > 0 && width > 0 && height > 0 && weight > 0;
+
+			$mainTitle.text( currentMode() === MODE_MULTIBULTO ? i18n.piece_title + ' 1' : i18n.box_single );
+			$('#andreani-despacho-main-ref').prop('hidden', currentMode() !== MODE_MULTIBULTO);
+			var cells = {
+				length: [ length, $main.attr('data-dim-unit') ],
+				width: [ width, $main.attr('data-dim-unit') ],
+				height: [ height, $main.attr('data-dim-unit') ],
+				weight: [ weight, $main.attr('data-weight-unit') ]
+			};
+
+			$main.find('.andr-box__cell').each(function () {
+				var cell = cells[ $(this).attr('data-cell') ];
+
+				$(this).empty()
+					.append( $('<span>').text( cell[0] > 0 ? cell[0] : '\u2014' ) )
+					.append( $('<span class="andr-box__cell-unit">').text( cell[0] > 0 ? cell[1] : '' ) );
+			});
+
+			$mainSummary.text( complete
+				? [ length, width, height ].join(' × ') + ' ' + $main.attr('data-dim-unit') + ' · ' + weight + ' ' + $main.attr('data-weight-unit')
+				: i18n.box_main_empty );
+		}
+
+		function discardedConfig() {
+			var mode = currentMode();
+			var apilado = mode !== MODE_APILADO && !! apiladoConfig();
+			var cajas = mode !== MODE_MULTIBULTO && bultos().some(function ( b ) {
+				return b.weight > 0 || b.width > 0 || b.height > 0 || b.depth > 0;
+			});
+
+			if ( apilado && cajas ) {
+				return 'both';
 			}
 
-			return {
-				action: 'andreani_preview_bultos',
-				nonce: config.nonce_preview,
+			if ( apilado ) {
+				return 'apilado';
+			}
+
+			return cajas ? 'bultos' : '';
+		}
+
+		function renderDiscard( confirming ) {
+			var discarded = discardedConfig();
+			var $text = $('#andreani-despacho-discard-text');
+
+			$('#andreani-despacho-discard').prop('hidden', ! discarded);
+			$('#andreani-despacho-discard-actions').prop('hidden', ! ( discarded && confirming ));
+			$text.text( discarded ? $text.attr( 'data-' + ( confirming ? 'confirm-' : 'hint-' ) + discarded ) : '' );
+		}
+
+		function updateStatus() {
+			var mode = currentMode();
+
+			renderDiscard( false );
+			updateMain();
+
+			Preview.applyBadge( $status, Preview.evaluateProduct({
 				weight: num('input[name="_weight"]'),
 				length: num('input[name="_length"]'),
 				width: num('input[name="_width"]'),
 				height: num('input[name="_height"]'),
-				dispatch_mode: mode,
-				bultos_json: JSON.stringify( bultos ),
-				apilado_json: JSON.stringify( apilado ? {
-					maxStackableUnits: apilado.maxUnits,
-					unitIncrementHeight: apilado.incH,
-					unitIncrementWidth: apilado.incW,
-					unitIncrementDepth: apilado.incD
-				} : {} )
-			};
+				mode: mode,
+				apilado: mode === MODE_APILADO ? apiladoConfig() : null,
+				bultos: mode === MODE_MULTIBULTO ? bultos() : []
+			}), {
+				ok: i18n.box_status_ok,
+				bigger: i18n.box_status_bigger,
+				missing: i18n.box_status_missing
+			});
+
+			if ( ! $body.prop('hidden') ) {
+				preview.refresh();
+			}
 		}
 
-		function schedulePreview() {
-			if ( ! $previewBody.length || ! config.ajax_url ) {
-				return;
+		function setOpen( open, persist ) {
+			$toggle.attr('aria-expanded', open ? 'true' : 'false');
+			$body.prop('hidden', ! open);
+
+			if ( open ) {
+				preview.refresh();
 			}
 
-			clearTimeout( previewTimer );
-
-			previewTimer = setTimeout(function () {
-				var request = ++previewRequest;
-
-				$.post( config.ajax_url, previewDraft() ).done(function ( res ) {
-					if ( request === previewRequest && res && res.success && res.data ) {
-						$previewBody.html( res.data.html );
-					}
+			if ( persist ) {
+				$.post( config.ajax_url, {
+					action: 'andreani_dispatch_box_open',
+					nonce: config.nonce_open,
+					open: open ? 1 : 0
 				});
-			}, 300 );
-		}
-
-		function updateStatus() {
-			schedulePreview();
-
-			var evaluation = evaluateBigger();
-			var text = evaluation.isBigger
-				? String( i18n.bigger_prefix || '%s' ).replace( '%s', evaluation.text )
-				: ( i18n.bigger_regular || '' );
-
-			$status
-				.text( text )
-				.toggleClass( 'andreani-despacho-status--bigger', evaluation.isBigger )
-				.toggleClass( 'andreani-despacho-status--regular', ! evaluation.isBigger );
+			}
 		}
 
 		function reindex() {
 			$list.find('.andreani-bulto-row').each(function (i) {
 				$(this).attr('data-index', i);
-				$(this).find('.andreani-bulto-label').text('Bulto ' + (i + 2));
+				$(this).find('.andreani-bulto-label').text( i18n.piece_title + ' ' + (i + 2) );
 			});
 		}
 
@@ -242,9 +258,11 @@
 			$list.find('.andreani-bulto-row').each(function () {
 				var $row = $(this);
 				var same = hasPrincipal
-					&& round2( $row.find('input[name="andreani_bulto_height[]"]').val() ) === height
-					&& round2( $row.find('input[name="andreani_bulto_width[]"]').val() ) === width
-					&& round2( $row.find('input[name="andreani_bulto_depth[]"]').val() ) === depth;
+					&& sortedDims(
+						$row.find('input[name="andreani_bulto_height[]"]').val(),
+						$row.find('input[name="andreani_bulto_width[]"]').val(),
+						$row.find('input[name="andreani_bulto_depth[]"]').val()
+					) === sortedDims( height, width, depth );
 
 				$row.find('.andreani-bulto-warning').toggle( !! same );
 			});
@@ -259,27 +277,16 @@
 				return false;
 			}
 
-			var hasComplete = false;
-
-			$list.find('.andreani-bulto-row').each(function () {
-				var $row = $(this);
-				var complete = [ 'weight', 'width', 'height', 'depth' ].every(function ( field ) {
-					return ( parseFloat( $row.find('input[name="andreani_bulto_' + field + '[]"]').val() ) || 0 ) > 0;
-				});
-
-				if ( complete ) {
-					hasComplete = true;
-				}
+			return partialRows().length > 0 || ! bultos().some(function ( b ) {
+				return b.weight > 0 && b.width > 0 && b.height > 0 && b.depth > 0;
 			});
-
-			return ! hasComplete;
 		}
 
 		function syncMode() {
 			var mode = currentMode();
 
-			$apiladoPanel.toggleClass( 'active', mode === MODE_APILADO );
-			$multibultoPanel.toggleClass( 'active', mode === MODE_MULTIBULTO );
+			$apiladoPanel.prop('hidden', mode !== MODE_APILADO);
+			$multibultoPanel.prop('hidden', mode !== MODE_MULTIBULTO);
 			$apiladoInvalid.hide();
 			$bultosInvalid.hide();
 
@@ -296,11 +303,11 @@
 			$list.append( tmpl({ index: count, number: count + 2 }) );
 		}
 
-		$modeInputs.on('change', function () {
-			if ( currentMode() !== MODE_MULTIBULTO ) {
-				$list.empty();
-			}
+		$toggle.on('click', function () {
+			setOpen( !! $body.prop('hidden'), true );
+		});
 
+		$modeInputs.on('change', function () {
 			if ( currentMode() === MODE_MULTIBULTO && ! $list.find('.andreani-bulto-row').length ) {
 				addRow();
 			}
@@ -315,12 +322,17 @@
 			syncMode();
 		});
 
-		$('#andreani-add-bulto').on('click', addRow);
+		$('#andreani-add-bulto').on('click', function () {
+			addRow();
+			updateStatus();
 
-		$('#andreani-despacho-preview-toggle').on('click', function () {
-			var expanded = $(this).attr('aria-expanded') === 'true';
-			$(this).attr('aria-expanded', expanded ? 'false' : 'true');
-			$('#andreani-despacho-preview-content').prop('hidden', expanded);
+			var grid = $list.closest('.andr-boxes__grid').get(0);
+			var first = $list.find('.andreani-bulto-row').last().find('input').get(0);
+
+			grid.scrollTop = grid.scrollHeight;
+			if ( first ) {
+				first.focus({ preventScroll: true });
+			}
 		});
 
 		$(document).on('click.andreaniBultos', '.andreani-despacho-section .andreani-remove-bulto', function () {
@@ -339,6 +351,7 @@
 			WC_INPUTS_SELECTOR + ', ' + BULTO_INPUTS_SELECTOR,
 			function () {
 				$bultosInvalid.hide();
+				$(this).closest('.andreani-bulto-row').find('.andreani-bulto-incomplete').hide();
 				updateSameDimsWarnings();
 				updateStatus();
 			});
@@ -352,26 +365,68 @@
 
 		// El apilado inválido no puede quedar en silencio: sin esto WordPress
 		// guarda el POST y la config se descarta después, sin avisar.
+		var discardConfirmed = false;
+		var submitter = null;
+
+		function releaseButtons() {
+			$('#publish, #save-post, .button-primary').removeClass('disabled button-primary-disabled').prop('disabled', false);
+			$('.spinner').removeClass('is-active');
+		}
+
+		$('#andreani-despacho-discard-go').on('click', function () {
+			discardConfirmed = true;
+			( submitter || $('#publish').get(0) ).click();
+		});
+
+		$('#andreani-despacho-discard-cancel').on('click', function () {
+			renderDiscard( false );
+		});
+
 		$('form#post').on('submit', function ( event ) {
 			var apiladoInvalid = apiladoIsInvalid();
 			var multibultoInvalid = multibultoIsInvalid();
 
 			if ( ! apiladoInvalid && ! multibultoInvalid ) {
+				if ( discardConfirmed || ! discardedConfig() ) {
+					discardConfirmed = false;
+					return;
+				}
+
+				event.preventDefault();
+				submitter = event.originalEvent && event.originalEvent.submitter;
+
+				if ( $body.prop('hidden') ) {
+					setOpen( true, false );
+				}
+
+				renderDiscard( true );
+				$('#andreani-despacho-discard-go').get(0).scrollIntoView({ block: 'nearest' });
+				releaseButtons();
 				return;
 			}
 
 			event.preventDefault();
 
+			if ( $body.prop('hidden') ) {
+				setOpen( true, false );
+			}
+
 			if ( apiladoInvalid ) {
 				$apiladoInvalid.show();
 				$('#andreani-apilado-max-units').focus();
+			} else if ( partialRows().length ) {
+				var $partial = partialRows();
+
+				$partial.find('.andreani-bulto-incomplete').show();
+				$partial.first().find('input[type="number"]').filter(function () {
+					return ! ( parseFloat( $(this).val() ) > 0 );
+				}).first().focus();
 			} else {
 				$bultosInvalid.show();
 				$list.find('.andreani-bulto-row').first().find('input').first().focus();
 			}
 
-			$('#publish, #save-post, .button-primary').removeClass('disabled button-primary-disabled').prop('disabled', false);
-			$('.spinner').removeClass('is-active');
+			releaseButtons();
 		});
 
 		syncMode();

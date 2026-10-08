@@ -15,6 +15,99 @@
     return escapeHtml(String(str == null ? '' : str)).replace(/"/g, '&quot;');
   }
 
+  function howHtml(mode, text) {
+    const art = { apilado: 'apilado', multibulto: 'piezas' }[mode];
+    return art && text
+      ? '<span class="andreani-how"><svg class="andreani-how__icon" data-andr-icon="' + art + '" aria-hidden="true" focusable="false"></svg>' + escapeHtml(text) + '</span>'
+      : '';
+  }
+
+  /* ========================================
+   * RESULTADO DE COTIZACIÓN (AndreaniQuote)
+   * ======================================== */
+  const AndreaniQuote = {
+    config() {
+      return window.andreani_admin || {};
+    },
+
+    t(key) {
+      return (this.config().i18n || {})[key] || '';
+    },
+
+    kind(rate) {
+      const key = (String(rate.label || '') + ' ' + String(rate.id || ''))
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[-_]+/g, ' ');
+
+      if (key.indexOf('sucursal') !== -1) return { icon: 'en-sucursal', title: 'rate_branch' };
+      if (/llega hoy|same ?day/.test(key)) return { icon: 'llega-hoy', title: 'rate_today' };
+      if (key.indexOf('bigger') !== -1) return { icon: 'estandar', title: 'rate_home', chip: 'rate_bigger' };
+      return { icon: 'estandar', title: 'rate_home' };
+    },
+
+    price(cost) {
+      const parts = (parseFloat(cost) || 0).toFixed(2).split('.');
+      return '<span class="andr-rate__amount">$ ' + parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '</span>'
+        + '<span class="andr-rate__cents">' + parts[1] + '</span>';
+    },
+
+    card(rate, cheapest) {
+      const base = this.config().services_icons_url || '';
+      const kind = this.kind(rate);
+      const chip = (tone, key) => ' <span class="andr-badge andr-badge--' + tone + ' andr-badge--sm">' + escapeHtml(this.t(key)) + '</span>';
+
+      return '<div class="andr-rate">'
+        + '<span class="andr-rate__icon">'
+        + '<img class="andr-rate__img" src="' + escapeAttr(base + kind.icon + '.svg') + '" alt="">'
+        + '<img class="andr-rate__img andr-rate__img--hover" src="' + escapeAttr(base + kind.icon + '-rojo.svg') + '" alt="">'
+        + '</span>'
+        + '<span class="andr-rate__text">'
+        + '<span class="andr-rate__title">' + escapeHtml(this.t(kind.title)) + (kind.chip ? chip('info', kind.chip) : '') + (cheapest ? chip('success', 'rate_cheapest') : '') + '</span>'
+        + '<span class="andr-rate__sub">' + escapeHtml(String(rate.label || '')) + '</span>'
+        + '</span>'
+        + '<span class="andr-rate__price">' + this.price(rate.cost) + '</span>'
+        + '</div>';
+    },
+
+    loading($box) {
+      AndreaniLoader.show($box.prop('hidden', false), { size: 'sm', text: (this.config().i18n || {}).quote_loading });
+    },
+
+    rates($box, rates, skipped) {
+      const cheapest = rates.length > 1 ? Math.min.apply(null, rates.map((r) => parseFloat(r.cost) || 0)) : null;
+      let marked = false;
+
+      const note = skipped && skipped.length
+        ? '<div class="andr-dispatch__warnbox">' + escapeHtml(this.t('sim_skipped') + ' ' + skipped.join(', ')) + '</div>'
+        : '';
+
+      $box.removeAttr('aria-busy').html(rates.map((r) => {
+        const isCheapest = !marked && cheapest !== null && (parseFloat(r.cost) || 0) === cheapest;
+        marked = marked || isCheapest;
+        return this.card(r, isCheapest);
+      }).join('') + note).prop('hidden', false);
+    },
+
+    error($box, message) {
+      $box.removeAttr('aria-busy').html('<div class="andr-dispatch__warnbox">' + escapeHtml(message) + '</div>').prop('hidden', false);
+    },
+
+    show($box, res, xhr) {
+      const i18n = this.config().i18n || {};
+
+      if (xhr) {
+        const data = (xhr.responseJSON && xhr.responseJSON.data) || {};
+        this.error($box, data.message || i18n.quote_error || 'Error de red.');
+      } else if (res.success && res.data.rates && res.data.rates.length) {
+        this.rates($box, res.data.rates, res.data.skipped);
+      } else {
+        this.error($box, (res.data && res.data.message) || i18n.quote_error || 'Error al cotizar.');
+      }
+    }
+  };
+
   /* ========================================
    * SETTINGS PAGE (AndreaniAdmin)
    * ======================================== */
@@ -366,7 +459,9 @@
     },
 
     renderOrigenEstado($lista, estado, mensaje) {
-      $lista.html('<p class="andreani-origen-estado andreani-origen-estado--' + estado + '">' + escapeHtml(mensaje) + '</p>');
+      $lista.html(estado === 'cargando'
+        ? AndreaniLoader.html({ size: 'sm', text: mensaje })
+        : '<p class="andreani-origen-estado andreani-origen-estado--' + estado + '">' + escapeHtml(mensaje) + '</p>');
       this.syncOrigenBuscador($lista);
     },
 
@@ -431,10 +526,9 @@
       $('.andreani-refresh-contratos').on('click', (e) => {
         e.preventDefault();
         const $btn = $(e.currentTarget);
-        const originalHtml = $btn.html();
 
-        $btn.prop('disabled', true).addClass('andreani-refresh-contratos--loading')
-          .html('<svg class="andreani-spinner" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg> Actualizando...');
+        $btn.prop('disabled', true);
+        const release = AndreaniLoader.busy(this.i18n('loader_contracts', 'Actualizando tus contratos…'));
 
         $.post(ajaxurl, { action: 'andreani_refresh_contratos', nonce: $btn.data('nonce') })
           .done((res) => {
@@ -443,13 +537,14 @@
               setTimeout(() => location.reload(), 1000);
             } else {
               this.showNotice(res.data?.message || 'Error al actualizar contratos.', 'error');
-              $btn.prop('disabled', false).removeClass('andreani-refresh-contratos--loading').html(originalHtml);
+              $btn.prop('disabled', false);
             }
           })
           .fail(() => {
             this.showNotice('Error de conexión.', 'error');
-            $btn.prop('disabled', false).removeClass('andreani-refresh-contratos--loading').html(originalHtml);
-          });
+            $btn.prop('disabled', false);
+          })
+          .always(release);
       });
     },
 
@@ -597,6 +692,7 @@
    * ASYNC TABLE LOADER (AndreaniTableLoader)
    * ======================================== */
   const AndreaniTableLoader = {
+    loaded: false,
     config: window.andreani_admin || {},
     $container: null,
     $refreshBtn: null,
@@ -675,16 +771,12 @@
         self.loadTable();
       });
 
-      // Pagination links (delegated para links cargados dinámicamente)
-      $(document).on('click', '#andreani-table-container .tablenav-pages a', (e) => {
+      // Pagination buttons (delegated para botones cargados dinámicamente)
+      $(document).on('click', '#andreani-table-container .andreani-page-btn', (e) => {
         e.preventDefault();
-        if (self.isLoading) return;
+        if (self.isLoading || $(e.currentTarget).attr('aria-disabled') === 'true') return;
 
-        const href = $(e.currentTarget).attr('href');
-        const params = new URLSearchParams(href.split('?')[1] || '');
-        const paged = params.get('paged') || 1;
-
-        self.loadTable({ paged: paged });
+        self.loadTable({ paged: $(e.currentTarget).attr('data-paged') || 1 });
       });
 
       $(document).on('click', '.andreani-per-page__btn', function(e) {
@@ -787,8 +879,9 @@
       });
 
       $.post(this.config.ajax_url || ajaxurl, params)
-        .done((res) => {
+        .done((res) => AndreaniLoader.hide(self.$container, () => {
           if (res.success && res.data.html) {
+            self.loaded = true;
             self.$container.html(res.data.html);
             AndreaniShipments.bindCopyEvents();
             self.bindFallbackNotice();
@@ -803,10 +896,8 @@
           } else {
             self.showError(res.data?.message || self.t('table_error'));
           }
-        })
-        .fail(() => {
-          self.showError(self.t('table_error'));
-        })
+        }))
+        .fail(() => AndreaniLoader.hide(self.$container, () => self.showError(self.t('table_error'))))
         .always(() => {
           self.isLoading = false;
           self.$refreshBtn.removeClass('andreani-refresh-btn--loading');
@@ -816,26 +907,14 @@
     showLoader() {
       this.$refreshBtn.addClass('andreani-refresh-btn--loading');
 
-      const logoPath = this.config.logo_path || 'M1852 2575 c-35 -8 -75 -16 -90 -18 -87 -14 -331 -87 -407 -122 -190 -87 -263 -126 -368 -197 -318 -214 -521 -466 -571 -711 -29 -137 -18 -233 40 -352 73 -154 253 -283 470 -340 150 -39 469 -43 674 -9 459 77 963 364 1209 687 244 321 252 631 22 854 -41 40 -78 73 -83 73 -5 0 -26 11 -47 25 -48 32 -176 82 -261 101 -96 22 -504 29 -588 9z m498 -95 c215 -32 400 -150 477 -308 36 -73 38 -80 38 -176 0 -56 -6 -123 -14 -151 -37 -132 -133 -277 -274 -411 -87 -84 -127 -110 -150 -101 -16 6 -37 71 -92 282 -111 431 -180 661 -204 689 -21 24 -59 43 -101 51 -46 8 -56 -3 -161 -180 -180 -306 -670 -1077 -712 -1122 -27 -30 -81 -30 -150 -1 -186 78 -299 217 -320 393 -9 70 -7 91 11 163 62 243 254 463 567 647 52 30 96 55 99 55 2 0 34 14 69 30 36 17 69 30 74 30 4 0 20 6 35 14 42 22 201 66 333 92 104 21 140 23 265 19 80 -3 174 -9 210 -15z m-428 -573 c29 -118 76 -320 82 -354 l6 -33 -195 0 c-107 0 -195 3 -195 7 0 14 274 462 280 457 3 -3 13 -38 22 -77z m-26 -516 l150 -1 17 -72 c38 -172 33 -193 -56 -233 -67 -29 -248 -74 -362 -91 -22 -3 -51 -7 -64 -9 -61 -10 -192 -17 -215 -11 -51 13 -51 38 -1 134 25 48 72 130 103 182 l57 95 65 5 c36 3 85 4 110 4 25 -1 113 -2 196 -3z';
-      const loaderHtml = `
-        <div class="andreani-table-loader">
-          <div class="andreani-table-loader__spinner">
-            <svg class="andreani-table-loader__logo andreani-table-loader__logo--bg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 341 341">
-              <g transform="translate(0,341) scale(0.1,-0.1)" fill="#e0e0e0"><path d="${logoPath}"/></g>
-            </svg>
-            <svg class="andreani-table-loader__logo andreani-table-loader__logo--fill" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 341 341">
-              <g transform="translate(0,341) scale(0.1,-0.1)" fill="#e31e24"><path d="${logoPath}"/></g>
-            </svg>
-          </div>
-        </div>
-      `;
-
-      this.$container.html(loaderHtml);
+      AndreaniLoader.show(this.$container, this.loaded
+        ? { size: 'lg', text: this.t('loader_shipments_update') }
+        : { size: 'lg', phrases: this.config.i18n.loader_shipments_phrases });
     },
 
     updateUrl() {
       const params = new URLSearchParams();
-      params.set('page', 'andreani-shipping');
+      params.set('page', new URLSearchParams(window.location.search).get('page') || 'andreani-shipping');
 
       const paged = parseInt(this.currentParams.paged, 10) || 1;
       if (paged > 1) params.set('paged', paged);
@@ -1165,14 +1244,14 @@
         if ($btn.prop('disabled')) return;
 
         const params = new URLSearchParams(window.location.search);
-        const originalHtml = $btn.html();
-
-        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update-alt andreani-spin"></span>');
+        $btn.prop('disabled', true);
+        const release = AndreaniLoader.busy(self.t('export_loading'));
 
         $.post(self.config.ajax_url || ajaxurl, {
           action: 'andreani_export_shipments',
           nonce: self.config.nonce_export,
           andreani_status: params.get('andreani_status') || '',
+          client_type: params.get('client_type') || '',
           search: params.get('s') || '',
           andreani_date_from: params.get('andreani_date_from') || '',
           andreani_date_to: params.get('andreani_date_to') || ''
@@ -1186,7 +1265,10 @@
           }
         })
         .fail(() => self.showNotice($btn, self.t('network_error'), 'error'))
-        .always(() => $btn.prop('disabled', false).html(originalHtml));
+        .always(() => {
+          $btn.prop('disabled', false);
+          release();
+        });
       });
     },
 
@@ -1272,16 +1354,13 @@
     handleRecipientFormSubmit($form) {
       const self = this;
       if ($form.data('loading')) {
-        console.log('[Andreani] submit aborted: loading=true');
         return;
       }
 
       const orderId = $form.data('order-id');
       const url = $form.data('ajax-url') || this.config.ajax_url || ajaxurl;
       const nonce = $form.data('nonce');
-      console.log('[Andreani] submit start', { orderId, url, hasNonce: !!nonce });
       if (!orderId || !nonce) {
-        console.log('[Andreani] submit aborted: missing orderId or nonce');
         return;
       }
 
@@ -1300,7 +1379,6 @@
       this.resetRecipientHints($form);
 
       const errors = this.validateRecipientFields(fields);
-      console.log('[Andreani] validation result', { fields, errors });
       if (Object.keys(errors).length > 0) {
         this.showRecipientErrors($form, errors);
         return;
@@ -1308,9 +1386,9 @@
 
       const $submit = $form.find('.andreani-recipient-form__submit');
       const $feedback = $form.find('.andreani-recipient-form__feedback');
-      const originalText = $submit.html();
       $form.data('loading', true);
-      $submit.prop('disabled', true).html('<span class="dashicons dashicons-update-alt andreani-spin"></span> ' + this.t('retry_loading'));
+      $submit.prop('disabled', true);
+      const release = AndreaniLoader.busy(this.t('retry_loading'));
       $feedback.removeClass('andreani-recipient-form__feedback--success andreani-recipient-form__feedback--error').text('');
 
       const rollback = self.snapshotRow(orderId);
@@ -1318,7 +1396,6 @@
         status: { class: 'pending', label: self.t('retry_loading') }
       });
 
-      console.log('[Andreani] sending AJAX request to', url);
       $.post(url, {
         action: 'andreani_update_recipient_and_retry',
         nonce: nonce,
@@ -1327,7 +1404,6 @@
         dni: fields.dni
       })
         .done((res) => {
-          console.log('[Andreani] AJAX response', res);
           if (res.success) {
             $feedback.addClass('andreani-recipient-form__feedback--success').text(res.data?.message || self.t('retry_success'));
             if (res.data?.row_html) {
@@ -1347,7 +1423,8 @@
         })
         .always(() => {
           $form.data('loading', false);
-          $submit.prop('disabled', false).html(originalText);
+          $submit.prop('disabled', false);
+          release();
         });
     },
 
@@ -1396,10 +1473,8 @@
       const url = $btn.data('ajax-url') || this.config.ajax_url || ajaxurl;
       if (!orderId) return;
 
-      const originalHtml = $btn.html();
-      $btn.data('loading', true).prop('disabled', true)
-        .html('<span class="dashicons dashicons-update-alt andreani-spin"></span>')
-        .attr('title', opts.loading);
+      $btn.data('loading', true).prop('disabled', true);
+      const release = AndreaniLoader.busy(opts.loading);
 
       $.post(url, { action: opts.action, nonce: opts.nonce, order_id: orderId })
         .done((res) => {
@@ -1416,7 +1491,8 @@
           this.showNotice($btn, this.t('network_error'), 'error');
         })
         .always(() => {
-          $btn.data('loading', false).prop('disabled', false).html(originalHtml);
+          $btn.data('loading', false).prop('disabled', false);
+          release();
         });
     },
 
@@ -1497,7 +1573,7 @@
         const $cell = $row.find('td.column-tracking');
         if ($cell.length) {
           if (changes.tracking) {
-            const safe = $('<div>').text(changes.tracking).html();
+            const safe = escapeAttr(changes.tracking);
             $cell.html(`<code class="andreani-tracking-code andreani-copy-click" data-tracking="${safe}" title="Click para copiar">${safe}</code>`);
           } else {
             $cell.html('<span class="andreani-tracking--empty">-</span>');
@@ -2055,6 +2131,143 @@
     }
   };
 
+  const AndreaniOrderPacking = {
+    cache: {},
+    pending: {},
+
+    init() {
+      $(document).on('click', '.andreani-detail__tabs .andr-tabs__item[data-tab="armado"]', (e) => {
+        const orderId = String($(e.currentTarget).closest('.andreani-detail').data('order-id') || '');
+        if (orderId) this.load(orderId);
+      });
+    },
+
+    config() {
+      return window.andreani_admin || {};
+    },
+
+    text(key) {
+      return (this.config().i18n || {})[key] || '';
+    },
+
+    $body(orderId) {
+      return $('.andreani-detail__packing[data-packing-order="' + orderId + '"] [data-andr="packing-body"]');
+    },
+
+    load(orderId) {
+      const $body = this.$body(orderId);
+      if (!$body.length) return;
+
+      if (this.cache[orderId]) {
+        this.paint($body, this.cache[orderId]);
+        return;
+      }
+
+      if (this.pending[orderId]) return;
+      this.pending[orderId] = true;
+
+      const config = this.config();
+      AndreaniLoader.show($body, { size: 'sm', text: this.text('packing_loading') });
+
+      $.post(config.ajax_url || ajaxurl, {
+        action:   'andreani_order_packing',
+        nonce:    config.nonce_order_packing,
+        order_id: orderId,
+      })
+        .done((res) => {
+          const ok = !!(res && res.success && res.data);
+          if (ok) this.cache[orderId] = res.data;
+          AndreaniLoader.hide(this.$body(orderId), () => (ok ? this.paint(this.$body(orderId), res.data) : this.fail(orderId)));
+        })
+        .fail(() => AndreaniLoader.hide(this.$body(orderId), () => this.fail(orderId)))
+        .always(() => { delete this.pending[orderId]; });
+    },
+
+    fail(orderId) {
+      this.$body(orderId).html('<p class="andr-packing__hint">' + escapeHtml(this.text('packing_error')) + '</p>');
+    },
+
+    paint($body, data) {
+      const config = this.config();
+      const preview = window.AndreaniBoxPreview;
+      preview.configure($.extend({}, config.box_preview, { i18n: (config.i18n || {}).dispatch || {} }));
+
+      const missing = data.missing || [];
+      const packages = data.packages || [];
+
+      if (missing.length) {
+        $body.html(missing.map((m) => '<p class="andr-packing__missing">'
+          + escapeHtml(preview.fill(this.text('packing_missing'), m.name))
+          + (m.url ? ' · <a href="' + escapeAttr(m.url) + '">' + escapeHtml(this.text('packing_complete')) + '</a>' : '')
+          + '</p>').join(''));
+        return;
+      }
+
+      if (!packages.length) {
+        $body.html('<p class="andr-packing__hint">' + escapeHtml(this.text('packing_empty')) + '</p>');
+        return;
+      }
+
+      const weight = preview.weightText;
+      const totalKg = packages.reduce((acc, p) => acc + p.kg * (p.count || 1), 0);
+      const totalBoxes = data.total || packages.length;
+      const bigTitle = '<p class="andr-packing__title">'
+        + escapeHtml(totalBoxes === 1 ? this.text('packing_big_one') : preview.fill(this.text('packing_big_title'), preview.fmt(totalBoxes)))
+        + '</p>';
+      let boxes;
+      let text;
+
+      $body.removeClass('andr-packing--list');
+
+      if (data.bigger && preview.heterogeneous(packages)) {
+        $body.addClass('andr-packing--list').html('<div class="andr-packing__text">' + bigTitle
+          + '<ul class="andr-boxlist" data-andr="boxlist"></ul></div>'
+          + '<p class="andr-packing__hint">' + escapeHtml(this.text('packing_hint')) + '</p>');
+        preview.boxList($body.find('[data-andr="boxlist"]').get(0), packages, { box: this.text('packing_box'), units: this.text('packing_units') });
+        return;
+      }
+
+      if (data.bigger) {
+        boxes = preview.separate(preview.sample(packages), 'kraft');
+        let offset = 0;
+        const rows = packages.map((p) => {
+          const count = p.count || 1;
+          const head = count > 1
+            ? [preview.fmt(count) + ' × ' + (p.name || this.text('packing_box')), p.ref]
+            : [this.text('packing_box') + ' ' + (offset + 1), p.name, p.ref];
+          offset += count;
+
+          return '<li>' + escapeHtml(head.concat([
+            p.units > 1 ? preview.fill(this.text('packing_units'), p.units) : '',
+            preview.dims(p) + ' cm',
+            weight(p.kg),
+          ]).filter(Boolean).join(' · ')) + '</li>';
+        });
+        text = bigTitle + '<ul class="andr-packing__list">' + rows.join('') + '</ul>';
+      } else {
+        const pack = preview.packed(packages);
+        const info = pack.info;
+        boxes = pack.boxes;
+
+        const meta = '<p class="andr-packing__meta">' + escapeHtml(data.units === 1
+          ? preview.fill(this.text('packing_fits_one'), weight(totalKg))
+          : preview.fill(this.text('packing_fits_many'), preview.fmt(data.units), weight(totalKg))) + '</p>';
+
+        if (info && info.ok) {
+          text = '<p class="andr-packing__title">' + escapeHtml(preview.fill(this.text('packing_use_box'), info.w, info.d, info.h)) + '</p>' + meta;
+        } else {
+          text = info ? preview.tooBigHtml(info) : meta;
+        }
+      }
+
+      $body.html('<div class="andr-packing__stage"><svg data-andr="stage" role="img" aria-label="' + escapeAttr(this.text('packing_stage')) + '"></svg></div>'
+        + '<div class="andr-packing__text">' + text + '</div>'
+        + '<p class="andr-packing__hint">' + escapeHtml(this.text('packing_hint')) + '</p>');
+
+      preview.render($body.find('[data-andr="stage"]').get(0), boxes, { W: 160, H: 140, pad: 8, fit: true });
+    },
+  };
+
   /**
    * AndreaniRowExpander — toggle del detail row eager-loaded.
    *
@@ -2300,7 +2513,8 @@
       const isQuickDate = $('.andreani-chip[data-filter-group="date"].andreani-chip--active').length > 0;
 
       if (!isQuickDate && (dateFrom || dateTo)) {
-        const text = (dateFrom || '…') + ' → ' + (dateTo || '…');
+        const display = (iso) => iso.split('-').reverse().join('/');
+        const text = (dateFrom ? display(dateFrom) : '…') + ' → ' + (dateTo ? display(dateTo) : '…');
         pills.push({ type: 'date-range', key: 'custom', label: text, removeLabel: 'Quitar rango de fechas' });
       }
 
@@ -2367,6 +2581,20 @@
       this.registerActions();
       this.bindCheckboxes();
       this.bindClose();
+      $(window).on('resize', () => {
+        if (!$bar.prop('hidden')) this.center();
+      });
+    },
+
+    center() {
+      const $bar = $('#andreani-bulk-bar');
+      const card = document.querySelector('.andreani-page-card');
+      if (!card || window.matchMedia('(max-width: 782px)').matches) {
+        $bar.css('left', '');
+        return;
+      }
+      const rect = card.getBoundingClientRect();
+      $bar.css('left', rect.left + rect.width / 2);
     },
 
     t(key) {
@@ -2384,7 +2612,7 @@
         {
           key: 'pay',
           label: self.t('bulk_pay_label'),
-          variant: 'primary',
+          variant: 'ghost',
           predicate: (sel) => sel.length > 0 && sel.some(r => r.paymentPending),
           handler: () => window.open(self.config.pyme_historial_url, '_blank', 'noopener')
         },
@@ -2394,7 +2622,7 @@
           // vez de descartar en silencio las que aún no tienen seguimiento.
           key: 'download-labels',
           label: self.t('bulk_labels_label'),
-          variant: 'ghost',
+          variant: 'primary',
           predicate: (sel) => sel.length > 0,
           handler: (ids, selection, $btn) => self.downloadLabels(selection, $btn)
         }
@@ -2419,9 +2647,9 @@
       }
 
       const self = this;
-      const originalText = $btn.text();
       this.busy = true;
-      $btn.prop('disabled', true).text(this.t('bulk_labels_loading'));
+      $btn.prop('disabled', true);
+      const release = AndreaniLoader.busy(this.t('bulk_labels_loading'));
 
       $.post(this.config.ajax_url || ajaxurl, {
         action: 'andreani_bulk_etiquetas',
@@ -2441,7 +2669,8 @@
         })
         .always(() => {
           self.busy = false;
-          $btn.prop('disabled', false).text(originalText);
+          $btn.prop('disabled', false);
+          release();
         });
     },
 
@@ -2496,17 +2725,22 @@
       const selection = this.selection();
       const $bar = $('#andreani-bulk-bar');
       const $count = $('#andreani-bulk-bar-count');
+      const $label = $('#andreani-bulk-bar-label');
       const $actions = $('#andreani-bulk-bar-actions');
 
       if (selection.length === 0) {
         $bar.prop('hidden', true);
+        $('.andreani-page-card').removeClass('has-bulk-bar');
         $actions.empty();
         return;
       }
 
       $count.text(selection.length);
+      $label.text($label.data(selection.length === 1 ? 'one' : 'many'));
       this.renderActions(selection);
       $bar.prop('hidden', false);
+      $('.andreani-page-card').addClass('has-bulk-bar');
+      this.center();
     },
 
     renderActions(selection) {
@@ -2656,9 +2890,15 @@
       $modal.find('.andr-modal__container').css({ left: '', top: '', transform: '', position: '' });
     },
 
-    showLoader(isLoading) {
-      $('#andreani-print-settings-modal [data-print-loader]').toggle(isLoading);
-      $('#andreani-print-settings-modal [data-print-options]').prop('hidden', isLoading);
+    showLoader(isLoading, onHidden) {
+      const $box = $('#andreani-print-settings-modal [data-print-loader]');
+
+      if (isLoading) {
+        $('#andreani-print-settings-modal [data-print-options]').prop('hidden', true);
+        AndreaniLoader.show($box, { size: 'lg', text: this.t('loader_print') });
+      } else {
+        AndreaniLoader.hide($box, onHidden);
+      }
     },
 
     load() {
@@ -2680,7 +2920,7 @@
             $modal.find(`.andreani-print-option__radio[value="${key}"]`).prop('checked', true);
             $('#andreani-print-settings-save').prop('disabled', false);
             self.renderPreview();
-            self.showLoader(false);
+            self.showLoader(false, () => $('#andreani-print-settings-modal [data-print-options]').prop('hidden', false));
             self.loaded = true;
           } else {
             self.showLoadError(res.data?.message || self.t('print_load_error'));
@@ -2702,8 +2942,8 @@
       if (!key) return;
 
       const $btn = $('#andreani-print-settings-save');
-      const originalText = $btn.text();
-      $btn.prop('disabled', true).text(this.t('print_save_loading'));
+      $btn.prop('disabled', true);
+      const release = AndreaniLoader.busy(this.t('print_save_loading'));
 
       $.post(this.config.ajax_url || ajaxurl, {
         action: 'andreani_save_print_settings',
@@ -2722,57 +2962,8 @@
           AndreaniShipments.showNotice($('#andreani-print-settings-modal .andr-modal__body'), self.t('network_error'), 'error');
         })
         .always(() => {
-          $btn.prop('disabled', false).text(originalText);
-        });
-    },
-
-    t(key) {
-      return this.config.i18n?.[key] || key;
-    }
-  };
-
-  /* ========================================
-   * TRACKING SYNC TOGGLE (AndreaniTrackingSync)
-   * ======================================== */
-  const AndreaniTrackingSync = {
-    config: window.andreani_admin || {},
-
-    init() {
-      const $input = $('#andreani-tracking-sync-toggle');
-      if (!$input.length) return;
-      const self = this;
-      $input.on('change', function() {
-        self.toggle($(this));
-      });
-    },
-
-    toggle($input) {
-      const self = this;
-      const next = $input.is(':checked');
-      $input.prop('disabled', true);
-
-      $.post(this.config.ajax_url || ajaxurl, {
-        action: 'andreani_toggle_tracking_sync',
-        nonce: this.config.nonce_toggle_sync,
-        enabled: next ? '1' : '0'
-      })
-        .done((res) => {
-          const $wrap = $('.andreani-shipments-wrap').first();
-          if (res && res.success) {
-            const on = !!res.data.enabled;
-            $input.prop('checked', on).attr('aria-checked', on ? 'true' : 'false');
-            AndreaniShipments.showNotice($wrap, res.data.message || (on ? self.t('sync_on') : self.t('sync_off')), 'success');
-          } else {
-            $input.prop('checked', !next).attr('aria-checked', (!next) ? 'true' : 'false');
-            AndreaniShipments.showNotice($wrap, (res && res.data && res.data.message) || self.t('sync_toggle_error'), 'error');
-          }
-        })
-        .fail(() => {
-          $input.prop('checked', !next).attr('aria-checked', (!next) ? 'true' : 'false');
-          AndreaniShipments.showNotice($('.andreani-shipments-wrap').first(), self.t('network_error'), 'error');
-        })
-        .always(() => {
-          $input.prop('disabled', false);
+          $btn.prop('disabled', false);
+          release();
         });
     },
 
@@ -2786,9 +2977,10 @@
    * ======================================== */
   const AndreaniProductsGrid = {
     config: window.andreani_admin || {},
+    loaded: false,
     $container: null,
     isLoading: false,
-    currentParams: { paged: 1, per_page: 10, s: '', missing_dims: 0 },
+    currentParams: { paged: 1, per_page: 10, s: '', service: [], mode: [] },
 
     init() {
       this.$container = $('#andreani-products-table-container');
@@ -2811,12 +3003,35 @@
         if (!self.isLoading) self.loadTable({ paged: 1 });
       });
 
-      $('#andreani-products-missing-filter').on('click', function() {
-        const $btn = $(this);
-        const isActive = $btn.attr('aria-pressed') === 'true';
-        $btn.attr('aria-pressed', isActive ? 'false' : 'true').toggleClass('is-active', !isActive);
-        self.currentParams.missing_dims = isActive ? 0 : 1;
-        self.loadTable({ paged: 1 });
+      $(document).on('click', '.andreani-products-wrap [data-filter-group]', function() {
+        const group = $(this).attr('data-filter-group');
+        const value = $(this).attr('data-filter-value');
+        const current = self.currentParams[group] || [];
+        const next = current.indexOf(value) === -1 ? current.concat(value) : current.filter((v) => v !== value);
+        self.loadTable({ paged: 1, [group]: next });
+      });
+
+      $('#andreani-products-filters-trigger').on('click', function(e) {
+        e.stopPropagation();
+        self.toggleFilters();
+      });
+
+      $(document).on('click', function(e) {
+        if (!$(e.target).closest('#andreani-products-filters-popover, #andreani-products-filters-trigger').length) self.toggleFilters(false);
+      });
+
+      $(document).on('keydown', function(e) {
+        if (e.key === 'Escape') self.toggleFilters(false);
+      });
+
+      $('#andreani-products-filters-close').on('click', () => self.toggleFilters(false));
+      $('#andreani-products-filters-clear, #andreani-products-pills-clear').on('click', () => self.loadTable({ paged: 1, service: [], mode: [] }));
+      $('#andreani-products-missing-link').on('click', () => self.loadTable({ paged: 1, service: ['missing'], mode: [] }));
+
+      $(document).on('click', '#andreani-products-pills-list .andreani-active-pill__remove', function() {
+        const $pill = $(this).closest('.andreani-active-pill');
+        const group = $pill.attr('data-pill-group');
+        self.loadTable({ paged: 1, [group]: (self.currentParams[group] || []).filter((v) => v !== $pill.attr('data-pill-value')) });
       });
 
       $(document).on('click', '.andreani-per-page__btn', function() {
@@ -2828,8 +3043,9 @@
         self.loadTable({ paged: 1 });
       });
 
-      $(document).on('click', '.andreani-products-page-btn', function() {
-        const p = parseInt($(this).data('paged'), 10);
+      $(document).on('click', '.andreani-products-wrap .andreani-page-btn', function() {
+        if ($(this).attr('aria-disabled') === 'true') return;
+        const p = parseInt($(this).attr('data-paged'), 10);
         if (p > 0) self.loadTable({ paged: p });
       });
     },
@@ -2837,6 +3053,14 @@
     loadTable(extra) {
       const self = this;
       if (self.isLoading) return;
+
+      const editor = window.AndreaniProductEdit;
+      if (editor && editor.$row) {
+        editor.requestClose(() => self.loadTable(extra));
+        return;
+      }
+      if (editor) editor.release();
+
       self.isLoading = true;
 
       const s = $('#andreani-products-search').val() || '';
@@ -2846,6 +3070,7 @@
         : (self.currentParams.per_page || 10);
 
       self.currentParams = Object.assign({}, self.currentParams, { s, per_page: perPage }, extra || {});
+      self.renderFilters();
 
       self.showLoader();
 
@@ -2855,50 +3080,119 @@
       });
 
       $.post(self.config.ajax_url || ajaxurl, params)
-        .done((res) => {
+        .done((res) => AndreaniLoader.hide(self.$container, () => {
           if (res.success) {
+            self.loaded = true;
             self.$container.html(res.data.html);
+            AndreaniBoxPreview.mountThumbs(self.$container.get(0));
+            AndreaniBoxPreview.mountIcons(self.$container.get(0));
+            self.updateCounts(res.data.counts);
+            self.updateAnalyzing(res.data.analyzing);
           } else {
             self.$container.html('<p class="andreani-products-empty">' + escapeHtml((self.config.i18n || {}).products_error || 'Error al cargar.') + '</p>');
           }
-        })
-        .fail(() => {
+        }))
+        .fail(() => AndreaniLoader.hide(self.$container, () => {
           self.$container.html('<p class="andreani-products-empty">' + escapeHtml((self.config.i18n || {}).products_error || 'Error al cargar.') + '</p>');
-        })
+        }))
         .always(() => { self.isLoading = false; });
     },
 
+    updateCounts(counts) {
+      Object.keys(counts || {}).forEach((key) => {
+        $('[data-count="' + key + '"]').text(Number(counts[key]).toLocaleString('es-AR'));
+      });
+      $('#andreani-products-missing').prop('hidden', !(counts.missing > 0));
+    },
+
+    toggleFilters(open) {
+      const show = open === undefined ? $('#andreani-products-filters-popover').prop('hidden') : open;
+      $('#andreani-products-filters-popover').prop('hidden', !show);
+      $('#andreani-products-filters-trigger').attr('aria-expanded', show ? 'true' : 'false');
+    },
+
+    renderFilters() {
+      const params = this.currentParams;
+      const pills = [];
+
+      $('.andreani-products-wrap [data-filter-group]').each(function() {
+        const group = $(this).attr('data-filter-group');
+        const value = $(this).attr('data-filter-value');
+        const on = (params[group] || []).indexOf(value) !== -1;
+        $(this).attr('aria-pressed', on ? 'true' : 'false').toggleClass('andreani-chip--active', on);
+        if (on) pills.push({ group, value, label: $(this).attr('data-filter-label') });
+      });
+
+      const $count = $('#andreani-products-filters-trigger .andreani-filter-trigger__count');
+      $count.text(pills.length).prop('hidden', !pills.length);
+      $('#andreani-products-filters-trigger').toggleClass('is-active', pills.length > 0);
+
+      const $list = $('#andreani-products-pills-list').empty();
+      pills.forEach((pill) => {
+        const $el = $('<span class="andreani-active-pill"><span class="andreani-active-pill__text"></span>'
+          + '<button type="button" class="andreani-active-pill__remove" aria-label="Quitar filtro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></span>');
+        $el.attr({ 'data-pill-group': pill.group, 'data-pill-value': pill.value }).find('.andreani-active-pill__text').text(pill.label);
+        $list.append($el);
+      });
+      $('#andreani-products-pills').toggleClass('is-active', pills.length > 0);
+    },
+
+    flash(message) {
+      $('.andreani-products-flash').remove();
+      const $msg = $('<p class="andreani-products-flash andreani-products-inline-msg andreani-products-inline-msg--success" role="status"></p>').text(message);
+      this.$container.before($msg);
+      setTimeout(() => $msg.remove(), 3500);
+    },
+
+    updateAnalyzing(progress) {
+      const $notice = $('#andreani-products-analyzing');
+      if (progress) {
+        $notice.find('[data-analyzing="done"]').text(Number(progress.done).toLocaleString('es-AR'));
+        $notice.find('[data-analyzing="total"]').text(Number(progress.total).toLocaleString('es-AR'));
+      }
+      $notice.prop('hidden', !progress);
+    },
+
     showLoader() {
-      const logoPath = (this.config || {}).logo_path || '';
-      this.$container.html(
-        '<div class="andreani-table-loader"><div class="andreani-table-loader__spinner">'
-        + '<svg class="andreani-table-loader__logo andreani-table-loader__logo--fill" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 341 341" style="color:var(--andr-color-brand);"><g transform="translate(0,341) scale(0.1,-0.1)" fill="currentColor"><path d="' + logoPath + '"/></g></svg>'
-        + '</div></div>'
-      );
+      const i18n = this.config.i18n || {};
+
+      AndreaniLoader.show(this.$container, this.loaded
+        ? { size: 'lg', text: i18n.loader_products_update }
+        : { size: 'lg', phrases: i18n.loader_products_phrases });
     },
   };
 
   /* ========================================
-   * PRODUCT EDIT MODAL (AndreaniProductEdit)
+   * PRODUCT EDITOR (AndreaniProductEdit)
    * ======================================== */
   const AndreaniProductEdit = {
     config: window.andreani_admin || {},
-    $modal: null,
-    thresholds: { weight: 50, sum_sides: 300, max_side: 165 },
-    canonical: { weight: 50, sum_sides: 300, max_side: 165 },
-    previewTimer: null,
-    previewRequest: 0,
+    $panel: null,
+    $holder: null,
+    $row: null,
+    preview: null,
+    baseline: '',
+    pending: null,
+
+    wooSku: '',
 
     MODE_SINGLE: 'single',
     MODE_APILADO: 'apilado',
     MODE_MULTIBULTO: 'multibulto',
 
     init() {
-      this.$modal = $('#andreani-product-edit-modal');
-      if (!this.$modal.length) return;
+      this.$panel = $('#andreani-product-editor');
+      if (!this.$panel.length) return;
+      this.$holder = $('#andreani-product-editor-holder');
       this.config = window.andreani_admin || {};
-      this.thresholds = this.config.bigger_thresholds || this.thresholds;
-      this.canonical = this.config.thresholds_canonical || this.canonical;
+      AndreaniBoxPreview.configure($.extend({}, this.config.box_preview, { i18n: this.strings() }));
+      this.preview = AndreaniBoxPreview.createPreview({
+        root: this.$panel.find('.andr-dispatch__preview').get(0),
+        ajaxUrl: this.config.ajax_url || ajaxurl,
+        nonce: this.config.nonce_preview_bultos,
+        getDraft: () => this.previewPayload(),
+        hint: () => (this.currentMode() === this.MODE_MULTIBULTO ? AndreaniBoxPreview.ignoredHint(this.collectBultos()) : ''),
+      });
       this.bindEvents();
     },
 
@@ -2908,96 +3202,284 @@
 
     bindEvents() {
       const self = this;
+      const ROW = '.andreani-products-wrap .andreani-product-item[data-product-id]';
 
-      $(document).on('click', '.andreani-product-edit-btn', function() {
-        const $btn = $(this);
-        $('#andreani-edit-product-id').val($btn.data('product-id'));
-        $('#andreani-edit-product-name').text($btn.data('product-name'));
-        const thumb = $btn.attr('data-thumb-url') || '';
-        const $thumb = $('#andreani-edit-product-thumb');
-        if (thumb) { $thumb.attr('src', thumb).show(); } else { $thumb.removeAttr('src').hide(); }
-        $('#andreani-edit-weight').val($btn.data('weight') || '');
-        $('#andreani-edit-length').val($btn.data('length') || '');
-        $('#andreani-edit-width').val($btn.data('width') || '');
-        $('#andreani-edit-height').val($btn.data('height') || '');
-        $('#andreani-edit-message').hide().text('').removeClass('andreani-products-inline-msg--success andreani-products-inline-msg--error');
-        $('#andreani-edit-quote-results').hide().empty();
-        $('#andreani-edit-quote-message').hide().text('').removeClass('andreani-products-inline-msg--success andreani-products-inline-msg--error');
-        $('#andreani-edit-quote-cp').val('');
-        $('#andreani-edit-quote-qty').val('1');
-        $('#andreani-edit-preview-body').empty();
-
-        let bultos = $btn.attr('data-bultos-json');
-        try { bultos = bultos ? JSON.parse(bultos) : []; } catch (e) { bultos = []; }
-        if (!Array.isArray(bultos)) bultos = [];
-        self.renderCards(bultos);
-
-        let apilado = $btn.attr('data-apilado-json');
-        try { apilado = apilado ? JSON.parse(apilado) : {}; } catch (e) { apilado = {}; }
-        if (!apilado || typeof apilado !== 'object' || Array.isArray(apilado)) apilado = {};
-        self.renderApilado(apilado);
-
-        let mode = self.MODE_SINGLE;
-        if (bultos.length) mode = self.MODE_MULTIBULTO;
-        else if (self.isValidApilado(apilado)) mode = self.MODE_APILADO;
-        self.setMode(mode);
-
-        self.$modal.show();
+      $(document).on('click', ROW, function() {
+        self.toggle($(this));
       });
 
-      this.$modal.on('click', '.andreani-modal__close, .andr-modal__backdrop', () => this.$modal.hide());
+      $(document).on('keydown', ROW, function(e) {
+        if (e.target !== this) return;
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+          e.preventDefault();
+          self.toggle($(this));
+        }
+      });
 
-      $('#andreani-bultos-plus').on('click', () => { self.addCard(); self.afterChange(); });
-      $('#andreani-bultos-minus').on('click', () => {
-        self.$modal.find('.andreani-bulto-card').last().remove();
+      $('#andreani-product-edit-cancel').on('click', () => this.requestClose());
+
+      $('#andreani-edit-discard').on('click', () => {
+        const then = self.pending;
+        self.pending = null;
+        $('#andreani-edit-confirm').prop('hidden', true);
+        self.close();
+        if (then) then();
+      });
+
+      $('#andreani-edit-keep').on('click', () => {
+        self.pending = null;
+        $('#andreani-edit-confirm').prop('hidden', true);
+      });
+
+      $('#andreani-bultos-add').on('click', () => {
+        self.addCard();
         self.afterChange();
+        const grid = $('#andreani-bultos-cards').closest('.andr-boxes__grid').get(0);
+        const first = $('#andreani-bultos-cards .andreani-bulto-card').last().find('input').get(0);
+        grid.scrollTop = grid.scrollHeight;
+        if (first) first.focus({ preventScroll: true });
       });
-      this.$modal.on('click', '.andreani-bulto-card__remove', function() {
+      this.$panel.on('click', '.andreani-bulto-card__remove', function() {
         $(this).closest('.andreani-bulto-card').remove();
         self.afterChange();
       });
 
-      this.$modal.on('click', '.andreani-bulto-card__switch', () => {
+      this.$panel.on('click', '.andreani-bulto-card__switch', () => {
         $('#andreani-bultos-cards').empty();
         self.setMode(self.MODE_APILADO);
       });
 
-      this.$modal.on('input',
+      this.$panel.on('input',
         '#andreani-edit-weight, #andreani-edit-length, #andreani-edit-width, #andreani-edit-height, .andreani-bulto-card input',
-        () => {
+        function() {
           $('#andreani-edit-bultos-invalid').hide();
+          $(this).closest('.andreani-bulto-card').find('.andreani-bulto-card__incomplete').hide();
           self.markSameDims();
           self.recalcStatus();
         });
 
-      this.$modal.on('change', '.andreani-despacho-card__input', function() {
+      this.$panel.on('change', '.andr-seg__input', function() {
         self.setMode($(this).val());
       });
 
-      this.$modal.on('input', '#andreani-edit-apilado-fields input', () => {
+      this.$panel.on('input', '#andreani-edit-apilado-fields input', () => {
         $('#andreani-edit-apilado-invalid').toggle(self.currentMode() === self.MODE_APILADO && !self.collectApilado());
         self.recalcStatus();
       });
 
+      this.$panel.on('input', '#andreani-edit-sku', () => this.refreshSkuHint());
+      this.$panel.on('click', '.andr-pem__hint-action', () => {
+        $('#andreani-edit-sku').val(this.wooSku);
+        this.refreshSkuHint();
+      });
+
       $('#andreani-product-edit-save').on('click', () => this.save());
+      $('#andreani-edit-discard-go').on('click', () => this.save(true));
+      $('#andreani-edit-discard-cancel').on('click', () => $('#andreani-edit-confirm-discard').prop('hidden', true));
       $('#andreani-edit-quote-submit').on('click', () => this.quote());
+      this.$panel.on('input change', '[data-andr="qty"], [data-andr="qty-input"]', function() {
+        const qty = parseInt($(this).val(), 10);
+        if (qty >= 1 && qty <= 99) {
+          $('#andreani-edit-quote-qty').val(qty);
+          self.markQuoteStale();
+          self.syncQuoteContext();
+        }
+      });
+      this.$panel.on('click', '.andr-stepper__btn', function() {
+        const $qty = $('#andreani-edit-quote-qty');
+        $qty.val((parseInt($qty.val(), 10) || 1) + parseInt($(this).attr('data-step'), 10)).trigger('change');
+      });
+      this.$panel.on('change', '#andreani-edit-quote-qty', function() {
+        const qty = Math.min(99, Math.max(1, parseInt($(this).val(), 10) || 1));
+        $(this).val(qty);
+        const $qtyInput = self.$panel.find('[data-andr="qty-input"]');
+        if (parseInt($qtyInput.val(), 10) !== qty) $qtyInput.val(qty).trigger('change');
+        self.markQuoteStale();
+        self.syncQuoteContext();
+      });
+      this.$panel.on('click', '.andr-tabs__item[data-tab="pem-quote"]', () => this.syncQuoteContext());
+      new MutationObserver(() => this.syncQuoteContext()).observe(this.$panel.find('[data-andr="result"]').get(0), { childList: true, subtree: true });
+    },
+
+    syncQuoteContext() {
+      const qty = parseInt($('#andreani-edit-quote-qty').val(), 10) || 1;
+      const title = qty <= parseInt(this.$panel.find('[data-andr="qty"]').attr('max'), 10)
+        ? this.$panel.find('.andr-dispatch__result-title').first().text()
+        : '';
+      const unit = qty === 1 ? this.strings().preview_unit_one : this.strings().preview_unit_many;
+      $('#andreani-edit-quote-sum').text(qty + ' ' + unit + (title ? ' · ' + title : ''));
+
+      const src = this.$panel.find('.andr-dispatch__stage svg').get(0);
+      const dst = document.getElementById('andreani-edit-quote-art');
+      if (src && dst) {
+        if (src.getAttribute('viewBox')) dst.setAttribute('viewBox', src.getAttribute('viewBox'));
+        dst.innerHTML = src.innerHTML;
+      }
+    },
+
+    markQuoteStale() {
+      const $results = $('#andreani-edit-quote-results');
+      if (!$results.prop('hidden') && $results.children().length) $results.addClass('is-stale');
+    },
+
+    numAttr($row, key) {
+      return parseFloat($row.attr('data-' + key)) || '';
+    },
+
+    snapshot() {
+      return JSON.stringify([
+        this.currentMode(),
+        this.$panel.find('input[type="number"], input[type="text"]').not('#andreani-edit-quote-cp, #andreani-edit-quote-qty, [data-andr="qty-input"], [data-andr="qty"]').map((i, el) => el.value).get(),
+      ]);
+    },
+
+    isDirty() {
+      return !!this.$row && this.snapshot() !== this.baseline;
+    },
+
+    toggle($row) {
+      if (this.$row && this.$row[0] === $row[0]) {
+        this.requestClose();
+        return;
+      }
+      this.requestClose(() => this.open($row));
+    },
+
+    requestClose(then) {
+      if (!this.$row) {
+        if (then) then();
+        return;
+      }
+
+      if (this.isDirty()) {
+        this.pending = then || null;
+        const $confirm = $('#andreani-edit-confirm').prop('hidden', false);
+        $confirm.get(0).scrollIntoView({ block: 'nearest' });
+        return;
+      }
+
+      this.close();
+      if (then) then();
+    },
+
+    open($row) {
+      const $content = $row.closest('.andreani-product-entry').find('.andreani-product-detail__content');
+      const parse = (key, fallback) => {
+        try {
+          const value = JSON.parse($row.attr(key) || '');
+          return value && typeof value === 'object' ? value : fallback;
+        } catch (e) {
+          return fallback;
+        }
+      };
+
+      this.$panel.appendTo($content);
+      this.$row = $row;
+
+      $('#andreani-edit-product-id').val($row.attr('data-product-id'));
+      const productName = $row.attr('data-name') || '';
+      const editUrl = $row.attr('data-edit-url') || '';
+      $('#andreani-edit-product-name').text(productName).attr('title', productName);
+      $('#andreani-edit-product-link').attr('href', editUrl || '#').prop('hidden', !editUrl);
+      this.wooSku = $row.attr('data-woo-sku') || '';
+      $('#andreani-edit-sku').val($row.attr('data-sku') || '');
+      this.refreshSkuHint();
+      $('#andreani-edit-main-ref').val($row.attr('data-main-ref') || '');
+      $('#andreani-edit-weight').val(this.numAttr($row, 'weight'));
+      $('#andreani-edit-length').val(this.numAttr($row, 'length'));
+      $('#andreani-edit-width').val(this.numAttr($row, 'width'));
+      $('#andreani-edit-height').val(this.numAttr($row, 'height'));
+      $('#andreani-edit-message').hide().text('').removeClass('andreani-products-inline-msg--success andreani-products-inline-msg--error');
+      $('#andreani-edit-quote-results').prop('hidden', true).removeClass('is-stale').empty();
+      $('#andreani-edit-quote-cp').val(AndreaniQuoteCp.get());
+      $('#andreani-edit-quote-qty').val(this.$panel.find('[data-andr="qty-input"]').val());
+      this.$panel.find('.andr-tabs__item[data-tab="pem-config"]').trigger('click');
+      $('#andreani-edit-confirm').prop('hidden', true);
+      $('#andreani-edit-apilado-invalid, #andreani-edit-bultos-invalid').hide();
+
+      $('#andreani-edit-confirm-discard').prop('hidden', true);
+
+      let bultos = parse('data-bultos-json', []);
+      if (!Array.isArray(bultos)) bultos = [];
+      this.renderCards(bultos);
+
+      let apilado = parse('data-apilado-json', {});
+      if (Array.isArray(apilado)) apilado = {};
+      this.renderApilado(apilado);
+
+      let mode = this.MODE_SINGLE;
+      if (bultos.length) mode = this.MODE_MULTIBULTO;
+      else if (this.isValidApilado(apilado)) mode = this.MODE_APILADO;
+      this.setMode(mode);
+
+      this.baseline = this.snapshot();
+
+      $row.attr('aria-expanded', 'true').closest('.andreani-product-entry').addClass('is-open');
+
+      if ($row.attr('data-missing') === '1') {
+        this.$panel.find('.andreani-product-dims input').filter(function() { return !parseFloat($(this).val()); }).first().focus();
+      }
+    },
+
+    release() {
+      this.pending = null;
+      if (this.$row) {
+        this.$row.attr('aria-expanded', 'false');
+        this.$row = null;
+      }
+      if (this.$panel && this.$holder) this.$panel.appendTo(this.$holder);
+    },
+
+    close($replacement) {
+      const $row = this.$row;
+      if (!$row) return;
+
+      const $entry = $row.closest('.andreani-product-entry');
+      const hadFocus = this.$panel.get(0).contains(document.activeElement);
+      this.$row = null;
+      this.pending = null;
+      $entry.removeClass('is-open');
+
+      if ($replacement) {
+        $row.replaceWith($replacement);
+      } else {
+        $row.attr('aria-expanded', 'false');
+      }
+
+      if (hadFocus) ($replacement || $row).get(0).focus({ preventScroll: true });
+
+      setTimeout(() => {
+        if (!this.$row) this.$panel.appendTo(this.$holder);
+      }, 350);
+    },
+
+    refreshSkuHint() {
+      const $hint = $('#andreani-edit-sku-hint').removeClass('andr-pem__hint--error');
+      const value = $.trim($('#andreani-edit-sku').val());
+      const text = (key) => $hint.attr('data-' + key);
+      $('#andreani-edit-sku').attr('title', text('default'));
+
+      if (this.wooSku && (value === this.wooSku || !value)) {
+        $hint.text(text('woo'));
+      } else if (this.wooSku) {
+        $hint.text(text('own') + ' · ').append($('<button type="button" class="andr-pem__hint-action"></button>').text(text('use-woo')));
+      } else {
+        $hint.text('');
+      }
     },
 
     currentMode() {
-      const mode = this.$modal.find('.andreani-despacho-card__input:checked').val();
+      const mode = this.$panel.find('.andr-seg__input:checked').val();
       return (mode === this.MODE_APILADO || mode === this.MODE_MULTIBULTO) ? mode : this.MODE_SINGLE;
     },
 
     setMode(mode) {
       mode = (mode === this.MODE_APILADO || mode === this.MODE_MULTIBULTO) ? mode : this.MODE_SINGLE;
 
-      if (mode !== this.MODE_MULTIBULTO) $('#andreani-bultos-cards').empty();
+      $('#andreani-edit-confirm-discard').prop('hidden', true);
 
-      this.$modal.find('.andreani-despacho-card__input').each(function() {
+      this.$panel.find('.andr-seg__input').each(function() {
         $(this).prop('checked', $(this).val() === mode);
-      });
-      this.$modal.find('.andreani-despacho-card').each(function() {
-        $(this).toggleClass('andreani-despacho-card--active', $(this).find('.andreani-despacho-card__input').val() === mode);
       });
 
       if (mode === this.MODE_APILADO) {
@@ -3009,8 +3491,8 @@
         this.addCard();
       }
 
-      $('#andreani-edit-panel-apilado').toggle(mode === this.MODE_APILADO);
-      $('#andreani-edit-panel-multibulto').toggle(mode === this.MODE_MULTIBULTO);
+      $('#andreani-edit-panel-apilado').prop('hidden', mode !== this.MODE_APILADO);
+      $('#andreani-edit-panel-multibulto').prop('hidden', mode !== this.MODE_MULTIBULTO);
       $('#andreani-edit-apilado-invalid').hide();
       $('#andreani-edit-bultos-invalid').hide();
 
@@ -3020,31 +3502,27 @@
     cardHtml(index, b) {
       b = b || {};
       const v = (x) => (x === undefined || x === null) ? '' : x;
+      const ownName = b.name && b.name !== 'Bulto ' + (index + 2) ? b.name : '';
       const u = this.config.units || { weight: 'kg', dimension: 'cm' };
-      const i18n = this.config.i18n || {};
       const s = this.strings();
-      const nameLabel = i18n.bulto_name_label || 'Referencia del bulto';
-      const namePlaceholder = i18n.bulto_name_placeholder || 'Ej. Base de somier';
+      const field = (key, label, unit, cls, step, value) => AndreaniBoxPreview.dimField({ key, label, unit, cls, step, value: v(value) });
       return ''
-        + '<div class="andreani-bulto-card">'
-        +   '<div class="andreani-bulto-card__head">'
-        +     '<span class="andreani-bulto-card__title">Bulto ' + (index + 2) + '</span>'
-        +     '<button type="button" class="andreani-bulto-card__remove" aria-label="Eliminar pieza">&times;</button>'
+        + '<div class="andreani-bulto-card andr-box">'
+        +   '<span class="andr-box__title andreani-bulto-card__title">' + escapeHtml(s.piece_title) + ' ' + (index + 2) + '</span>'
+        +   '<label class="andr-box__ref"><span class="screen-reader-text">' + escapeHtml(s.piece_reference) + '</span>'
+        +     '<input type="text" class="b-name" maxlength="120" placeholder="' + escapeAttr(s.piece_reference_hint) + '" value="' + escapeAttr(ownName) + '"></label>'
+        +   '<div class="andr-box__dims">'
+        +     field('length', s.label_length, u.dimension, 'b-depth', '0.01', b.depth)
+        +     field('width', s.label_width, u.dimension, 'b-width', '0.01', b.width)
+        +     field('height', s.label_height, u.dimension, 'b-height', '0.01', b.height)
+        +     field('weight', s.label_weight, u.weight, 'b-weight', '0.001', b.weight)
         +   '</div>'
-        +   '<label class="andreani-bulto-card__field andreani-bulto-card__field--name">'
-        +     '<span>' + escapeHtml(nameLabel) + '</span>'
-        +     '<input type="text" class="b-name" maxlength="120" placeholder="' + escapeAttr(namePlaceholder) + '" value="' + escapeAttr(v(b.name)) + '">'
-        +   '</label>'
-        +   '<div class="andreani-bulto-card__grid">'
-        +     '<label class="andreani-bulto-card__field"><span>Alto (' + escapeHtml(u.dimension) + ')</span><input type="number" class="b-height" min="0" step="0.01" value="' + v(b.height) + '"></label>'
-        +     '<label class="andreani-bulto-card__field"><span>Ancho (' + escapeHtml(u.dimension) + ')</span><input type="number" class="b-width" min="0" step="0.01" value="' + v(b.width) + '"></label>'
-        +     '<label class="andreani-bulto-card__field"><span>Profundidad (' + escapeHtml(u.dimension) + ')</span><input type="number" class="b-depth" min="0" step="0.01" value="' + v(b.depth) + '"></label>'
-        +     '<label class="andreani-bulto-card__field"><span>Peso (' + escapeHtml(u.weight) + ')</span><input type="number" class="b-weight" min="0" step="0.001" value="' + v(b.weight) + '"></label>'
-        +   '</div>'
-        +   '<div class="andreani-bulto-card__warning" style="display:none;">'
+        +   '<button type="button" class="andr-btn andr-btn--ghost andr-btn--sm andreani-bulto-card__remove" aria-label="' + escapeAttr(s.piece_remove) + '">&times;</button>'
+        +   '<div class="andreani-bulto-card__warning andr-dispatch__warnbox" style="display:none;">'
         +     '<span>' + escapeHtml(s.same_dims_warning || '') + '</span>'
-        +     '<button type="button" class="andr-btn andr-btn--ghost andr-btn--sm andreani-bulto-card__switch">' + escapeHtml(s.switch_to_apilado || '') + '</button>'
+        +     '<button type="button" class="andr-btn andr-btn--secondary andr-btn--sm andreani-bulto-card__switch">' + escapeHtml(s.switch_to_apilado || '') + '</button>'
         +   '</div>'
+        +   '<p class="andreani-bulto-card__incomplete andr-dispatch__warnbox" style="display:none;">' + escapeHtml(s.piece_incomplete || '') + '</p>'
         + '</div>';
     },
 
@@ -3062,18 +3540,29 @@
     },
 
     afterChange() {
+      const title = this.strings().piece_title;
+      $('#andreani-edit-box-title').text(this.currentMode() === this.MODE_MULTIBULTO ? title + ' 1' : this.strings().box_single);
       $('#andreani-bultos-cards .andreani-bulto-card').each(function(i) {
-        $(this).find('.andreani-bulto-card__title').text('Bulto ' + (i + 2));
+        $(this).find('.andreani-bulto-card__title').text(title + ' ' + (i + 2));
       });
-      const n = $('#andreani-bultos-cards .andreani-bulto-card').length;
-      $('#andreani-bultos-count').text(n);
-      $('#andreani-bultos-minus').prop('disabled', n === 0);
       this.markSameDims();
       this.recalcStatus();
     },
 
     round2(value) {
       return Math.round((parseFloat(value) || 0) * 100) / 100;
+    },
+
+    sortedDims(a, b, c) {
+      return [this.round2(a), this.round2(b), this.round2(c)].sort((x, y) => x - y).join('|');
+    },
+
+    partialCards() {
+      return $('#andreani-bultos-cards .andreani-bulto-card').filter(function() {
+        const filled = ['.b-height', '.b-width', '.b-depth', '.b-weight']
+          .filter((sel) => (parseFloat($(this).find(sel).val()) || 0) > 0).length;
+        return filled > 0 && filled < 4;
+      });
     },
 
     markSameDims() {
@@ -3086,9 +3575,8 @@
       $('#andreani-bultos-cards .andreani-bulto-card').each(function() {
         const $c = $(this);
         const same = hasPrincipal
-          && self.round2($c.find('.b-height').val()) === height
-          && self.round2($c.find('.b-width').val()) === width
-          && self.round2($c.find('.b-depth').val()) === depth;
+          && self.sortedDims($c.find('.b-height').val(), $c.find('.b-width').val(), $c.find('.b-depth').val())
+            === self.sortedDims(height, width, depth);
         $c.find('.andreani-bulto-card__warning').toggle(!!same);
       });
     },
@@ -3122,8 +3610,17 @@
         height:        $('#andreani-edit-height').val(),
         dispatch_mode: mode,
         bultos_json:   JSON.stringify(mode === this.MODE_MULTIBULTO ? this.collectBultos() : []),
+        main_ref:      mode === this.MODE_MULTIBULTO ? $.trim($('#andreani-edit-main-ref').val()) : '',
         apilado_json:  JSON.stringify(mode === this.MODE_APILADO ? (apilado || {}) : {}),
       };
+    },
+
+    previewPayload() {
+      const draft = this.draftPayload();
+      if (this.currentMode() === this.MODE_MULTIBULTO) {
+        draft.bultos_json = JSON.stringify(AndreaniBoxPreview.completeBultos(this.collectBultos()));
+      }
+      return draft;
     },
 
     serverError(xhr) {
@@ -3159,90 +3656,43 @@
     },
 
     recalcStatus() {
-      const t = this.thresholds || { weight: 50, sum_sides: 300, max_side: 165 };
-      const c = this.canonical || { weight: 50, sum_sides: 300, max_side: 165 };
-      const s = this.strings();
+      this.markQuoteStale();
       const mode = this.currentMode();
-      const cmFactor = (this.config && this.config.cm_factor) || 1;
-      const kgFactor = (this.config && this.config.kg_factor) || 1;
-      const fmt = (value) => String(Math.round((parseFloat(value) || 0) * 100) / 100);
-      const fill = (tpl, first, second) => String(tpl || '').replace('%1$s', first).replace('%2$s', second);
+      const value = (id) => parseFloat($(id).val()) || 0;
 
-      const weight = parseFloat($('#andreani-edit-weight').val()) || 0;
-      const length = parseFloat($('#andreani-edit-length').val()) || 0;
-      const width = parseFloat($('#andreani-edit-width').val()) || 0;
-      const height = parseFloat($('#andreani-edit-height').val()) || 0;
+      AndreaniBoxPreview.applyBadge($('#andreani-edit-bigger-status'), AndreaniBoxPreview.evaluateProduct({
+        weight: value('#andreani-edit-weight'),
+        length: value('#andreani-edit-length'),
+        width: value('#andreani-edit-width'),
+        height: value('#andreani-edit-height'),
+        mode: mode,
+        apilado: mode === this.MODE_APILADO ? this.apiladoForPreview() : null,
+        bultos: mode === this.MODE_MULTIBULTO ? this.collectBultos() : [],
+      }));
 
-      let totalWeight = weight;
-      let maxSumSides = length + width + height;
-      let maxSide = Math.max(length, width, height);
-
-      if (mode === this.MODE_APILADO) {
-        const apilado = this.collectApilado();
-        if (apilado) {
-          const extra = apilado.maxStackableUnits - 1;
-          const pilaL = length + apilado.unitIncrementDepth * cmFactor * extra;
-          const pilaW = width + apilado.unitIncrementWidth * cmFactor * extra;
-          const pilaH = height + apilado.unitIncrementHeight * cmFactor * extra;
-          totalWeight = weight * apilado.maxStackableUnits;
-          maxSumSides = pilaL + pilaW + pilaH;
-          maxSide = Math.max(pilaL, pilaW, pilaH);
-        }
-      }
-
-      if (mode === this.MODE_MULTIBULTO) {
-        this.collectBultos().forEach((b) => {
-          totalWeight += b.weight;
-          const sum = b.depth + b.width + b.height;
-          if (sum > maxSumSides) maxSumSides = sum;
-          const ms = Math.max(b.depth, b.width, b.height);
-          if (ms > maxSide) maxSide = ms;
-        });
-      }
-
-      let reason = '';
-      if (totalWeight > t.weight) {
-        reason = fill(s.bigger_reason_weight, fmt(totalWeight * kgFactor), fmt(c.weight));
-      } else if (maxSumSides > t.sum_sides) {
-        reason = fill(s.bigger_reason_sum_sides, fmt(cmFactor ? maxSumSides / cmFactor : maxSumSides), fmt(c.sum_sides));
-      } else if (maxSide > t.max_side) {
-        reason = fill(s.bigger_reason_max_side, fmt(cmFactor ? maxSide / cmFactor : maxSide), fmt(c.max_side));
-      }
-
-      const text = reason
-        ? String(s.bigger_prefix || '%s').replace('%s', reason)
-        : (s.bigger_regular || '');
-
-      $('#andreani-edit-bigger-status')
-        .text(text)
-        .toggleClass('andreani-despacho-status--bigger', !!reason)
-        .toggleClass('andreani-despacho-status--regular', !reason);
-
-      this.schedulePreview();
+      this.preview.refresh();
     },
 
-    schedulePreview() {
-      const $body = $('#andreani-edit-preview-body');
-      if (!$body.length) return;
-
-      clearTimeout(this.previewTimer);
-
-      this.previewTimer = setTimeout(() => {
-        const request = ++this.previewRequest;
-
-        $.post(this.config.ajax_url || ajaxurl, $.extend({
-          action: 'andreani_preview_bultos',
-          nonce:  this.config.nonce_preview_bultos,
-        }, this.draftPayload()))
-          .done((res) => {
-            if (request === this.previewRequest && res && res.success && res.data) {
-              $body.html(res.data.html);
-            }
-          });
-      }, 300);
+    apiladoForPreview() {
+      const a = this.collectApilado();
+      return a && {
+        maxUnits: a.maxStackableUnits,
+        incH: a.unitIncrementHeight,
+        incW: a.unitIncrementWidth,
+        incD: a.unitIncrementDepth,
+      };
     },
 
-    save() {
+    discardedConfig() {
+      const mode = this.currentMode();
+      const apilado = mode !== this.MODE_APILADO && !!this.collectApilado();
+      const bultos = mode !== this.MODE_MULTIBULTO && this.collectBultos().some((b) => b.weight > 0 || b.height > 0 || b.width > 0 || b.depth > 0);
+      if (apilado && bultos) return 'both';
+      if (apilado) return 'apilado';
+      return bultos ? 'bultos' : '';
+    },
+
+    save(confirmed) {
       const self = this;
       const $btn = $('#andreani-product-edit-save');
       const $msg = $('#andreani-edit-message');
@@ -3251,6 +3701,7 @@
       const apilado = this.collectApilado();
 
       $msg.hide().text('').removeClass('andreani-products-inline-msg--success andreani-products-inline-msg--error');
+      this.refreshSkuHint();
 
       // El apilado inválido no se descarta en silencio: sin esto el guardado
       // vuelve OK y el producto sigue cotizando una caja por unidad.
@@ -3260,26 +3711,47 @@
         return;
       }
 
+      if (mode === this.MODE_MULTIBULTO && this.partialCards().length) {
+        const $partial = this.partialCards();
+        $partial.find('.andreani-bulto-card__incomplete').show();
+        $partial.first().find('input[type="number"]').filter(function() { return !(parseFloat($(this).val()) > 0); }).first().focus();
+        $partial.first().find('.andreani-bulto-card__incomplete').get(0).scrollIntoView({ block: 'nearest' });
+        return;
+      }
+
       if (mode === this.MODE_MULTIBULTO && !this.hasCompleteBulto()) {
         $('#andreani-edit-bultos-invalid').show();
         $('#andreani-bultos-cards .andreani-bulto-card').first().find('input').first().focus();
         return;
       }
 
-      $btn.prop('disabled', true).text(i18n.save_dims_loading || 'Guardando...');
+      const discarded = confirmed ? '' : this.discardedConfig();
+      if (discarded) {
+        const $text = $('#andreani-edit-confirm-discard-text');
+        $text.text($text.attr('data-' + discarded));
+        const $confirm = $('#andreani-edit-confirm-discard').prop('hidden', false);
+        $confirm.get(0).scrollIntoView({ block: 'nearest' });
+        return;
+      }
+      $('#andreani-edit-confirm-discard').prop('hidden', true);
+
+      const $saving = $('#andreani-edit-saving');
+      $btn.prop('disabled', true);
+      AndreaniLoader.show($saving, { size: 'sm', text: i18n.save_dims_loading });
 
       $.post(this.config.ajax_url || ajaxurl, $.extend({
         action:     'andreani_save_product_dims',
         nonce:      this.config.nonce_save_dims,
         product_id: $('#andreani-edit-product-id').val(),
-      }, this.draftPayload()))
+      }, this.draftPayload(), { sku: $('#andreani-edit-sku').val() }))
         .done((res) => {
           if (res.success) {
-            $msg.text(i18n.save_dims_success || 'Guardado.').addClass('andreani-products-inline-msg--success').show();
-            setTimeout(() => {
-              self.$modal.hide();
-              if (window.AndreaniProductsGrid) AndreaniProductsGrid.loadTable();
-            }, 800);
+            const $newRow = $('<div>').html(res.data.html).find('.andreani-product-item');
+            self.close($newRow);
+            AndreaniBoxPreview.mountThumbs($newRow.get(0));
+            AndreaniBoxPreview.mountIcons($newRow.get(0));
+            AndreaniProductsGrid.updateCounts(res.data.counts);
+            AndreaniProductsGrid.flash(i18n.editor_saved || 'Producto actualizado.');
           } else {
             $msg.text((res.data && res.data.message) || i18n.save_dims_error || 'Error.')
               .addClass('andreani-products-inline-msg--error').show();
@@ -3290,25 +3762,27 @@
           if (data.field === 'apilado') {
             $('#andreani-edit-apilado-invalid').text(data.message).show();
             $('#andreani-edit-apilado-max-units').focus();
+          } else if (data.field === 'sku') {
+            $('#andreani-edit-sku-hint').addClass('andr-pem__hint--error').text(data.message);
+            $('#andreani-edit-sku').focus();
           } else if (data.field === 'bultos') {
             $('#andreani-edit-bultos-invalid').text(data.message).show();
           } else {
             $msg.text(data.message || i18n.save_dims_error || 'Error de red.').addClass('andreani-products-inline-msg--error').show();
           }
         })
-        .always(() => { $btn.prop('disabled', false).text('Guardar'); });
+        .always(() => {
+          $btn.prop('disabled', false);
+          AndreaniLoader.hide($saving);
+        });
     },
 
     quote() {
-      const self = this;
       const $btn = $('#andreani-edit-quote-submit');
-      const $results = $('#andreani-edit-quote-results');
-      const $msg = $('#andreani-edit-quote-message');
-      const i18n = (this.config.i18n || {});
+      const $results = $('#andreani-edit-quote-results').removeClass('is-stale');
 
-      $msg.hide().text('').removeClass('andreani-products-inline-msg--success andreani-products-inline-msg--error');
-      $results.hide().empty();
-      $btn.prop('disabled', true).text(i18n.quote_loading || 'Cotizando...');
+      AndreaniQuote.loading($results);
+      $btn.prop('disabled', true);
 
       $.post(this.config.ajax_url || ajaxurl, $.extend({
         action:     'andreani_test_quote',
@@ -3317,123 +3791,257 @@
         cp_destino: ($('#andreani-edit-quote-cp').val() || '').trim(),
         quantity:   $('#andreani-edit-quote-qty').val() || 1,
       }, this.draftPayload()))
-        .done((res) => {
-          if (res.success && res.data.rates && res.data.rates.length) {
-            let html = '';
-            res.data.rates.forEach((r) => {
-              html += '<div class="andreani-quote-rate">'
-                + '<span class="andreani-quote-rate__name">' + escapeHtml(String(r.label)) + '</span>'
-                + '<span class="andreani-quote-rate__price">$' + escapeHtml(parseFloat(r.cost).toFixed(2)) + '</span>'
-                + '</div>';
-            });
-            $results.html(html).show();
-          } else {
-            $msg.text((res.data && res.data.message) || i18n.quote_error || 'Error al cotizar.')
-              .addClass('andreani-products-inline-msg--error').show();
-          }
-        })
-        .fail((xhr) => {
-          $msg.text(self.serverError(xhr).message || i18n.quote_error || 'Error de red.').addClass('andreani-products-inline-msg--error').show();
-        })
-        .always(() => { $btn.prop('disabled', false).text('Cotizar'); });
+        .done((res) => AndreaniLoader.hide($results, () => AndreaniQuote.show($results, res)))
+        .fail((xhr) => AndreaniLoader.hide($results, () => AndreaniQuote.show($results, null, xhr)))
+        .always(() => { $btn.prop('disabled', false); });
     },
   };
 
   /* ========================================
-   * QUOTE TESTER (AndreaniQuoteTester)
+   * CART SIMULATOR (AndreaniCartSim)
    * ======================================== */
-  const AndreaniQuoteTester = {
+  const AndreaniCartSim = {
     config: window.andreani_admin || {},
     $modal: null,
+    lines: [],
+    searchTimer: null,
+    searchXhr: null,
+    lastQuery: null,
+    simTimer: null,
+    simRequest: 0,
 
     init() {
-      this.$modal = $('#andreani-product-quote-modal');
+      this.$modal = $('#andreani-cart-sim-modal');
       if (!this.$modal.length) return;
       this.config = window.andreani_admin || {};
+      AndreaniBoxPreview.configure($.extend({}, this.config.box_preview, { i18n: (this.config.i18n || {}).dispatch || {} }));
       this.bindEvents();
+    },
+
+    t(key) {
+      return (this.config.i18n || {})[key] || '';
     },
 
     bindEvents() {
       const self = this;
 
-      $(document).on('click', '.andreani-product-quote-btn', function() {
-        const $btn = $(this);
-        $('#andreani-quote-product-id').val($btn.data('product-id'));
-        $('#andreani-quote-product-name').text($btn.data('product-name'));
-        const thumb = $btn.attr('data-thumb-url') || '';
-        const $thumb = $('#andreani-quote-product-thumb');
-        if (thumb) { $thumb.attr('src', thumb).show(); } else { $thumb.removeAttr('src').hide(); }
-        $('#andreani-quote-cp').val('');
-        $('#andreani-quote-results').hide().empty();
-        $('#andreani-quote-message').hide().text('').removeClass('andreani-products-inline-msg--success andreani-products-inline-msg--error');
-        $('#andreani-quote-empty').show();
-        $('#andreani-quote-loader').prop('hidden', true);
+      $('#andreani-cart-sim-open').on('click', () => {
         self.$modal.show();
-        $('#andreani-quote-cp').focus();
+        self.renderLines();
       });
 
       this.$modal.on('click', '.andreani-modal__close, .andr-modal__backdrop', () => this.$modal.hide());
 
-      $('#andreani-quote-submit').on('click', () => this.quote());
+      this.$modal.on('input', '#andreani-sim-search', () => self.searchSoon());
 
-      this.$modal.on('keydown', '#andreani-quote-cp', (e) => {
+      this.$modal.on('focus', '#andreani-sim-search', () => {
+        const q = self.query();
+        if (q === self.lastQuery && $('#andreani-sim-results').children().length) {
+          $('#andreani-sim-results').prop('hidden', false);
+        } else if (q === '') {
+          self.search();
+        }
+      });
+
+      this.$modal.on('click', (e) => {
+        if (!$(e.target).closest('.andreani-sim__search').length) $('#andreani-sim-results').prop('hidden', true);
+      });
+
+      this.$modal.on('click', '.andreani-sim__result:not([disabled])', function() {
+        self.addLine($(this).data('product'));
+        $('#andreani-sim-search').val('');
+        $('#andreani-sim-results').prop('hidden', true).empty();
+        self.lastQuery = null;
+      });
+
+      this.$modal.on('click', '.andreani-sim__remove', function() {
+        const id = parseInt($(this).attr('data-id'), 10);
+        self.lines = self.lines.filter((l) => l.id !== id);
+        self.renderLines();
+      });
+
+      this.$modal.on('click', '.andreani-sim__step', function() {
+        const id = parseInt($(this).attr('data-id'), 10);
+        const delta = parseInt($(this).attr('data-d'), 10);
+        self.lines = self.lines
+          .map((l) => (l.id === id ? Object.assign({}, l, { qty: Math.min(99, l.qty + delta) }) : l))
+          .filter((l) => l.qty > 0);
+        self.renderLines();
+      });
+
+      $('#andreani-sim-quote').on('click', () => this.quote());
+      this.$modal.on('keydown', '#andreani-sim-cp', (e) => {
         if (e.key === 'Enter') this.quote();
       });
     },
 
-    quote() {
+    thumbHtml(url, packages) {
+      return url
+        ? '<img class="andreani-product-item__thumb" src="' + escapeAttr(url) + '" alt="">'
+        : '<span class="andreani-product-item__thumb-cell"><svg class="andreani-product-item__box" viewBox="0 0 48 48" aria-hidden="true" data-andr-thumb="' + escapeAttr(JSON.stringify(packages || [])) + '"></svg></span>';
+    },
+
+    metaHtml(p) {
+      return [p.sku ? escapeHtml('SKU ' + p.sku) : '', howHtml(p.mode, p.how)].filter(Boolean).join(' · ');
+    },
+
+    query() {
+      return ($('#andreani-sim-search').val() || '').trim();
+    },
+
+    searchSoon() {
+      clearTimeout(this.searchTimer);
+      if (this.searchXhr) this.searchXhr.abort();
+
+      if (this.query().length === 1) {
+        $('#andreani-sim-results').prop('hidden', true);
+        return;
+      }
+
+      this.searchTimer = setTimeout(() => this.search(), 300);
+    },
+
+    search() {
       const self = this;
-      const $btn = $('#andreani-quote-submit');
-      const $results = $('#andreani-quote-results');
-      const $msg = $('#andreani-quote-message');
-      const $loader = $('#andreani-quote-loader');
-      const i18n = (this.config.i18n || {});
-      const MIN_LOADER_MS = 700;
+      const $results = $('#andreani-sim-results');
+      const q = this.query();
 
-      $msg.hide().text('').removeClass('andreani-products-inline-msg--success andreani-products-inline-msg--error');
-      $results.hide().empty();
-      $('#andreani-quote-empty').hide();
-      $loader.prop('hidden', false);
-      $btn.prop('disabled', true).text(i18n.quote_loading || 'Cotizando...');
-      const started = Date.now();
+      if (this.searchXhr) this.searchXhr.abort();
 
-      // Dejamos que la animación de la cajita complete al menos un ciclo aunque
-      // la respuesta llegue antes, para que no parpadee.
-      const finish = (cb) => {
-        const wait = Math.max(0, MIN_LOADER_MS - (Date.now() - started));
-        setTimeout(() => { $loader.prop('hidden', true); cb(); }, wait);
-      };
+      AndreaniLoader.show($results.prop('hidden', false), { size: 'sm', text: this.t('loader_products_update') });
+
+      this.searchXhr = $.post(this.config.ajax_url || ajaxurl, {
+        action: 'andreani_sim_search',
+        nonce:  this.config.nonce_sim_search,
+        s:      q,
+      }).done((res) => AndreaniLoader.hide($results, () => {
+        if (!res.success) {
+          $results.prop('hidden', true);
+          return;
+        }
+        self.lastQuery = q;
+        const results = res.data.results || [];
+        let html = '';
+        results.forEach((p, i) => {
+          html += '<button type="button" class="andreani-sim__result" data-index="' + i + '"' + (p.missing ? ' disabled' : '') + '>'
+            + self.thumbHtml(p.thumb, p.packages)
+            + '<span class="andreani-sim__result-text"><span class="andreani-product-item__name">' + escapeHtml(p.name) + '</span>'
+            + '<span class="andreani-product-item__sku">' + self.metaHtml(p) + '</span></span>'
+            + (p.missing ? '<span class="andr-badge andr-badge--warning andr-badge--sm">' + escapeHtml(self.t('sim_missing')) + '</span>' : '')
+            + '</button>';
+        });
+        if (results.length >= res.data.limit) {
+          html += '<p class="andr-dispatch__message">' + escapeHtml(self.t('sim_limit').replace('%d', res.data.limit)) + '</p>';
+        }
+        $results.html(html || '<p class="andr-dispatch__message">' + escapeHtml(self.t('sim_no_results')) + '</p>').prop('hidden', false);
+        AndreaniBoxPreview.mountThumbs($results.get(0));
+        AndreaniBoxPreview.mountIcons($results.get(0));
+        $results.find('.andreani-sim__result').each(function(i) { $(this).data('product', results[i]); });
+      })).fail((xhr, status) => {
+        if (status !== 'abort') AndreaniLoader.hide($results, () => $results.prop('hidden', true));
+      });
+    },
+
+    addLine(product) {
+      const found = this.lines.find((l) => l.id === product.id);
+      if (found) {
+        found.qty = Math.min(99, found.qty + 1);
+      } else {
+        this.lines.push({ id: product.id, name: product.name, thumb: product.thumb, packages: product.packages, how: product.how, mode: product.mode, qty: 1 });
+      }
+      this.renderLines();
+    },
+
+    renderLines() {
+      let html = '';
+      this.lines.forEach((l) => {
+        html += '<div class="andreani-sim__line">'
+          + this.thumbHtml(l.thumb, l.packages)
+          + '<span class="andreani-sim__line-text"><span class="andreani-product-item__name">' + escapeHtml(l.name) + '</span>'
+          + (l.how ? '<span class="andreani-product-item__sku">' + howHtml(l.mode, l.how) + '</span>' : '') + '</span>'
+          + '<span class="andreani-sim__stepper">'
+          + '<button type="button" class="andr-btn andr-btn--secondary andr-btn--icon andr-btn--sm andreani-sim__step" data-id="' + l.id + '" data-d="-1" aria-label="' + escapeAttr(this.t('sim_remove')) + '">&minus;</button>'
+          + '<b>' + l.qty + '</b>'
+          + '<button type="button" class="andr-btn andr-btn--secondary andr-btn--icon andr-btn--sm andreani-sim__step" data-id="' + l.id + '" data-d="1" aria-label="' + escapeAttr(this.t('sim_add')) + '">+</button>'
+          + '</span>'
+          + '<button type="button" class="andreani-icon-btn andreani-sim__remove" data-id="' + l.id + '" aria-label="' + escapeAttr(this.t('sim_remove_line')) + '" title="' + escapeAttr(this.t('sim_remove_line')) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>'
+          + '</div>';
+      });
+      $('#andreani-sim-lines').html(html);
+      AndreaniBoxPreview.mountThumbs($('#andreani-sim-lines').get(0));
+      AndreaniBoxPreview.mountIcons($('#andreani-sim-lines').get(0));
+      $('#andreani-sim-empty').toggle(!this.lines.length);
+      $('#andreani-sim-rates').prop('hidden', true).empty();
+      this.simulateSoon();
+    },
+
+    payloadLines() {
+      return this.lines.map((l) => ({ product_id: l.id, quantity: l.qty }));
+    },
+
+    simulateSoon() {
+      clearTimeout(this.simTimer);
+      this.simTimer = setTimeout(() => this.simulate(), 250);
+    },
+
+    simulate() {
+      const self = this;
+      const paint = (packages, mixed) => AndreaniBoxPreview.paint({
+        svg: document.getElementById('andreani-sim-stage'),
+        result: document.getElementById('andreani-sim-result'),
+        packages: packages,
+        cart: true,
+        list: true,
+        mixed: mixed,
+        emptyText: self.t('sim_empty_preview'),
+      });
+      const id = ++this.simRequest;
+      const $skipped = $('#andreani-sim-skipped');
+
+      if (!this.lines.length) {
+        $skipped.prop('hidden', true);
+        paint([], false);
+        return;
+      }
+
+      $.post(this.config.ajax_url || ajaxurl, {
+        action: 'andreani_simulate_cart',
+        nonce:  this.config.nonce_simulate_cart,
+        lines:  this.payloadLines(),
+      }).done((res) => {
+        if (id !== self.simRequest || !res.success) return;
+        const packages = res.data.packages || [];
+        const names = self.lines.filter((l) => (res.data.skipped || []).indexOf(l.id) !== -1).map((l) => l.name);
+        paint(packages, new Set(packages.map((p) => p.product_id)).size > 1);
+        $skipped.text(names.length ? self.t('sim_skipped') + ' ' + names.join(', ') : '').prop('hidden', !names.length);
+      }).fail(() => {
+        if (id !== self.simRequest) return;
+        paint([], false);
+        $skipped.text(self.t('network_error')).prop('hidden', false);
+      });
+    },
+
+    quote() {
+      const $btn = $('#andreani-sim-quote');
+      const $results = $('#andreani-sim-rates');
+
+      if (!this.lines.length) {
+        AndreaniQuote.error($results, this.t('sim_empty_preview'));
+        return;
+      }
+
+      AndreaniQuote.loading($results);
+      $btn.prop('disabled', true);
 
       $.post(this.config.ajax_url || ajaxurl, {
         action:     'andreani_test_quote',
         nonce:      this.config.nonce_test_quote,
-        product_id: $('#andreani-quote-product-id').val(),
-        cp_destino: $('#andreani-quote-cp').val().trim(),
+        cp_destino: ($('#andreani-sim-cp').val() || '').trim(),
+        lines:      this.payloadLines(),
       })
-        .done((res) => {
-          finish(() => {
-            if (res.success && res.data.rates && res.data.rates.length) {
-              let html = '';
-              res.data.rates.forEach((r) => {
-                html += '<div class="andreani-quote-rate">'
-                  + '<span class="andreani-quote-rate__name">' + escapeHtml(String(r.label)) + '</span>'
-                  + '<span class="andreani-quote-rate__price">$' + escapeHtml(parseFloat(r.cost).toFixed(2)) + '</span>'
-                  + '</div>';
-              });
-              $results.html(html).show();
-            } else {
-              const msg = (res.data && res.data.message) || i18n.quote_error || 'Error al cotizar.';
-              $msg.text(msg).addClass('andreani-products-inline-msg--error').show();
-            }
-          });
-        })
-        .fail((xhr) => {
-          finish(() => {
-            const data = (xhr.responseJSON && xhr.responseJSON.data) || {};
-            $msg.text(data.message || i18n.quote_error || 'Error de red.').addClass('andreani-products-inline-msg--error').show();
-          });
-        })
-        .always(() => { $btn.prop('disabled', false).text('Cotizar'); });
+        .done((res) => AndreaniLoader.hide($results, () => AndreaniQuote.show($results, res)))
+        .fail((xhr) => AndreaniLoader.hide($results, () => AndreaniQuote.show($results, null, xhr)))
+        .always(() => { $btn.prop('disabled', false); });
     },
   };
 
@@ -3444,7 +4052,6 @@
     AndreaniAdmin.init();
     AndreaniShipments.init();
     AndreaniPrintSettings.init();
-    AndreaniTrackingSync.init();
     AndreaniTableLoader.init();
     AndreaniInfoBox.init();
     AndreaniTabs.init();
@@ -3452,9 +4059,10 @@
     AndreaniFilters.init();
     AndreaniBulkBar.init();
     AndreaniRowExpander.init();
+    AndreaniOrderPacking.init();
     AndreaniProductsGrid.init();
     AndreaniProductEdit.init();
-    AndreaniQuoteTester.init();
+    AndreaniCartSim.init();
   });
 
   window.AndreaniAdmin = AndreaniAdmin;
@@ -3469,5 +4077,49 @@
   window.AndreaniRowExpander = AndreaniRowExpander;
   window.AndreaniProductsGrid = AndreaniProductsGrid;
   window.AndreaniProductEdit = AndreaniProductEdit;
-  window.AndreaniQuoteTester = AndreaniQuoteTester;
+  const AndreaniQuoteCp = {
+    key: 'andreani_quote_cp',
+    selector: '#andreani-edit-quote-cp, #andreani-sim-cp',
+
+    get() {
+      try {
+        return window.sessionStorage.getItem(this.key) || '';
+      } catch (e) {
+        return '';
+      }
+    },
+
+    set(value) {
+      try {
+        if (value) {
+          window.sessionStorage.setItem(this.key, value);
+        } else {
+          window.sessionStorage.removeItem(this.key);
+        }
+      } catch (e) {
+        return;
+      }
+    },
+
+    init() {
+      const saved = this.get();
+      if (saved) {
+        $(this.selector).each(function () {
+          if (!this.value) this.value = saved;
+        });
+      }
+      $(document).on('input change', this.selector, (e) => {
+        const value = (e.currentTarget.value || '').trim();
+        this.set(value);
+        $(this.selector).not(e.currentTarget).val(value);
+      });
+    },
+  };
+
+  window.AndreaniCartSim = AndreaniCartSim;
+  window.AndreaniQuoteCp = AndreaniQuoteCp;
+
+  $(function () {
+    AndreaniQuoteCp.init();
+  });
 })(jQuery);

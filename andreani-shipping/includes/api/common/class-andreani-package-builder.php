@@ -88,21 +88,45 @@ class Andreani_Package_Builder {
 	 * @return array
 	 */
 	public static function resolve_apilado( $product ) {
-		$product_id = $product->get_id();
-
-		$bultos_adicionales = Andreani_Order_Mapper::get_bultos_adicionales( $product_id );
-
-		if ( empty( $bultos_adicionales ) && $product->is_type( 'variation' ) ) {
-			$bultos_adicionales = Andreani_Order_Mapper::get_bultos_adicionales( $product->get_parent_id() );
-		}
-
-		if ( ! empty( $bultos_adicionales ) ) {
+		if ( ! empty( self::resolve_bultos( $product ) ) ) {
 			return array();
 		}
 
-		$config = Andreani_Product_Apilado::get_apilado( $product_id );
+		$config = Andreani_Product_Apilado::get_apilado( $product->get_id() );
 
 		return Andreani_Product_Apilado::is_valid( $config ) ? $config : array();
+	}
+
+	/**
+	 * Bultos adicionales del producto; una variación sin los propios hereda los del padre.
+	 *
+	 * @param WC_Product $product Producto o variación.
+	 * @return array
+	 */
+	public static function resolve_bultos( $product ) {
+		$bultos_adicionales = Andreani_Order_Mapper::get_bultos_adicionales( $product->get_id() );
+
+		if ( empty( $bultos_adicionales ) && Andreani_Product_Bultos::inherits_from_parent( $product ) ) {
+			$bultos_adicionales = Andreani_Order_Mapper::get_bultos_adicionales( $product->get_parent_id() );
+		}
+
+		return $bultos_adicionales;
+	}
+
+	/**
+	 * Referencia de la caja del producto; una variación sin la propia hereda la del padre.
+	 *
+	 * @param WC_Product $product Producto o variación.
+	 * @return string
+	 */
+	public static function resolve_main_ref( $product ) {
+		$ref = (string) get_post_meta( $product->get_id(), Andreani_Product_Bultos::MAIN_REF_META, true );
+
+		if ( '' === $ref && Andreani_Product_Bultos::inherits_from_parent( $product ) ) {
+			$ref = (string) get_post_meta( $product->get_parent_id(), Andreani_Product_Bultos::MAIN_REF_META, true );
+		}
+
+		return $ref;
 	}
 
 	/**
@@ -172,6 +196,170 @@ class Andreani_Package_Builder {
 		}
 
 		return $bultos;
+	}
+
+	/**
+	 * Cajas de un pedido de $quantity unidades, listas para dibujar, en cm y kg.
+	 * Una pila trae units, base (alto de la primera unidad) e inc (alto que suma cada
+	 * unidad extra) para dibujarla en rodajas; cuando la pila también crece de ancho
+	 * o de fondo no se puede rebanar y inc queda en 0. El resto de las cajas son de
+	 * una unidad.
+	 *
+	 * @param array $base        Dimensiones de una unidad en cm: width, height, depth.
+	 * @param float $weight_kg   Peso de una unidad en kg.
+	 * @param array $config      Config de apilado, o array vacío si no aplica.
+	 * @param array $adicionales Piezas adicionales en cm y gramos.
+	 * @param int   $quantity    Unidades del pedido.
+	 * @param string $main_ref   Referencia de la caja del producto, que lleva la primera caja de cada unidad.
+	 * @return array<int,array{w:float,d:float,h:float,kg:float,units:int,base:float,inc:float,ref:string}>
+	 */
+	public static function draw_packages( array $base, $weight_kg, array $config, array $adicionales, $quantity, $main_ref = '' ) {
+		return self::expand_groups( self::draw_package_groups( $base, $weight_kg, $config, $adicionales, $quantity, $main_ref ) );
+	}
+
+	/**
+	 * @return array<int,array{w:float,d:float,h:float,kg:float,units:int,base:float,inc:float,ref:string,count:int}>
+	 */
+	public static function draw_package_groups( array $base, $weight_kg, array $config, array $adicionales, $quantity, $main_ref = '' ) {
+		foreach ( array( 'width', 'height', 'depth' ) as $side ) {
+			if ( ! isset( $base[ $side ] ) || (float) $base[ $side ] <= 0 ) {
+				return array();
+			}
+		}
+
+		$quantity = (int) $quantity;
+
+		if ( $quantity <= 0 ) {
+			return array();
+		}
+
+		$apila  = empty( $adicionales ) && Andreani_Product_Apilado::is_valid( $config );
+		$groups = array();
+
+		if ( $apila ) {
+			$max    = (int) $config['maxStackableUnits'];
+			$slices = (float) $config['unitIncrementWidth'] <= 0 && (float) $config['unitIncrementDepth'] <= 0;
+
+			foreach ( array( array( $max, intdiv( $quantity, $max ) ), array( $quantity % $max, 1 ) ) as $pile ) {
+				list( $units, $count ) = $pile;
+
+				if ( $units <= 0 || $count <= 0 ) {
+					continue;
+				}
+
+				$bulto = self::apply_min_weight( self::stack( $base, $weight_kg, $config, $units ), true )[0];
+
+				$groups[] = self::with_count(
+					self::drawn_package(
+						$bulto['width'],
+						$bulto['depth'],
+						$bulto['height'],
+						$bulto['weight_kg'],
+						$bulto['units'],
+						$base['height'],
+						$slices ? (float) $config['unitIncrementHeight'] : 0.0,
+						$main_ref
+					),
+					$count
+				);
+			}
+		} else {
+			$bulto = self::apply_min_weight( self::stack( $base, $weight_kg, array(), $quantity ), false )[0];
+
+			$groups[] = self::with_count(
+				self::drawn_package( $bulto['width'], $bulto['depth'], $bulto['height'], $bulto['weight_kg'], 1, $bulto['height'], 0.0, $main_ref ),
+				$bulto['units']
+			);
+		}
+
+		foreach ( $adicionales as $pieza ) {
+			$width  = isset( $pieza['width'] ) ? (float) $pieza['width'] : 0.0;
+			$height = isset( $pieza['height'] ) ? (float) $pieza['height'] : 0.0;
+			$depth  = isset( $pieza['depth'] ) ? (float) $pieza['depth'] : 0.0;
+
+			if ( $width <= 0 || $height <= 0 || $depth <= 0 ) {
+				continue;
+			}
+
+			$kg = self::floor_weight_grams( isset( $pieza['weight'] ) ? $pieza['weight'] : 0 ) / 1000;
+
+			$groups[] = self::with_count( self::drawn_package( $width, $depth, $height, $kg, 1, $height, 0.0, self::piece_ref( $pieza ) ), $quantity );
+		}
+
+		return $groups;
+	}
+
+	private static function with_count( array $package, $count ) {
+		$package['count'] = (int) $count;
+
+		return $package;
+	}
+
+	private static function expand_groups( array $groups ) {
+		$packages = array();
+
+		foreach ( $groups as $group ) {
+			$count = $group['count'];
+			unset( $group['count'] );
+
+			for ( $i = 0; $i < $count; $i++ ) {
+				$packages[] = $group;
+			}
+		}
+
+		return $packages;
+	}
+
+	/**
+	 * Cajas de $quantity unidades del producto tal como las arma el cotizador.
+	 *
+	 * @param WC_Product $product  Producto o variación.
+	 * @param int        $quantity Unidades.
+	 * @return array<int,array{w:float,d:float,h:float,kg:float,units:int,base:float,inc:float}>
+	 */
+	public static function draw_packages_for_product( $product, $quantity ) {
+		return self::expand_groups( self::draw_package_groups_for_product( $product, $quantity ) );
+	}
+
+	/**
+	 * @param WC_Product $product  Producto o variación.
+	 * @param int        $quantity Unidades.
+	 * @return array<int,array{w:float,d:float,h:float,kg:float,units:int,base:float,inc:float,ref:string,count:int}>
+	 */
+	public static function draw_package_groups_for_product( $product, $quantity ) {
+		$base = array(
+			'width'  => Andreani_Order_Mapper::convert_dimension_to_cm( $product->get_width() ),
+			'height' => Andreani_Order_Mapper::convert_dimension_to_cm( $product->get_height() ),
+			'depth'  => Andreani_Order_Mapper::convert_dimension_to_cm( $product->get_length() ),
+		);
+
+		return self::draw_package_groups(
+			$base,
+			Andreani_Order_Mapper::convert_weight_to_unit( $product->get_weight(), 'kg' ),
+			self::resolve_apilado( $product ),
+			self::resolve_bultos( $product ),
+			$quantity,
+			self::resolve_main_ref( $product )
+		);
+	}
+
+	private static function piece_ref( array $pieza ) {
+		$name = isset( $pieza['name'] ) ? trim( (string) $pieza['name'] ) : '';
+
+		return preg_match( '/^Bulto \d+$/', $name ) ? '' : $name;
+	}
+
+	private static function drawn_package( $width, $depth, $height, $kg, $units, $base_height, $increment, $ref = '' ) {
+		return array(
+			'w'     => round( (float) $width, 4 ),
+			'd'     => round( (float) $depth, 4 ),
+			'h'     => round( (float) $height, 4 ),
+			'kg'    => round( (float) $kg, 6 ),
+			'units' => (int) $units,
+			'base'  => round( (float) $base_height, 4 ),
+			'inc'   => round( (float) $increment, 4 ),
+			'ref'   => (string) $ref,
+		);
 	}
 
 	public static function preview( array $base, $weight_kg, array $config, array $adicionales, array $quantities ) {

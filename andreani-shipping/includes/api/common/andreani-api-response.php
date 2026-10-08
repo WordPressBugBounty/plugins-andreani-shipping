@@ -354,12 +354,7 @@ class Andreani_Api_Response {
 
 			$price = $mostrar_sin_decimales ? round( floatval( $product_data->get_price() ) ) : floatval( $product_data->get_price() );
 
-			$product_id         = $product_data->get_id();
-			$bultos_adicionales = Andreani_Order_Mapper::get_bultos_adicionales( $product_id );
-
-			if ( empty( $bultos_adicionales ) && $product_data->is_type( 'variation' ) ) {
-				$bultos_adicionales = Andreani_Order_Mapper::get_bultos_adicionales( $product_data->get_parent_id() );
-			}
+			$bultos_adicionales = Andreani_Package_Builder::resolve_bultos( $product_data );
 
 			$total_bultos    = 1 + count( $bultos_adicionales );
 			$price_per_bulto = (int) ( $price / $total_bultos );

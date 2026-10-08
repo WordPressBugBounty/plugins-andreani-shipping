@@ -328,14 +328,6 @@
 	animation: andreani-metabox-fade-in 0.3s ease;
 }
 
-.andreani-spin {
-	animation: andreani-metabox-spin 1s linear infinite;
-	color: var(--andr-color-brand) !important;
-	display: inline-flex !important;
-	align-items: center;
-	justify-content: center;
-}
-
 /* ----- ERROR COLAPSABLE (debug del merchant) ----- */
 .andreani-metabox__error {
 	background: var(--andr-color-error-subtle);
@@ -459,11 +451,6 @@
 	white-space: pre;
 	word-break: break-all;
 	margin: var(--andr-sp-1) 0 var(--andr-sp-2);
-}
-
-@keyframes andreani-metabox-spin {
-	from { transform: rotate(0deg); }
-	to   { transform: rotate(360deg); }
 }
 
 @keyframes andreani-metabox-fade-in {
