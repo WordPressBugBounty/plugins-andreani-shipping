@@ -30,6 +30,21 @@
 	display: block;
 }
 
+.andr-service-icon {
+	display: inline-block;
+	width: 18px;
+	height: 18px;
+	flex-shrink: 0;
+	margin-inline-end: var(--andr-sp-1);
+	vertical-align: middle;
+}
+
+.andr-badge .andr-service-icon {
+	width: 16px;
+	height: 16px;
+	margin-inline-end: 0;
+}
+
 .andr-badge--pyme {
 	background: var(--andr-color-brand-subtle);
 	color: var(--andr-color-brand-strong);

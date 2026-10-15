@@ -338,7 +338,8 @@ class Andreani_Shipping extends WC_Shipping_Method {
 				<?php $this->render_panel_cuenta( $ctx ); ?>
 				<?php $this->render_panel_origen( $ctx ); ?>
 				<?php $this->render_panel_modos( $ctx ); ?>
-				<?php $this->render_panel_checkout( $ctx['checkout_fields'], $ctx['cotizador_fields'] ); ?>
+				<?php $this->render_panel_tienda( $ctx['checkout_fields'], $ctx['cotizador_fields'] ); ?>
+				<?php $this->render_panel_etiquetas( $ctx ); ?>
 				<?php $this->render_panel_avanzado( $ctx['avanzado_fields'] ); ?>
 			</div>
 
@@ -380,11 +381,12 @@ class Andreani_Shipping extends WC_Shipping_Method {
 			'origen'           => Andreani_Origen::get(),
 			'cp_origen'        => $this->get_option( 'cp_origen', '' ),
 			'config_por_modo'  => $config_por_modo,
-			'hidden_fields'    => array_intersect_key( $all_fields, array_flip( array( 'tipo_cliente', 'config_por_modo' ) ) ),
-			'credencial_fields' => array_intersect_key( $all_fields, array_flip( array( 'hash_andreani' ) ) ),
-			'checkout_fields'  => array_intersect_key( $all_fields, array_flip( array( 'checkout_modo', 'checkout_shortcodes_info', 'checkout_force_enqueue' ) ) ),
-			'cotizador_fields' => array_intersect_key( $all_fields, array_flip( array( 'cotizador_producto', 'cotizador_tema', 'cotizador_modo', 'cotizador_posicion' ) ) ),
-			'avanzado_fields'  => array_intersect_key( $all_fields, array_flip( array( 'mostrar_sin_decimales', 'modo_debug' ) ) ),
+			'hidden_fields'    => Andreani_Settings_Layout::fields_for( 'oculto', $all_fields ),
+			'credencial_fields' => Andreani_Settings_Layout::fields_for( 'cuenta', $all_fields ),
+			'costos_fields'    => Andreani_Settings_Layout::fields_for( 'modos', $all_fields ),
+			'checkout_fields'  => Andreani_Settings_Layout::fields_for( 'checkout', $all_fields ),
+			'cotizador_fields' => Andreani_Settings_Layout::fields_for( 'cotizador', $all_fields ),
+			'avanzado_fields'  => Andreani_Settings_Layout::fields_for( 'avanzado', $all_fields ),
 		);
 	}
 
@@ -418,11 +420,15 @@ class Andreani_Shipping extends WC_Shipping_Method {
 			</button>
 			<button type="button" class="andr-tabs__item" data-tab="modos" role="tab" aria-controls="andr-panel-modos" aria-selected="false">
 				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9 4-9-4 9-4 9 4z"/><path d="M3 8v8l9 4 9-4V8"/></svg>
-				<span><?php esc_html_e( 'Servicios', 'andreani-shipping' ); ?></span>
+				<span><?php esc_html_e( 'Modos de entrega', 'andreani-shipping' ); ?></span>
 			</button>
-			<button type="button" class="andr-tabs__item" data-tab="checkout" role="tab" aria-controls="andr-panel-checkout" aria-selected="false">
+			<button type="button" class="andr-tabs__item" data-tab="tienda" role="tab" aria-controls="andr-panel-tienda" aria-selected="false">
 				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-				<span><?php esc_html_e( 'Checkout', 'andreani-shipping' ); ?></span>
+				<span><?php esc_html_e( 'En tu tienda', 'andreani-shipping' ); ?></span>
+			</button>
+			<button type="button" class="andr-tabs__item" data-tab="etiquetas" role="tab" aria-controls="andr-panel-etiquetas" aria-selected="false">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+				<span><?php esc_html_e( 'Etiquetas', 'andreani-shipping' ); ?></span>
 			</button>
 			<button type="button" class="andr-tabs__item" data-tab="avanzado" role="tab" aria-controls="andr-panel-avanzado" aria-selected="false">
 				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -495,22 +501,40 @@ class Andreani_Shipping extends WC_Shipping_Method {
 		<?php
 	}
 
-	private function render_bloque_impresion() {
+	private function render_panel_etiquetas( $ctx ) {
+		$origen = $ctx['origen'];
 		?>
-		<div class="andreani-section">
-			<h3 class="andreani-section-heading andreani-section-heading--with-icon">
-				<span class="andreani-section-heading__icon" aria-hidden="true">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-				</span>
-				<span class="andreani-section-heading__title"><?php esc_html_e( 'Impresión de etiquetas', 'andreani-shipping' ); ?></span>
-			</h3>
-			<p class="andreani-section-description"><?php esc_html_e( 'Elegí el formato en el que se imprimen las etiquetas de tus envíos. Por defecto es A4 con 1 etiqueta por hoja.', 'andreani-shipping' ); ?></p>
-			<p>
-				<button type="button" class="andr-btn andr-btn--secondary andr-btn--sm" id="andreani-print-settings-trigger">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-					<?php esc_html_e( 'Configuración de impresión', 'andreani-shipping' ); ?>
-				</button>
-			</p>
+		<div class="andr-tabs__panel" data-panel="etiquetas" role="tabpanel" id="andr-panel-etiquetas">
+			<div class="andreani-section">
+				<h3 class="andreani-section-heading andreani-section-heading--with-icon">
+					<span class="andreani-section-heading__icon" aria-hidden="true">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+					</span>
+					<span class="andreani-section-heading__title"><?php esc_html_e( 'Remitente', 'andreani-shipping' ); ?></span>
+				</h3>
+				<p class="andreani-origen-campo andreani-origen-campo--remitente">
+					<label for="andreani_origen_remitente_nombre"><?php esc_html_e( 'Nombre del remitente', 'andreani-shipping' ); ?></label>
+					<input
+						type="text"
+						id="andreani_origen_remitente_nombre"
+						name="andreani_origen[remitente_nombre]"
+						value="<?php echo esc_attr( $origen['remitente_nombre'] ); ?>"
+						maxlength="<?php echo esc_attr( Andreani_Origen::REMITENTE_NOMBRE_MAX ); ?>"
+						placeholder="<?php esc_attr_e( 'Ej: el nombre de tu tienda', 'andreani-shipping' ); ?>"
+					/>
+					<span class="andreani-origen-campo__ayuda"><?php esc_html_e( 'Es el nombre que se imprime como remitente en la etiqueta de tus envíos. Si el de tu tienda es distinto al de tu cuenta de Andreani, editalo.', 'andreani-shipping' ); ?></span>
+				</p>
+			</div>
+
+			<div class="andreani-section">
+				<h3 class="andreani-section-heading andreani-section-heading--with-icon">
+					<span class="andreani-section-heading__icon" aria-hidden="true">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+					</span>
+					<span class="andreani-section-heading__title"><?php esc_html_e( 'Formato de impresión', 'andreani-shipping' ); ?></span>
+				</h3>
+				<?php require ANDREANI_PLUGIN_DIR . 'includes/admin/views/print-settings-form.php'; ?>
+			</div>
 		</div>
 		<?php
 	}
@@ -700,19 +724,6 @@ class Andreani_Shipping extends WC_Shipping_Method {
 					</p>
 				<?php endforeach; ?>
 			</div>
-
-			<p class="andreani-origen-campo andreani-origen-campo--remitente">
-				<label for="andreani_origen_remitente_nombre"><?php esc_html_e( 'Nombre del remitente', 'andreani-shipping' ); ?></label>
-				<input
-					type="text"
-					id="andreani_origen_remitente_nombre"
-					name="andreani_origen[remitente_nombre]"
-					value="<?php echo esc_attr( $origen['remitente_nombre'] ); ?>"
-					maxlength="<?php echo esc_attr( Andreani_Origen::REMITENTE_NOMBRE_MAX ); ?>"
-					placeholder="<?php esc_attr_e( 'Ej: el nombre de tu tienda', 'andreani-shipping' ); ?>"
-				/>
-				<span class="andreani-origen-campo__ayuda"><?php esc_html_e( 'Es el nombre que se imprime como remitente en la etiqueta de tus envíos. Si el de tu tienda es distinto al de tu cuenta de Andreani, editalo.', 'andreani-shipping' ); ?></span>
-			</p>
 		</div>
 		<?php
 	}
@@ -937,7 +948,26 @@ class Andreani_Shipping extends WC_Shipping_Method {
 				} else {
 					$this->render_modos_empty_state( $type_info );
 				}
-			endif; ?>
+			endif;
+
+			$this->render_bloque_costos( $ctx['costos_fields'] );
+			?>
+		</div>
+		<?php
+	}
+
+	private function render_bloque_costos( $costos_fields ) {
+		?>
+		<div class="andreani-section">
+			<h3 class="andreani-section-heading andreani-section-heading--with-icon">
+				<span class="andreani-section-heading__icon" aria-hidden="true">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+				</span>
+				<span class="andreani-section-heading__title"><?php esc_html_e( 'Cómo se muestran los costos', 'andreani-shipping' ); ?></span>
+			</h3>
+			<table class="form-table">
+				<?php $this->generate_settings_html( $costos_fields ); ?>
+			</table>
 		</div>
 		<?php
 	}
@@ -967,7 +997,6 @@ class Andreani_Shipping extends WC_Shipping_Method {
 		<p class="andreani-section-description"><?php esc_html_e( 'Habilitá los servicios de Andreani que querés ofrecer y configurá costos adicionales o envío gratis por modo.', 'andreani-shipping' ); ?></p>
 		<div class="andreani-modos-panel andreani-modos-panel--contratos andreani-modos-panel--seamless" data-card="<?php echo esc_attr( $panel_data_card ); ?>">
 			<div class="andreani-modos-panel__body">
-				<p class="andreani-contratos-description"><?php esc_html_e( 'Configurá cada modo de entrega según tus necesidades.', 'andreani-shipping' ); ?></p>
 				<div class="andreani-modos-list">
 					<?php
 					$show_detail = $type_info && $type_info->shows_contract_details();
@@ -1006,9 +1035,9 @@ class Andreani_Shipping extends WC_Shipping_Method {
 		<?php
 	}
 
-	private function render_panel_checkout( $checkout_fields, $cotizador_fields ) {
+	private function render_panel_tienda( $checkout_fields, $cotizador_fields ) {
 		?>
-		<div class="andr-tabs__panel" data-panel="checkout" role="tabpanel" id="andr-panel-checkout">
+		<div class="andr-tabs__panel" data-panel="tienda" role="tabpanel" id="andr-panel-tienda">
 			<div class="andreani-section">
 				<h3 class="andreani-section-heading andreani-section-heading--with-icon">
 					<span class="andreani-section-heading__icon" aria-hidden="true">
@@ -1045,8 +1074,6 @@ class Andreani_Shipping extends WC_Shipping_Method {
 	private function render_panel_avanzado( $avanzado_fields ) {
 		?>
 		<div class="andr-tabs__panel" data-panel="avanzado" role="tabpanel" id="andr-panel-avanzado">
-			<?php $this->render_bloque_impresion(); ?>
-
 			<div class="andreani-section">
 				<h3 class="andreani-section-heading andreani-section-heading--with-icon">
 					<span class="andreani-section-heading__icon" aria-hidden="true">
@@ -1054,7 +1081,7 @@ class Andreani_Shipping extends WC_Shipping_Method {
 					</span>
 					<span class="andreani-section-heading__title"><?php esc_html_e( 'Opciones técnicas', 'andreani-shipping' ); ?></span>
 				</h3>
-				<p class="andreani-section-description"><?php esc_html_e( 'Configuración para diagnóstico y formato de costos. Solo activá el modo debug si estás resolviendo un problema concreto.', 'andreani-shipping' ); ?></p>
+				<p class="andreani-section-description"><?php esc_html_e( 'Configuración para diagnóstico y casos puntuales. Solo activá el modo debug si estás resolviendo un problema concreto.', 'andreani-shipping' ); ?></p>
 				<table class="form-table">
 					<?php
 					$this->generate_settings_html( $avanzado_fields );
@@ -1070,7 +1097,6 @@ class Andreani_Shipping extends WC_Shipping_Method {
 			</div>
 		</div>
 		<?php
-		require ANDREANI_PLUGIN_DIR . 'includes/admin/views/print-settings-modal.php';
 	}
 
 	private function render_settings_footer() {
@@ -1176,6 +1202,10 @@ class Andreani_Shipping extends WC_Shipping_Method {
 					<span class="andreani-modo-card__name"><?php echo esc_html( ucfirst( $contrato['modoDeEntregaNombre'] ) ); ?></span>
 					<?php if ( $show_detail ) : ?>
 					<span class="andreani-modo-card__detail"><?php echo esc_html( $contrato['tipoDeEnvioNombre'] ); ?> - <?php echo esc_html( $contrato['numeroDeContrato'] ); ?></span>
+					<?php endif; ?>
+					<?php $cuando = Andreani_Settings_Layout::modo_cuando( $modo_key ); ?>
+					<?php if ( '' !== $cuando ) : ?>
+					<span class="andreani-modo-card__when"><?php echo esc_html( $cuando ); ?></span>
 					<?php endif; ?>
 				</div>
 				<button type="button" class="andreani-modo-card__expand" aria-label="<?php esc_attr_e( 'Expandir/colapsar', 'andreani-shipping' ); ?>">

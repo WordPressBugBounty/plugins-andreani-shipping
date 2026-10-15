@@ -381,7 +381,7 @@
 
 .andreani-shipments-wrap .wp-list-table {
 	width: 100%;
-	table-layout: fixed;
+	table-layout: auto;
 	border: 0;
 	border-collapse: separate;
 	border-spacing: 0;
@@ -472,21 +472,36 @@
 	box-sizing: border-box;
 }
 
-.andreani-shipments-wrap .column-cb { width: 3%; }
-.andreani-shipments-wrap .column-order_number { width: 7%; }
-.andreani-shipments-wrap .column-customer { width: 15%; }
-.andreani-shipments-wrap .column-destination { width: 13%; }
-.andreani-shipments-wrap .column-products { width: 150px; }
-.andreani-shipments-wrap .column-client_type { width: 70px; text-align: center; }
-.andreani-shipments-wrap .column-delivery_mode { width: 80px; }
-.andreani-shipments-wrap .column-payment { width: 8.5%; text-align: center; }
+.andreani-shipments-wrap .wp-list-table .column-cb,
+.andreani-shipments-wrap .wp-list-table .column-date,
+.andreani-shipments-wrap .wp-list-table .column-order_number,
+.andreani-shipments-wrap .wp-list-table .column-destination,
+.andreani-shipments-wrap .wp-list-table .column-service,
+.andreani-shipments-wrap .wp-list-table .column-payment,
+.andreani-shipments-wrap .wp-list-table .column-status,
+.andreani-shipments-wrap .wp-list-table .column-tracking,
+.andreani-shipments-wrap .wp-list-table .column-actions,
+.andreani-shipments-wrap .wp-list-table .column-expand {
+	width: 1%;
+	white-space: nowrap;
+}
+
+.andreani-shipments-wrap .wp-list-table .column-customer {
+	width: auto;
+	max-width: 0;
+	overflow: hidden;
+}
+
+.andreani-shipments-wrap .column-service,
+.andreani-shipments-wrap .column-payment,
+.andreani-shipments-wrap .column-status { text-align: center; }
 .andreani-shipments-wrap .column-payment .andreani-payment--na {
 	color: var(--andr-color-text-disabled);
 }
-.andreani-shipments-wrap .column-status { width: 13%; }
-.andreani-shipments-wrap .column-andreani_id { width: 145px; }
-.andreani-shipments-wrap .column-tracking { width: 16%; }
-.andreani-shipments-wrap .column-date { width: 8%; }
+.andreani-shipments-wrap .column-actions { text-align: right; }
+.andreani-shipments-wrap .column-expand { padding-left: 0; padding-right: var(--andr-sp-2); }
+.andreani-shipments-wrap td.column-expand .andreani-order-number__chevron { margin-left: auto; }
+
 .andreani-shipments-wrap .column-date,
 .andreani-shipments-wrap .column-date span,
 .andreani-shipments-wrap .column-date abbr {
@@ -494,11 +509,25 @@
 	border-bottom: none;
 	font-size: var(--andr-text-base);
 	color: var(--andr-color-text-subtle);
+	white-space: nowrap;
 }
 
-.andreani-shipments-wrap .column-actions { width: 8%; text-align: right; }
-.andreani-shipments-wrap .column-expand { width: 32px; padding-left: 0; padding-right: var(--andr-sp-2); }
-.andreani-shipments-wrap td.column-expand .andreani-order-number__chevron { margin-left: auto; }
+.andreani-date__short {
+	display: none;
+}
+
+.andreani-shipments-wrap .wp-list-table thead th,
+.andreani-shipments-wrap .wp-list-table thead th a {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.andreani-shipments-wrap .wp-list-table thead th,
+.andreani-shipments-wrap .wp-list-table td {
+	padding-left: var(--andr-sp-2);
+	padding-right: var(--andr-sp-2);
+}
 
 .andreani-shipments-wrap .wp-list-table td.column-order_number a {
 	color: var(--andr-color-text-strong);
@@ -586,52 +615,21 @@
 	color: var(--andr-color-info-strong);
 }
 
-/* Columna Cliente: nombre prominente, meta (email + DNI) discreta debajo. */
+/* Columna Cliente: nombre en una línea con ellipsis; el email vive en el detalle. */
 .andreani-customer__name {
 	font-size: var(--andr-text-md);
 	font-weight: var(--andr-fw-medium);
 	color: var(--andr-color-text-strong);
 	line-height: 1.4;
-}
-
-.andreani-customer__meta {
-	margin-top: 2px;
-	font-size: var(--andr-text-sm);
-	color: var(--andr-color-text-meta);
-	line-height: 1.5;
-}
-
-.andreani-customer__meta br {
-	display: none;
-}
-
-.andreani-customer__email,
-.andreani-customer__dni {
-	display: block;
-	max-width: 100%;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
-.andreani-customer__email {
-	color: var(--andr-color-text-meta);
-	text-decoration: none;
-	cursor: pointer;
-}
-
-.andreani-customer__email:hover {
-	color: var(--andr-color-brand);
-	text-decoration: underline;
-}
-
-.andreani-customer__dni {
-	color: var(--andr-color-text-meta);
-}
-
 /* Columna Destino: línea principal con calle + número, línea secundaria muted
  * con ciudad/provincia/CP. Cae a "—" si no hay datos. */
 .andreani-destination {
+	max-width: 220px;
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
@@ -679,10 +677,6 @@
 }
 
 /* Columna Seguimiento: ID + Seg apilados, monospace plano, sin fondo. */
-.andreani-shipments-wrap .wp-list-table th.column-tracking,
-.andreani-shipments-wrap .wp-list-table td.column-tracking {
-	width: 16%;
-}
 
 .andreani-identifier-stack {
 	display: flex;
@@ -762,6 +756,7 @@
 
 .andreani-identifier__value {
 	flex: 1 1 auto;
+	max-width: 150px;
 	min-width: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -815,25 +810,20 @@
 	fill: none;
 }
 
+.andreani-shipments-wrap .wp-list-table .andr-badge--icon-only,
 .andreani-shipments-wrap .wp-list-table .andr-status--icon-only {
 	max-width: 100%;
-	white-space: normal;
+	white-space: nowrap;
+	overflow: hidden;
 	text-align: left;
 }
 
 .andreani-shipments-wrap .wp-list-table .andr-badge--icon-only::after,
 .andreani-shipments-wrap .wp-list-table .andr-status--icon-only::after {
 	content: attr(data-label);
-}
-
-.andr-status__error-dot {
-	order: -1;
-	flex-shrink: 0;
-	width: 6px;
-	height: 6px;
-	background: var(--andr-color-error);
-	border-radius: 50%;
-	pointer-events: none;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .andreani-shipments-wrap .wp-list-table th.column-service,
@@ -844,8 +834,6 @@
 .andreani-shipments-wrap .wp-list-table td.column-status {
 	text-align: center;
 }
-
-.andreani-shipments-wrap .column-service { width: 8.5%; }
 
 .andreani-cell--empty,
 .andreani-tracking--empty,
@@ -1517,24 +1505,7 @@ input[type="date"].andreani-date-range__input {
 	color: var(--andr-color-error-strong);
 }
 
-@media screen and (max-width: 1280px) {
-	.andreani-shipments-wrap .column-products {
-		display: none;
-	}
-}
-
-@media screen and (max-width: 1100px) {
-	.andreani-shipments-wrap .column-destination {
-		display: none;
-	}
-}
-
 @media screen and (max-width: 960px) {
-	.andreani-shipments-wrap .column-delivery_mode,
-	.andreani-shipments-wrap .column-andreani_id {
-		display: none;
-	}
-
 	.andreani-tracking-code {
 		max-width: 80px;
 	}
@@ -3980,7 +3951,6 @@ input[type="text"].andreani-search-input {
 }
 
 .andr-packing .andr-packing__title,
-.andr-packing .andr-packing__meta,
 .andr-packing .andr-packing__hint {
 	margin: 0;
 	line-height: var(--andr-leading-snug);
@@ -3992,12 +3962,21 @@ input[type="text"].andreani-search-input {
 	overflow: visible;
 }
 
-.andr-packing--list {
+.andr-packing--stack {
 	grid-template-columns: minmax(0, 1fr);
 	align-items: start;
 }
 
-.andr-packing--list .andr-packing__hint {
+.andr-packing--stack .andr-packing__stage,
+.andr-packing--stack .andr-packing__stage svg {
+	height: 150px;
+}
+
+.andr-packing--stack .andr-packing__stage {
+	grid-row: auto;
+}
+
+.andr-packing--stack .andr-packing__hint {
 	grid-column: 1;
 }
 
@@ -4015,13 +3994,23 @@ input[type="text"].andreani-search-input {
 	color: var(--andr-color-text-strong);
 }
 
-.andr-packing__meta {
+.andr-packing__pkg {
+	display: flex;
+	align-items: center;
+	gap: var(--andr-sp-2);
 	margin: 0;
 	font-size: var(--andr-text-base);
+	font-weight: var(--andr-fw-medium);
 	color: var(--andr-color-text);
 }
 
-.andr-packing__list {
+.andr-packing__pkg-icon {
+	flex: none;
+	color: var(--andr-color-text-subtle);
+}
+
+.andr-packing__items,
+.andr-packing__cards {
 	display: flex;
 	flex-direction: column;
 	gap: var(--andr-sp-1);
@@ -4030,6 +4019,52 @@ input[type="text"].andreani-search-input {
 	list-style: none;
 	font-size: var(--andr-text-sm);
 	color: var(--andr-color-text);
+}
+
+.andr-packing__sub {
+	display: block;
+	font-size: inherit;
+	color: var(--andr-color-text-subtle);
+}
+
+.andr-packing__more {
+	color: var(--andr-color-text-subtle);
+}
+
+.andr-packing__card {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 var(--andr-sp-2);
+	padding: var(--andr-sp-2) var(--andr-sp-3);
+	background: var(--andr-color-surface-subtle, #f6f7f9);
+	border: 1px solid var(--andr-color-border);
+	border-radius: var(--andr-radius-card);
+}
+
+.andr-packing__card span {
+	color: var(--andr-color-text-subtle);
+}
+
+.andr-packing__chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--andr-sp-1) var(--andr-sp-2);
+}
+
+.andr-packing__chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--andr-sp-1);
+	padding: 2px var(--andr-sp-2);
+	border-radius: 999px;
+	background: var(--andr-color-surface-subtle, #f0f1f4);
+	font-size: var(--andr-text-xs, 12px);
+	color: var(--andr-color-text);
+}
+
+.andr-packing__chip .andr-service-icon {
+	width: 14px;
+	height: 14px;
 }
 
 .andr-packing__hint,
@@ -4052,5 +4087,187 @@ input[type="text"].andreani-search-input {
 	.andr-packing__hint,
 	.andr-packing__missing {
 		grid-column: 1;
+	}
+}
+
+#andreani-table-container {
+	container: andr-ships / inline-size;
+	box-sizing: border-box;
+	width: 100%;
+	min-width: 0;
+}
+
+.andreani-shipments-wrap .wp-list-table {
+	min-width: 100%;
+}
+
+.andreani-shipments-wrap .wp-list-table thead th {
+	overflow: visible;
+	text-overflow: clip;
+	white-space: nowrap;
+}
+
+.andreani-shipments-wrap .andreani-order-number-wrap {
+	display: flex;
+	align-items: center;
+	flex-wrap: nowrap;
+	gap: var(--andr-sp-2);
+	min-width: 0;
+}
+
+.andreani-shipments-wrap .andreani-order-number {
+	flex: none;
+	white-space: nowrap;
+}
+
+.andreani-shipments-wrap .andreani-order-number__type {
+	flex: none;
+	overflow: visible;
+	text-overflow: clip;
+	white-space: nowrap;
+}
+
+.andreani-shipments-wrap .andreani-actions {
+	flex-wrap: nowrap;
+	justify-content: flex-end;
+}
+
+.andreani-actions__more {
+	position: relative;
+}
+
+.andreani-actions__more > summary {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	list-style: none;
+	cursor: pointer;
+}
+
+.andreani-actions__more > summary::-webkit-details-marker {
+	display: none;
+}
+
+.andreani-actions__menu {
+	position: absolute;
+	top: calc(100% + var(--andr-sp-1));
+	right: 0;
+	z-index: var(--andr-z-dropdown);
+	display: flex;
+	gap: var(--andr-sp-1);
+	padding: var(--andr-sp-1);
+	border: 1px solid var(--andr-color-border-soft);
+	border-radius: var(--andr-radius-box);
+	background: var(--andr-color-surface);
+	box-shadow: var(--andr-shadow-md);
+}
+
+@media screen and (min-width: 783px) {
+	@container andr-ships (max-width: 1290px) {
+		.andreani-shipments-wrap .wp-list-table th.column-destination,
+		.andreani-shipments-wrap .wp-list-table td.column-destination {
+			width: 0;
+			max-width: 0;
+			padding: 0 !important;
+			border: 0 !important;
+			overflow: hidden;
+			font-size: 0;
+			line-height: 0;
+		}
+
+		.andreani-shipments-wrap .wp-list-table th.column-destination *,
+		.andreani-shipments-wrap .wp-list-table td.column-destination * {
+			display: none;
+		}
+	}
+
+	@container andr-ships (max-width: 917px) {
+		.andreani-shipments-wrap .wp-list-table th.column-tracking,
+		.andreani-shipments-wrap .wp-list-table td.column-tracking {
+			width: 0;
+			max-width: 0;
+			padding: 0 !important;
+			border: 0 !important;
+			overflow: hidden;
+			font-size: 0;
+			line-height: 0;
+		}
+
+		.andreani-shipments-wrap .wp-list-table th.column-tracking *,
+		.andreani-shipments-wrap .wp-list-table td.column-tracking * {
+			display: none;
+		}
+	}
+
+	@container andr-ships (max-width: 1054px) {
+		.andreani-shipments-wrap .wp-list-table th.column-service,
+		.andreani-shipments-wrap .wp-list-table th.column-payment,
+		.andreani-shipments-wrap .wp-list-table th.column-status {
+			padding-left: var(--andr-sp-2);
+			padding-right: var(--andr-sp-2);
+		}
+
+		.andreani-shipments-wrap .wp-list-table .andr-badge--icon-only,
+		.andreani-shipments-wrap .wp-list-table .andr-status--icon-only {
+			width: 28px;
+			height: 28px;
+			padding: 0;
+			justify-content: center;
+		}
+
+		.andreani-shipments-wrap .wp-list-table .andr-badge--icon-only::after,
+		.andreani-shipments-wrap .wp-list-table .andr-status--icon-only::after {
+			content: none;
+		}
+	}
+
+	@container andr-ships (max-width: 693px) {
+		.andreani-shipments-wrap .wp-list-table th.column-payment,
+		.andreani-shipments-wrap .wp-list-table td.column-payment {
+			width: 0;
+			max-width: 0;
+			padding: 0 !important;
+			border: 0 !important;
+			overflow: hidden;
+			font-size: 0;
+			line-height: 0;
+		}
+
+		.andreani-shipments-wrap .wp-list-table th.column-payment *,
+		.andreani-shipments-wrap .wp-list-table td.column-payment * {
+			display: none;
+		}
+	}
+
+	@container andr-ships (max-width: 647px) {
+		.andreani-date__full {
+			display: none;
+		}
+
+		.andreani-date__short {
+			display: inline;
+		}
+	}
+
+	@container andr-ships (max-width: 647px) {
+		.andreani-shipments-wrap .wp-list-table .column-order_number {
+			width: auto;
+		}
+
+		.andreani-shipments-wrap .wp-list-table th.column-customer,
+		.andreani-shipments-wrap .wp-list-table td.column-customer {
+			width: 0;
+			max-width: 0;
+			padding: 0 !important;
+			border: 0 !important;
+			overflow: hidden;
+			font-size: 0;
+			line-height: 0;
+		}
+
+		.andreani-shipments-wrap .wp-list-table th.column-customer *,
+		.andreani-shipments-wrap .wp-list-table td.column-customer * {
+			display: none;
+		}
 	}
 }

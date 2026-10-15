@@ -23,7 +23,7 @@ $andreani_awaiting_count = $andreani_has_payment ? $andreani_stats['awaiting'] :
 
 	<div class="andreani-page-card">
 		<?php
-		$andreani_page_title = __( 'Ver mis envíos', 'andreani-shipping' );
+		$andreani_page_title  = __( 'Ver mis envíos', 'andreani-shipping' );
 		require ANDREANI_PLUGIN_DIR . 'includes/admin/views/page-card-header.php';
 		?>
 		<div class="andreani-page-card__body">
@@ -81,13 +81,11 @@ $andreani_awaiting_count = $andreani_has_payment ? $andreani_stats['awaiting'] :
 							</header>
 							<div class="andreani-filters-section__body">
 								<div class="andreani-quick-filters__group" role="group" aria-label="<?php esc_attr_e( 'Estado del envío', 'andreani-shipping' ); ?>">
-									<button type="button" class="andreani-chip" data-quick-filter="not_packaged" data-filter-group="status" aria-pressed="false"><?php esc_html_e( 'Por Empaquetar', 'andreani-shipping' ); ?></button>
-									<button type="button" class="andreani-chip" data-quick-filter="packaged" data-filter-group="status" aria-pressed="false"><?php esc_html_e( 'Empaquetados', 'andreani-shipping' ); ?></button>
-									<button type="button" class="andreani-chip" data-quick-filter="ready" data-filter-group="status" aria-pressed="false"><?php esc_html_e( 'Listos', 'andreani-shipping' ); ?></button>
-									<?php /* Chips reservados para futuras versiones (in_transit / delivered): cuando se integre tracking real, descomentar.
+									<button type="button" class="andreani-chip" data-quick-filter="not_packaged" data-filter-group="status" aria-pressed="false"><?php esc_html_e( 'Por empaquetar', 'andreani-shipping' ); ?></button>
+									<button type="button" class="andreani-chip" data-quick-filter="packaged" data-filter-group="status" aria-pressed="false"><?php esc_html_e( 'Empaquetado', 'andreani-shipping' ); ?></button>
+									<button type="button" class="andreani-chip" data-quick-filter="ready" data-filter-group="status" aria-pressed="false"><?php esc_html_e( 'Listo', 'andreani-shipping' ); ?></button>
 									<button type="button" class="andreani-chip" data-quick-filter="in_transit" data-filter-group="status" aria-pressed="false"><?php esc_html_e( 'En camino', 'andreani-shipping' ); ?></button>
-									<button type="button" class="andreani-chip" data-quick-filter="delivered" data-filter-group="status" aria-pressed="false"><?php esc_html_e( 'Entregados', 'andreani-shipping' ); ?></button>
-									*/ ?>
+									<button type="button" class="andreani-chip" data-quick-filter="delivered" data-filter-group="status" aria-pressed="false"><?php esc_html_e( 'Entregado', 'andreani-shipping' ); ?></button>
 									<button type="button" class="andreani-chip" data-quick-filter="errors" data-filter-group="status" aria-pressed="false"><?php esc_html_e( 'Con error', 'andreani-shipping' ); ?></button>
 								</div>
 							</div>

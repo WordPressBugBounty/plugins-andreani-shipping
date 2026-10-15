@@ -297,19 +297,22 @@ class Andreani_Api_Response {
 	}
 
 	public static function prepare_products_for_cotizacion( $package, $mostrar_sin_decimales = false ) {
-		$products = array();
+		$products     = array();
+		$decision     = Andreani_Package_Builder::decision_for_package( $package );
+		$bundle_value = 0.0;
 
-		foreach ( $package['contents'] as $values ) {
+		foreach ( $package['contents'] as $key => $values ) {
 			$product_data = $values['data'];
 
 			if ( ! $product_data->needs_shipping() ) {
 				continue;
 			}
 
-			$weight     = floatval( $product_data->get_weight() );
-			$raw_width  = Andreani_Order_Mapper::convert_dimension_to_cm( $product_data->get_width() );
-			$raw_height = Andreani_Order_Mapper::convert_dimension_to_cm( $product_data->get_height() );
-			$raw_depth  = Andreani_Order_Mapper::convert_dimension_to_cm( $product_data->get_length() );
+			$measures   = Andreani_Package_Builder::unit_measures( $product_data );
+			$weight     = floatval( $measures['weight_kg'] );
+			$raw_width  = $measures['width'];
+			$raw_height = $measures['height'];
+			$raw_depth  = $measures['depth'];
 
 			if ( $weight <= 0 ) {
 				$sku = $product_data->get_sku();
@@ -354,25 +357,25 @@ class Andreani_Api_Response {
 
 			$price = $mostrar_sin_decimales ? round( floatval( $product_data->get_price() ) ) : floatval( $product_data->get_price() );
 
+			if ( in_array( $key, $decision['bundled'], true ) ) {
+				$bundle_value += $price * (int) $values['quantity'];
+				continue;
+			}
+
 			$bultos_adicionales = Andreani_Package_Builder::resolve_bultos( $product_data );
 
 			$total_bultos    = 1 + count( $bultos_adicionales );
 			$price_per_bulto = (int) ( $price / $total_bultos );
 
-			$apilado = Andreani_Package_Builder::resolve_apilado( $product_data );
-			$apila   = ! empty( $apilado );
-
-			foreach ( Andreani_Package_Builder::build( $product_data, (int) $values['quantity'] ) as $bulto ) {
-				$units = (int) $bulto['units'];
-
+			foreach ( Andreani_Package_Builder::lines( $product_data, (int) $values['quantity'] ) as $line ) {
 				$products[] = array(
-					'quantity'   => $apila ? 1 : $units,
-					'price'      => $apila ? (int) ( $price_per_bulto * $units ) : $price_per_bulto,
+					'quantity'   => $line['quantity'],
+					'price'      => (int) ( $price_per_bulto * ( $line['units'] / $line['quantity'] ) ),
 					'dimensions' => array(
-						'width'  => floatval( $bulto['width'] ),
-						'height' => floatval( $bulto['height'] ),
-						'depth'  => floatval( $bulto['depth'] ),
-						'grams'  => $bulto['weight_kg'] * 1000,
+						'width'  => floatval( $line['width'] ),
+						'height' => floatval( $line['height'] ),
+						'depth'  => floatval( $line['depth'] ),
+						'grams'  => $line['weight_kg'] * 1000,
 					),
 				);
 			}
@@ -398,6 +401,19 @@ class Andreani_Api_Response {
 					),
 				);
 			}
+		}
+
+		if ( $decision['bundle'] ) {
+			$products[] = array(
+				'quantity'   => 1,
+				'price'      => (int) $bundle_value,
+				'dimensions' => array(
+					'width'  => floatval( $decision['bundle']['width'] ),
+					'height' => floatval( $decision['bundle']['height'] ),
+					'depth'  => floatval( $decision['bundle']['depth'] ),
+					'grams'  => $decision['bundle']['weight_kg'] * 1000,
+				),
+			);
 		}
 
 		return $products;

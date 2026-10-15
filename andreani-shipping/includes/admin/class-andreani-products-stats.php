@@ -31,6 +31,7 @@ class Andreani_Products_Stats {
 	const FILTER_MULTIBULTO = 'multibulto';
 
 	const SERVICES = array( self::CLASS_PAQUETERIA, self::CLASS_BIGGER, self::CLASS_MISSING );
+	const OVERFLOWS = array( Andreani_Product_Bultos::OVERFLOW_SEPARATE, Andreani_Product_Bultos::OVERFLOW_TOGETHER, Andreani_Product_Bultos::OVERFLOW_INHERIT );
 	const MODES    = array( Andreani_Product_Bultos::MODE_SINGLE, Andreani_Product_Bultos::MODE_APILADO, Andreani_Product_Bultos::MODE_MULTIBULTO );
 
 	const BATCH_HOOK      = 'andreani_classify_batch';
@@ -64,6 +65,7 @@ class Andreani_Products_Stats {
 			add_action( 'update_option_' . $option, array( __CLASS__, 'restart' ) );
 		}
 
+		add_action( 'andreani_store_boxes_changed', array( __CLASS__, 'requeue_assigned' ) );
 		add_action( self::BATCH_HOOK, array( __CLASS__, 'run_batch' ) );
 		add_action( 'admin_init', array( __CLASS__, 'maybe_start' ) );
 	}
@@ -76,7 +78,28 @@ class Andreani_Products_Stats {
 	 * @return string[] Metas de producto cuyo cambio puede alterar la clasificación.
 	 */
 	public static function watched_meta_keys() {
-		return array( '_weight', '_length', '_width', '_height', '_virtual', Andreani_Product_Bultos::META_KEY, Andreani_Product_Apilado::META_KEY );
+		return array( '_weight', '_length', '_width', '_height', '_virtual', Andreani_Product_Bultos::META_KEY, Andreani_Product_Apilado::META_KEY, Andreani_Product_Bultos::UNITS_META, Andreani_Product_Bultos::OVERFLOW_META, Andreani_Product_Bultos::BOX_REF_META );
+	}
+
+	/**
+	 * Un paquete editado o borrado cambia las medidas de los productos que lo tienen asignado:
+	 * se descarta su clasificación y la reclasifica el lote en segundo plano.
+	 */
+	public static function requeue_assigned() {
+		global $wpdb;
+
+		$ids = $wpdb->get_col( $wpdb->prepare( "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value <> ''", Andreani_Product_Bultos::BOX_REF_META ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		if ( empty( $ids ) ) {
+			return;
+		}
+
+		foreach ( array_chunk( array_map( 'intval', $ids ), self::BATCH_SIZE * 5 ) as $chunk ) {
+			self::clear_metas( $chunk );
+		}
+
+		self::flush();
+		self::start_backfill();
 	}
 
 	public static function on_meta_change( $meta_id, $post_id, $meta_key ) {
@@ -237,12 +260,24 @@ class Andreani_Products_Stats {
 	 * @param array $apilado Config de apilado cruda.
 	 * @return array{state:string,mode:string,reason:string,value:float}
 	 */
-	public static function classify( $weight, $length, $width, $height, array $bultos, array $apilado ) {
-		$weight_kg = (float) Andreani_Order_Mapper::convert_weight_to_unit( $weight, 'kg' );
-		$width_cm  = (float) Andreani_Order_Mapper::convert_dimension_to_cm( $width );
-		$height_cm = (float) Andreani_Order_Mapper::convert_dimension_to_cm( $height );
-		$length_cm = (float) Andreani_Order_Mapper::convert_dimension_to_cm( $length );
+	public static function classify( $weight, $length, $width, $height, array $bultos, array $apilado, $units_per_box = 1 ) {
+		return self::classify_canonical(
+			(float) Andreani_Order_Mapper::convert_weight_to_unit( $weight, 'kg' ),
+			(float) Andreani_Order_Mapper::convert_dimension_to_cm( $length ),
+			(float) Andreani_Order_Mapper::convert_dimension_to_cm( $width ),
+			(float) Andreani_Order_Mapper::convert_dimension_to_cm( $height ),
+			$bultos,
+			$apilado,
+			$units_per_box
+		);
+	}
 
+	/**
+	 * Igual que classify() con el peso en kg y las medidas ya en cm.
+	 *
+	 * @return array{state:string,mode:string,reason:string,value:float}
+	 */
+	public static function classify_canonical( $weight_kg, $length_cm, $width_cm, $height_cm, array $bultos, array $apilado, $units_per_box = 1 ) {
 		if ( ! empty( $bultos ) ) {
 			$mode = Andreani_Product_Bultos::MODE_MULTIBULTO;
 		} elseif ( Andreani_Product_Apilado::is_valid( $apilado ) ) {
@@ -260,10 +295,11 @@ class Andreani_Products_Stats {
 			);
 		}
 
-		$bigger = Andreani_Product_Bultos::bigger_from_values( $weight_kg, $width_cm, $height_cm, $length_cm, $bultos, $apilado );
+		$box_kg = Andreani_Product_Bultos::MODE_SINGLE === $mode ? $weight_kg * max( 1, (int) $units_per_box ) : $weight_kg;
+		$bigger = Andreani_Product_Bultos::bigger_from_values( $box_kg, $width_cm, $height_cm, $length_cm, $bultos, $apilado );
 
 		return array(
-			'state'  => $bigger['is_bigger'] ? 'bigger' : 'ok',
+			'state'  => ( $bigger['is_bigger'] || Andreani_Product_Bultos::MODE_MULTIBULTO === $mode ) ? 'bigger' : 'ok',
 			'mode'   => $mode,
 			'reason' => $bigger['reason'],
 			'value'  => $bigger['value'],
@@ -275,23 +311,29 @@ class Andreani_Products_Stats {
 	 * @return array{state:string,mode:string,reason:string,value:float}
 	 */
 	public static function classify_product( $product ) {
-		return self::classify(
-			$product->get_weight(),
-			$product->get_length(),
-			$product->get_width(),
-			$product->get_height(),
+		$measures = Andreani_Package_Builder::unit_measures( $product );
+
+		return self::classify_canonical(
+			(float) $measures['weight_kg'],
+			(float) $measures['depth'],
+			(float) $measures['width'],
+			(float) $measures['height'],
 			Andreani_Package_Builder::resolve_bultos( $product ),
-			Andreani_Package_Builder::resolve_apilado( $product )
+			Andreani_Package_Builder::resolve_apilado( $product ),
+			Andreani_Package_Builder::resolve_units_per_box( $product )
 		);
 	}
 
 	/**
-	 * @param array $rows Filas de GROUP BY con class, mode y n.
-	 * @return array<string,int> all, ready, missing, bigger, apilado y multibulto.
+	 * @param array $rows Filas de GROUP BY con class, mode, overflow (opcional) y n.
+	 * @return array<string,int> all, ready, missing, bigger, apilado, multibulto y las tres preferencias de cajas.
 	 */
 	public static function counts_from_rows( array $rows ) {
 		$counts = array(
 			'all'                   => 0,
+			Andreani_Product_Bultos::OVERFLOW_SEPARATE => 0,
+			Andreani_Product_Bultos::OVERFLOW_TOGETHER => 0,
+			Andreani_Product_Bultos::OVERFLOW_INHERIT  => 0,
 			self::FILTER_READY      => 0,
 			self::CLASS_PAQUETERIA  => 0,
 			Andreani_Product_Bultos::MODE_SINGLE => 0,
@@ -309,6 +351,12 @@ class Andreani_Products_Stats {
 			}
 
 			$counts['all'] += $n;
+
+			$overflow = Andreani_Product_Bultos::MODE_MULTIBULTO === $row['mode']
+				? Andreani_Product_Bultos::OVERFLOW_SEPARATE
+				: Andreani_Product_Bultos::sanitize_overflow( isset( $row['overflow'] ) ? $row['overflow'] : '' );
+
+			$counts[ $overflow ] += $n;
 
 			if ( self::CLASS_MISSING === $row['class'] ) {
 				$counts[ self::FILTER_MISSING ] += $n;
@@ -342,7 +390,7 @@ class Andreani_Products_Stats {
 	public static function get_counts() {
 		$cached = get_transient( self::TRANSIENT );
 
-		if ( is_array( $cached ) ) {
+		if ( is_array( $cached ) && isset( $cached[ Andreani_Product_Bultos::OVERFLOW_SEPARATE ] ) ) {
 			return $cached;
 		}
 
@@ -350,14 +398,16 @@ class Andreani_Products_Stats {
 
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT cls.meta_value AS class, md.meta_value AS mode, COUNT(*) AS n
+				"SELECT cls.meta_value AS class, md.meta_value AS mode, ov.meta_value AS overflow, COUNT(*) AS n
 				FROM {$wpdb->posts} p
 				INNER JOIN {$wpdb->postmeta} cls ON cls.post_id = p.ID AND cls.meta_key = %s
 				INNER JOIN {$wpdb->postmeta} md ON md.post_id = p.ID AND md.meta_key = %s
+				LEFT JOIN {$wpdb->postmeta} ov ON ov.post_id = p.ID AND ov.meta_key = %s
 				WHERE p.post_type IN ('product', 'product_variation') AND p.post_status = 'publish'
-				GROUP BY cls.meta_value, md.meta_value",
+				GROUP BY cls.meta_value, md.meta_value, ov.meta_value",
 				self::META_CLASS,
-				self::META_MODE
+				self::META_MODE,
+				Andreani_Product_Bultos::OVERFLOW_META
 			),
 			ARRAY_A
 		); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared

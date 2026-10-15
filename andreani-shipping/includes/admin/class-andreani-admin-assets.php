@@ -143,7 +143,7 @@ class Andreani_Admin_Assets {
 			wp_enqueue_style(
 				'andreani-products-table',
 				ANDREANI_PLUGIN_URL . 'includes/assets/css/views/admin-products.css',
-				array( 'andreani-shipments-table' ),
+				array( 'andreani-shipments-table', Andreani_Core_Assets::HANDLE_C_PACKAGE ),
 				ANDREANI_PLUGIN_VERSION
 			);
 			return;
@@ -157,8 +157,10 @@ class Andreani_Admin_Assets {
 				ANDREANI_PLUGIN_URL . 'includes/assets/css/views/admin-settings.css',
 				array(
 					'andreani-core-base',
+					Andreani_Core_Assets::HANDLE_C_BADGE,
 					Andreani_Core_Assets::HANDLE_C_BUTTON,
 					Andreani_Core_Assets::HANDLE_C_CARD,
+					Andreani_Core_Assets::HANDLE_C_DISPATCH,
 					Andreani_Core_Assets::HANDLE_C_TABS,
 					Andreani_Core_Assets::HANDLE_C_MODAL,
 					Andreani_Core_Assets::HANDLE_C_LOADER,
@@ -194,7 +196,7 @@ class Andreani_Admin_Assets {
 		wp_enqueue_script(
 			self::HANDLE,
 			ANDREANI_PLUGIN_URL . 'includes/assets/js/admin.js',
-			array( 'jquery', Andreani_Core_Assets::HANDLE_LOADER, Andreani_Core_Assets::HANDLE_BOX_PREVIEW ),
+			array( 'jquery', Andreani_Core_Assets::HANDLE_LOADER, Andreani_Core_Assets::HANDLE_BOX_PREVIEW, Andreani_Core_Assets::HANDLE_PACKAGE_PICKER ),
 			ANDREANI_PLUGIN_VERSION,
 			true
 		);
@@ -266,6 +268,7 @@ class Andreani_Admin_Assets {
 				'save_dims_error'          => __( 'Error al guardar las dimensiones.', 'andreani-shipping' ),
 				'quote_loading'            => __( 'Consultando tarifas de Andreani…', 'andreani-shipping' ),
 				'quote_error'              => __( 'Error al cotizar.', 'andreani-shipping' ),
+				'quote_cp_required'        => __( 'Poné un código postal', 'andreani-shipping' ),
 				'rate_home'                => __( 'A domicilio', 'andreani-shipping' ),
 				'rate_branch'              => __( 'A sucursal', 'andreani-shipping' ),
 				'rate_today'               => __( 'Llega hoy', 'andreani-shipping' ),
@@ -284,19 +287,27 @@ class Andreani_Admin_Assets {
 				'packing_loading'          => __( 'Armando la caja…', 'andreani-shipping' ),
 				'packing_error'            => __( 'No pudimos armar la sugerencia. Probá de nuevo.', 'andreani-shipping' ),
 				'packing_stage'            => __( 'Cómo se acomoda el envío', 'andreani-shipping' ),
-				/* translators: 1: largo, 2: ancho, 3: alto, en cm */
-				'packing_use_box'          => __( 'Usá una caja de aprox. %1$s × %2$s × %3$s cm', 'andreani-shipping' ),
-				/* translators: %s: peso total */
-				'packing_fits_one'         => __( 'Entra 1 producto · Peso total %s', 'andreani-shipping' ),
-				/* translators: 1: cantidad de productos, 2: peso total */
-				'packing_fits_many'        => __( 'Entran %1$s productos · Peso total %2$s', 'andreani-shipping' ),
-				'packing_big_one'          => __( 'Este envío es 1 caja, con su etiqueta', 'andreani-shipping' ),
+				'packing_title_one'        => __( 'Armalo así', 'andreani-shipping' ),
+				'packing_title_bag'        => __( '1 bolsa · 1 etiqueta', 'andreani-shipping' ),
+				'packing_title_big_one'    => __( '1 caja · 1 etiqueta · Bigger', 'andreani-shipping' ),
 				/* translators: %s: cantidad de cajas */
-				'packing_big_title'        => __( 'Este envío son %s cajas, cada una con su etiqueta', 'andreani-shipping' ),
+				'packing_title_big'        => __( '%1$s cajas · %1$s etiquetas · Bigger', 'andreani-shipping' ),
+				/* translators: 1: largo, 2: ancho, 3: alto, en cm */
+				'packing_pkg_suggested'    => __( 'Caja sugerida · ~%1$s×%2$s×%3$s cm', 'andreani-shipping' ),
+				/* translators: %s: peso total */
+				'packing_weight'           => __( 'Peso %s', 'andreani-shipping' ),
+				/* translators: %s: cantidad de unidades del mismo producto */
+				'packing_count_units'      => __( '%s unidades', 'andreani-shipping' ),
+				/* translators: %s: cantidad de productos distintos */
+				'packing_count_products'   => __( '%s productos', 'andreani-shipping' ),
+				/* translators: %s: productos que no entran en la lista */
+				'packing_more'             => __( '+%s productos más', 'andreani-shipping' ),
+				'packing_service_pack'     => __( 'Paquetería', 'andreani-shipping' ),
+				'packing_service_bigger'   => __( 'Bigger', 'andreani-shipping' ),
 				'packing_box'              => __( 'Caja', 'andreani-shipping' ),
 				/* translators: %s: unidades en la pila */
 				'packing_units'            => __( '%s unidades', 'andreani-shipping' ),
-				'packing_hint'             => __( 'Es una sugerencia según las medidas que cargaste en tus productos.', 'andreani-shipping' ),
+				'packing_hint'             => __( 'Sugerencia según las medidas de tus productos y tus paquetes guardados.', 'andreani-shipping' ),
 				'packing_empty'            => __( 'Este pedido no tiene productos para enviar.', 'andreani-shipping' ),
 				/* translators: %s: nombre del producto */
 				'packing_missing'          => __( 'No podemos sugerir una caja: %s no tiene medidas', 'andreani-shipping' ),

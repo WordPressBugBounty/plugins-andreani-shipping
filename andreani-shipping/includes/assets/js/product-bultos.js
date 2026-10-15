@@ -28,18 +28,18 @@
 
 		Preview.configure( config.preview );
 
-		var $modeInputs = $section.find('.andr-seg__input');
+		var $modeInput = $section.find('[data-andr="mode-input"]');
 		var $status = $('#andreani-despacho-status');
 		var $main = $('#andreani-despacho-main');
 		var $mainTitle = $('#andreani-despacho-main-title');
-		var $mainSummary = $('#andreani-despacho-main-summary');
 		var $toggle = $('#andreani-despacho-toggle');
 		var $body = $('#andreani-despacho-body');
 		var $list = $('#andreani-bultos-list');
-		var $apiladoPanel = $('#andreani-despacho-panel-apilado');
-		var $multibultoPanel = $('#andreani-despacho-panel-multibulto');
+				var $multibultoPanel = $('#andreani-despacho-panel-multibulto');
 		var $apiladoInvalid = $('#andreani-apilado-invalid');
 		var $bultosInvalid = $('#andreani-bultos-invalid');
+		var $units = $('#andreani-despacho-units');
+		var OVERFLOW_INPUTS = 'input[name="andreani_overflow"]';
 
 		var tmpl = null;
 		if ( typeof window.wp !== 'undefined' && window.wp.template ) {
@@ -51,8 +51,66 @@
 		}
 
 		function currentMode() {
-			var mode = $modeInputs.filter(':checked').val();
+			var mode = $modeInput.val();
 			return mode === MODE_APILADO || mode === MODE_MULTIBULTO ? mode : MODE_SINGLE;
+		}
+
+		var picker = null;
+
+		function packageMode() {
+			var pkg = picker && picker.effective();
+
+			return pkg ? ( pkg.type === 'juego' ? 'juego' : 'caja' ) : '';
+		}
+
+		function effective() {
+			var pkg = picker && picker.effective();
+
+			if ( pkg && pkg.type === 'juego' ) {
+				return {
+					weight: pkg.boxes[0].weight,
+					length: pkg.boxes[0].length,
+					width: pkg.boxes[0].width,
+					height: pkg.boxes[0].height,
+					bultos: pkg.boxes.slice(1).map(function ( b ) {
+						return { name: b.ref, height: b.height, width: b.width, depth: b.length, weight: b.weight };
+					})
+				};
+			}
+
+			if ( pkg ) {
+				return { weight: num('input[name="_weight"]'), length: pkg.length, width: pkg.width, height: pkg.height, bultos: [] };
+			}
+
+			return {
+				weight: num('input[name="_weight"]'),
+				length: num('input[name="_length"]'),
+				width: num('input[name="_width"]'),
+				height: num('input[name="_height"]'),
+				bultos: bultos()
+			};
+		}
+
+		function manualPackage() {
+			var own = {
+				length: num('input[name="_length"]'),
+				width: num('input[name="_width"]'),
+				height: num('input[name="_height"]'),
+				weight: num('input[name="_weight"]')
+			};
+
+			if ( currentMode() !== MODE_MULTIBULTO ) {
+				return own.length > 0 && own.width > 0 && own.height > 0 ? { type: 'caja', length: own.length, width: own.width, height: own.height } : null;
+			}
+
+			var boxes = [ $.extend( { ref: $.trim( $('input[name="andreani_main_box_ref"]').val() ) }, own ) ].concat( bultos().map(function ( b ) {
+				return { ref: b.name, length: b.depth, width: b.width, height: b.height, weight: b.weight };
+			}) );
+			var complete = boxes.every(function ( b ) {
+				return b.length > 0 && b.width > 0 && b.height > 0 && b.weight > 0;
+			});
+
+			return complete && boxes.length >= 2 ? { type: 'juego', boxes: boxes } : null;
 		}
 
 		function num( selector ) {
@@ -65,6 +123,21 @@
 
 		function rowValue( $row, field ) {
 			return parseFloat( $row.find('input[name="andreani_bulto_' + field + '[]"]').val() ) || 0;
+		}
+
+		function unitsValue() {
+			return parseInt( $units.val(), 10 ) || 1;
+		}
+
+		function overflowValue() {
+			return $section.find( OVERFLOW_INPUTS ).val() || 'inherit';
+		}
+
+		function capacityState() {
+			return {
+				mode: currentMode(),
+				overflow: overflowValue()
+			};
 		}
 
 		function apiladoConfig() {
@@ -116,12 +189,32 @@
 			return rows;
 		}
 
+		picker = window.AndreaniPackagePicker.create({
+			root: $section.find('[data-andr="package"]'),
+			scope: $section,
+			getMode: currentMode,
+			getManual: manualPackage,
+			onChange: function () {
+				syncMode();
+			}
+		});
+
 		var preview = Preview.createPreview({
 			root: $section.get(0),
 			ajaxUrl: config.ajax_url,
 			nonce: config.nonce_preview,
 			hint: function () {
-				return currentMode() === MODE_MULTIBULTO ? Preview.ignoredHint( bultos() ) : '';
+				return currentMode() === MODE_MULTIBULTO && packageMode() !== 'juego' ? Preview.ignoredHint( bultos() ) : '';
+			},
+			blocked: function () {
+				return currentMode() === MODE_MULTIBULTO && packageMode() !== 'juego' ? Preview.incompleteText( bultos() ) : '';
+			},
+			onResult: function ( bigger ) {
+				Preview.applyBadge( $status, { missing: false, reason: bigger }, {
+					ok: i18n.box_status_ok,
+					bigger: i18n.box_status_bigger,
+					missing: i18n.box_status_missing
+				});
 			},
 			getDraft: function () {
 				var mode = currentMode();
@@ -132,8 +225,11 @@
 					length: num('input[name="_length"]'),
 					width: num('input[name="_width"]'),
 					height: num('input[name="_height"]'),
-					dispatch_mode: mode,
-					bultos_json: JSON.stringify( mode === MODE_MULTIBULTO ? Preview.completeBultos( bultos() ) : [] ),
+						dispatch_mode: mode,
+						box_ref: picker ? picker.value() : '',
+						units_per_box: mode === MODE_SINGLE ? $units.val() : 1,
+						overflow: overflowValue(),
+					bultos_json: JSON.stringify( mode === MODE_MULTIBULTO && packageMode() !== 'juego' ? Preview.completeBultos( bultos() ) : [] ),
 					apilado_json: JSON.stringify( apilado ? {
 						maxStackableUnits: apilado.maxUnits,
 						unitIncrementHeight: apilado.incH,
@@ -145,11 +241,11 @@
 		});
 
 		function updateMain() {
-			var length = round2( num('input[name="_length"]') );
-			var width = round2( num('input[name="_width"]') );
-			var height = round2( num('input[name="_height"]') );
-			var weight = round2( num('input[name="_weight"]') );
-			var complete = length > 0 && width > 0 && height > 0 && weight > 0;
+			var eff = effective();
+			var length = round2( eff.length );
+			var width = round2( eff.width );
+			var height = round2( eff.height );
+			var weight = round2( eff.weight );
 
 			$mainTitle.text( currentMode() === MODE_MULTIBULTO ? i18n.piece_title + ' 1' : i18n.box_single );
 			$('#andreani-despacho-main-ref').prop('hidden', currentMode() !== MODE_MULTIBULTO);
@@ -167,10 +263,6 @@
 					.append( $('<span>').text( cell[0] > 0 ? cell[0] : '\u2014' ) )
 					.append( $('<span class="andr-box__cell-unit">').text( cell[0] > 0 ? cell[1] : '' ) );
 			});
-
-			$mainSummary.text( complete
-				? [ length, width, height ].join(' × ') + ' ' + $main.attr('data-dim-unit') + ' · ' + weight + ' ' + $main.attr('data-weight-unit')
-				: i18n.box_main_empty );
 		}
 
 		function discardedConfig() {
@@ -206,22 +298,27 @@
 			renderDiscard( false );
 			updateMain();
 
+			var eff = effective();
+
 			Preview.applyBadge( $status, Preview.evaluateProduct({
-				weight: num('input[name="_weight"]'),
-				length: num('input[name="_length"]'),
-				width: num('input[name="_width"]'),
-				height: num('input[name="_height"]'),
+				weight: eff.weight,
+				length: eff.length,
+				width: eff.width,
+				height: eff.height,
 				mode: mode,
 				apilado: mode === MODE_APILADO ? apiladoConfig() : null,
-				bultos: mode === MODE_MULTIBULTO ? bultos() : []
+					bultos: mode === MODE_MULTIBULTO ? eff.bultos : [],
+					unitsPerBox: mode === MODE_SINGLE ? unitsValue() : 1
 			}), {
 				ok: i18n.box_status_ok,
 				bigger: i18n.box_status_bigger,
 				missing: i18n.box_status_missing
 			});
 
-			if ( ! $body.prop('hidden') ) {
-				preview.refresh();
+				Preview.syncCapacity( $section, capacityState() );
+
+				if ( ! $body.prop('hidden') ) {
+					preview.refresh();
 			}
 		}
 
@@ -250,6 +347,11 @@
 		}
 
 		function updateSameDimsWarnings() {
+			if ( packageMode() ) {
+				$list.find('.andreani-bulto-warning').hide();
+				return;
+			}
+
 			var width = round2( num('input[name="_width"]') );
 			var height = round2( num('input[name="_height"]') );
 			var depth = round2( num('input[name="_length"]') );
@@ -273,7 +375,7 @@
 		}
 
 		function multibultoIsInvalid() {
-			if ( currentMode() !== MODE_MULTIBULTO ) {
+			if ( currentMode() !== MODE_MULTIBULTO || packageMode() === 'juego' ) {
 				return false;
 			}
 
@@ -285,7 +387,8 @@
 		function syncMode() {
 			var mode = currentMode();
 
-			$apiladoPanel.prop('hidden', mode !== MODE_APILADO);
+			picker.refresh();
+
 			$multibultoPanel.prop('hidden', mode !== MODE_MULTIBULTO);
 			$apiladoInvalid.hide();
 			$bultosInvalid.hide();
@@ -307,16 +410,9 @@
 			setOpen( !! $body.prop('hidden'), true );
 		});
 
-		$modeInputs.on('change', function () {
+		$modeInput.on('change', function () {
 			if ( currentMode() === MODE_MULTIBULTO && ! $list.find('.andreani-bulto-row').length ) {
 				addRow();
-			}
-
-			if ( currentMode() === MODE_APILADO ) {
-				var $maxUnits = $('#andreani-apilado-max-units');
-				if ( ! $maxUnits.val() ) {
-					$maxUnits.val( $maxUnits.attr('min') );
-				}
 			}
 
 			syncMode();
@@ -344,20 +440,25 @@
 
 		$(document).on('click.andreaniBultos', '.andreani-despacho-section .andreani-switch-to-apilado', function () {
 			$list.empty();
-			$('#andreani-despacho-mode-apilado').prop('checked', true).trigger('change');
+			$modeInput.val(MODE_APILADO).trigger('change');
 		});
 
 		$(document).on('input.andreaniBultos change.andreaniBultos',
 			WC_INPUTS_SELECTOR + ', ' + BULTO_INPUTS_SELECTOR,
 			function () {
 				$bultosInvalid.hide();
-				$(this).closest('.andreani-bulto-row').find('.andreani-bulto-incomplete').hide();
+					picker.refresh();
+					$(this).closest('.andreani-bulto-row').find('.andreani-bulto-incomplete').hide();
 				updateSameDimsWarnings();
 				updateStatus();
 			});
 
-		$(document).on('input.andreaniApilado change.andreaniApilado',
-			'#andreani-despacho-panel-apilado input[type="number"]',
+			$(document).on('input.andreaniCapacity change.andreaniCapacity',
+				'#andreani-despacho-units, ' + OVERFLOW_INPUTS,
+				updateStatus);
+
+			$(document).on('input.andreaniApilado change.andreaniApilado',
+			'#andreani-despacho-panel-apilado input',
 			function () {
 				$apiladoInvalid.toggle( apiladoIsInvalid() );
 				updateStatus();

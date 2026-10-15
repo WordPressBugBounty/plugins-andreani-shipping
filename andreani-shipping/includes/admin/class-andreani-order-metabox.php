@@ -33,15 +33,9 @@ class Andreani_Order_Metabox {
 
 		$screen = $this->get_order_screen();
 
-		$logo_url = ANDREANI_PLUGIN_URL . 'includes/assets/img/andreani.png';
-		$title    = sprintf(
-			'<img src="%s" alt="Andreani" style="height:16px;vertical-align:middle;">',
-			esc_url( $logo_url )
-		);
-
 		add_meta_box(
 			self::METABOX_ID,
-			$title,
+			__( 'Andreani', 'andreani-shipping' ),
 			array( $this, 'render_metabox' ),
 			$screen,
 			'side',
@@ -85,61 +79,24 @@ class Andreani_Order_Metabox {
 			return;
 		}
 
-		$data             = $this->get_order_shipping_data( $order );
-		$data['timeline'] = $this->build_timeline_steps( $data );
+		$data = $this->get_order_shipping_data( $order );
+		$data = array_merge( $data, $this->status_view( $order, $data ) );
 
 		include ANDREANI_PLUGIN_DIR . 'includes/admin/views/metabox-tracking.php';
 	}
 
-	/**
-	 * Mini-timeline logístico para el sidebar. Replica la lógica del detail-view
-	 * (rank_map + map_tracking_status) en versión compacta: 4 pasos
-	 * (Pendiente de ingreso → En camino → [Listo para retirar si sucursal] → Entregado),
-	 * resaltando el paso activo según el tracking_status real. Devuelve [] si todavía
-	 * no hay tracking_status (el template oculta el bloque).
-	 */
-	private function build_timeline_steps( array $data ) {
-		$tracking_status = isset( $data['tracking_status'] ) ? (string) $data['tracking_status'] : '';
+	private function status_view( $order, array $data ) {
+		$shipment  = Andreani_Shipments_List::get_order_shipment_data( $order );
+		$internal  = '' !== $data['tracking_status'] ? Andreani_Shipments_List::map_tracking_status( $data['tracking_status'] ) : $shipment['shipping_status'];
+		$has_error = ! $data['created'] && '' !== (string) $data['last_error'];
+		$status    = Andreani_Shipment_Status::unify( $internal, $has_error );
+		$service   = Andreani_Shipments_List::get_service_config( (string) $shipment['delivery_mode'] );
 
-		if ( '' === $tracking_status || ! class_exists( 'Andreani_Shipments_List' ) ) {
-			return array();
-		}
-
-		$mapped       = Andreani_Shipments_List::map_tracking_status( $tracking_status );
-		$rank_map     = array( 'pending_entry' => 1, 'in_transit' => 2, 'ready_pickup' => 3, 'delivered' => 4, 'not_delivered' => 4 );
-		$current_rank = isset( $rank_map[ $mapped ] ) ? $rank_map[ $mapped ] : 1;
-		$is_failed    = ( 'not_delivered' === $mapped );
-		$is_sucursal  = ! empty( $data['is_sucursal'] );
-
-		$step_defs = array(
-			array( 'rank' => 1, 'label' => __( 'Ingr.', 'andreani-shipping' ) ),
-			array( 'rank' => 2, 'label' => __( 'Camino', 'andreani-shipping' ) ),
+		return array(
+			'status_key'   => $status,
+			'status_text'  => Andreani_Shipment_Status::label( $status ),
+			'service_text' => $service['label'],
 		);
-		if ( $is_sucursal ) {
-			$step_defs[] = array( 'rank' => 3, 'label' => __( 'Retiro', 'andreani-shipping' ) );
-		}
-		$step_defs[] = array(
-			'rank'  => 4,
-			'label' => $is_failed ? __( 'No entr.', 'andreani-shipping' ) : __( 'Entreg.', 'andreani-shipping' ),
-		);
-
-		$steps = array();
-		foreach ( $step_defs as $def ) {
-			if ( $def['rank'] < $current_rank ) {
-				$state = 'done';
-			} elseif ( $def['rank'] === $current_rank ) {
-				$state = $is_failed ? 'failed' : 'active';
-			} else {
-				$state = 'pending';
-			}
-
-			$steps[] = array(
-				'label' => $def['label'],
-				'state' => $state,
-			);
-		}
-
-		return $steps;
 	}
 
 	private function get_order_shipping_data( $order ) {
@@ -161,24 +118,8 @@ class Andreani_Order_Metabox {
 		}
 
 		$type_info        = Andreani_Client_Type::from_id( $client_type );
-		$status           = 'error';
-		$status_label     = __( 'Error al generar', 'andreani-shipping' );
-
-		if ( $created ) {
-			$status       = 'success';
-			$status_label = __( 'Generado', 'andreani-shipping' );
-		}
-
-		$tracking_status       = (string) $order->get_meta( '_order_andreani_tracking_status', true );
-		$tracking_status_label = '';
-		$tracking_status_class = '';
-		if ( '' !== $tracking_status && class_exists( 'Andreani_Shipments_List' ) ) {
-			$has_payment_step      = $type_info ? $type_info->has_payment_step() : false;
-			$mapped                = Andreani_Shipments_List::map_tracking_status( $tracking_status );
-			$status_config         = Andreani_Shipments_List::get_shipping_status_config( $mapped, $has_payment_step );
-			$tracking_status_label = $status_config['label'];
-			$tracking_status_class = $status_config['class'];
-		}
+		$status          = $created ? 'success' : 'error';
+		$tracking_status = (string) $order->get_meta( '_order_andreani_tracking_status', true );
 
 		$identifier       = $tracking;
 		$identifier_label = __( 'Nro. Seguimiento', 'andreani-shipping' );
@@ -215,10 +156,7 @@ class Andreani_Order_Metabox {
 		$data = array(
 			'order_id'         => $order_id,
 			'status'           => $status,
-			'status_label'     => $status_label,
-			'tracking_status'       => $tracking_status,
-			'tracking_status_label' => $tracking_status_label,
-			'tracking_status_class' => $tracking_status_class,
+			'tracking_status'  => $tracking_status,
 			'client_type'      => $client_type,
 			'tracking_number'  => $tracking,
 			'display_tracking' => $tracking,
@@ -261,20 +199,7 @@ class Andreani_Order_Metabox {
 			$cache[ $key ] = $this->fetch_api_data( (string) $key );
 		}
 
-		$merged = array_merge( $data, $cache[ $key ] );
-
-		// Pyme/MM no persisten el tracking_status en el meta (vive en la API): si la
-		// hidratación lo trajo, recalculamos el label/clase del estado logístico.
-		if ( ! empty( $merged['tracking_status'] ) && class_exists( 'Andreani_Shipments_List' ) ) {
-			$type_info        = Andreani_Client_Type::from_id( isset( $merged['client_type'] ) ? $merged['client_type'] : '' );
-			$has_payment_step = $type_info ? $type_info->has_payment_step() : false;
-			$mapped           = Andreani_Shipments_List::map_tracking_status( $merged['tracking_status'] );
-			$config           = Andreani_Shipments_List::get_shipping_status_config( $mapped, $has_payment_step );
-			$merged['tracking_status_label'] = $config['label'];
-			$merged['tracking_status_class'] = $config['class'];
-		}
-
-		return $merged;
+		return array_merge( $data, $cache[ $key ] );
 	}
 
 	private function fetch_api_data( $order_id ) {

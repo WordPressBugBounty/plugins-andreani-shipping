@@ -514,13 +514,24 @@ class Andreani_Shipment_Detail_View {
 		$html .=     '<div><dt>' . esc_html__( 'Contrato', 'andreani-shipping' ) . '</dt>';
 		$html .=     '<dd>' . esc_html( '' !== $contract_number ? $contract_number : '—' ) . '</dd></div>';
 		$html .=     '<div><dt>' . esc_html__( 'Servicio', 'andreani-shipping' ) . '</dt>';
-		$html .=     '<dd>' . esc_html( $servicio_label ) . '</dd></div>';
+		$html .=     '<dd>' . ( false !== stripos( (string) $delivery_mode, 'bigger' ) ? Andreani_Product_Bultos::service_icon( 'bigger' ) : '' ) . esc_html( $servicio_label ) . '</dd></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		$html .=     '<div><dt>' . esc_html__( 'Tipo cliente', 'andreani-shipping' ) . '</dt>';
 		$html .=     '<dd>' . esc_html( $tipo_label ) . '</dd></div>';
 		$html .=     '<div><dt>' . esc_html__( 'Costo envío', 'andreani-shipping' ) . '</dt>';
 		$html .=     '<dd class="andreani-detail__info-price">$ ' . esc_html( $shipping_total_formatted ) . '</dd></div>';
 
 		$copy_title = esc_attr__( 'Click para copiar', 'andreani-shipping' );
+
+		if ( ! empty( $data['payment_status'] ) ) {
+			$payment_config = Andreani_Shipments_List::get_payment_status_config( $data['payment_status'] );
+			$html .= '<div><dt>' . esc_html__( 'Pago', 'andreani-shipping' ) . '</dt>';
+			$html .=   '<dd title="' . esc_attr( $payment_config['hint'] ) . '">' . esc_html( $payment_config['label'] ) . '</dd></div>';
+		}
+
+		if ( ! empty( $display_tracking ) ) {
+			$html .= '<div><dt>' . esc_html__( 'Nro. seguimiento', 'andreani-shipping' ) . '</dt>';
+			$html .=   '<dd class="andreani-detail__info-copy andreani-copy-click" data-copy-text="' . esc_attr( $display_tracking ) . '" title="' . $copy_title . '" role="button" tabindex="0">' . esc_html( $display_tracking ) . '</dd></div>';
+		}
 
 		if ( ! empty( $numero_interno_display ) ) {
 			$id_orden_label = ( $type_info && $type_info->can( 'id_orden_display' ) )

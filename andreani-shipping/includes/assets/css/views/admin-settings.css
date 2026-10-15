@@ -972,12 +972,6 @@
 	transform: translateY(-1px) !important;
 }
 
-.andreani-contratos-description {
-	margin: 0 0 16px 0;
-	color: var(--andr-color-text-muted);
-	font-size: var(--andr-text-base);
-}
-
 .andreani-contratos-stats {
 	display: inline-flex;
 	align-items: center;
@@ -1484,7 +1478,8 @@
 	display: block;
 }
 
-.andreani-modo-card__detail {
+.andreani-modo-card__detail,
+.andreani-modo-card__when {
 	font-size: var(--andr-text-xs);
 	color: var(--andr-color-text-muted);
 	display: block;
@@ -3207,4 +3202,8 @@
 .andreani-origen-estado--error {
 	background: var(--andr-red-50);
 	color: var(--andr-red-800);
+}
+
+.andreani-modos-panel + .andreani-section {
+	margin-top: var(--andr-sp-6);
 }

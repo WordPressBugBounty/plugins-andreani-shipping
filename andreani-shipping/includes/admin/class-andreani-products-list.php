@@ -47,6 +47,7 @@ class Andreani_Products_List {
 		$conditions = Andreani_Products_Stats::filter_conditions( isset( $args['filter'] ) ? $args['filter'] : '' );
 		$classes    = ! empty( $args['service'] ) ? $args['service'] : $conditions['classes'];
 		$modes      = ! empty( $args['modes'] ) ? $args['modes'] : ( '' !== $conditions['mode'] ? array( $conditions['mode'] ) : array() );
+		$overflows  = ! empty( $args['overflows'] ) ? $args['overflows'] : array();
 		$lookup     = $wpdb->prefix . 'wc_product_meta_lookup';
 
 		$joins  = $wpdb->prepare( "LEFT JOIN {$wpdb->postmeta} cls ON cls.post_id = p.ID AND cls.meta_key = %s", Andreani_Products_Stats::META_CLASS ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -61,6 +62,41 @@ class Andreani_Products_List {
 
 		if ( ! empty( $modes ) ) {
 			$joins  .= $wpdb->prepare( " INNER JOIN {$wpdb->postmeta} md ON md.post_id = p.ID AND md.meta_key = %s AND md.meta_value IN (" . implode( ', ', array_fill( 0, count( $modes ), '%s' ) ) . ')', array_merge( array( Andreani_Products_Stats::META_MODE ), $modes ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		}
+
+		if ( ! empty( $overflows ) ) {
+			$joins .= $wpdb->prepare( " LEFT JOIN {$wpdb->postmeta} ov ON ov.post_id = p.ID AND ov.meta_key = %s", Andreani_Product_Bultos::OVERFLOW_META ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+			$joins .= $wpdb->prepare( " LEFT JOIN {$wpdb->postmeta} mo ON mo.post_id = p.ID AND mo.meta_key = %s", Andreani_Products_Stats::META_MODE ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+			$explicit = array_values( array_diff( $overflows, array( Andreani_Product_Bultos::OVERFLOW_INHERIT ) ) );
+			$parts    = array();
+
+			if ( in_array( Andreani_Product_Bultos::OVERFLOW_TOGETHER, $explicit, true ) ) {
+				$explicit = array_values( array_diff( $explicit, array( Andreani_Product_Bultos::OVERFLOW_TOGETHER ) ) );
+				$parts[]  = $wpdb->prepare( '((ov.meta_value IS NULL OR ov.meta_value <> %s) AND (mo.meta_value IS NULL OR mo.meta_value <> %s))', Andreani_Product_Bultos::OVERFLOW_SEPARATE, Andreani_Product_Bultos::MODE_MULTIBULTO ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			}
+
+			if ( in_array( Andreani_Product_Bultos::OVERFLOW_SEPARATE, $explicit, true ) ) {
+				$parts[] = $wpdb->prepare( '(ov.meta_value = %s OR mo.meta_value = %s)', Andreani_Product_Bultos::OVERFLOW_SEPARATE, Andreani_Product_Bultos::MODE_MULTIBULTO ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			}
+
+			if ( in_array( Andreani_Product_Bultos::OVERFLOW_INHERIT, $overflows, true ) ) {
+				$parts[] = $wpdb->prepare( '(ov.meta_value IS NULL AND (mo.meta_value IS NULL OR mo.meta_value <> %s))', Andreani_Product_Bultos::MODE_MULTIBULTO ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			}
+
+			$where[] = '(' . implode( ' OR ', $parts ) . ')';
+		}
+
+		if ( ! empty( $args['unassigned'] ) ) {
+			$where[] = $wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+				"NOT EXISTS (SELECT 1 FROM {$wpdb->postmeta} br WHERE br.post_id = p.ID AND br.meta_key = %s AND br.meta_value <> '')"
+				. " AND (p.post_parent = 0 OR EXISTS (SELECT 1 FROM {$wpdb->postmeta} vm WHERE vm.post_id = p.ID AND vm.meta_key = %s)"
+				. " OR NOT EXISTS (SELECT 1 FROM {$wpdb->postmeta} pr WHERE pr.post_id = p.post_parent AND pr.meta_key = %s AND pr.meta_value <> ''))",
+				Andreani_Product_Bultos::BOX_REF_META,
+				Andreani_Product_Bultos::MODE_META,
+				Andreani_Product_Bultos::BOX_REF_META
+			);
 		}
 
 		if ( '' !== $search ) {
@@ -125,6 +161,8 @@ class Andreani_Products_List {
 			'filter'  => isset( $args['filter'] ) ? Andreani_Products_Stats::sanitize_filter( $args['filter'] ) : '',
 			'service' => isset( $args['service'] ) ? Andreani_Products_Stats::sanitize_list( $args['service'], Andreani_Products_Stats::SERVICES ) : array(),
 			'modes'   => isset( $args['modes'] ) ? Andreani_Products_Stats::sanitize_list( $args['modes'], Andreani_Products_Stats::MODES ) : array(),
+			'overflows' => isset( $args['overflows'] ) ? Andreani_Products_Stats::sanitize_list( $args['overflows'], Andreani_Products_Stats::OVERFLOWS ) : array(),
+			'unassigned' => ! empty( $args['unassigned'] ),
 		);
 
 		$total = self::query_total( $query );
@@ -171,8 +209,19 @@ class Andreani_Products_List {
 			: get_edit_post_link( $product_id, 'raw' );
 
 		$thumb_units = ! empty( $apilado ) ? min( 3, (int) $apilado['maxStackableUnits'] ) : 1;
+		$assigned    = Andreani_Package_Builder::assigned_package( $product );
+		$measures    = Andreani_Package_Builder::unit_measures( $product );
 
 		return array(
+			'box_ref'       => $assigned['ref'],
+			'package_state' => $assigned['state'],
+			'package'       => $assigned['package'],
+			'eff'           => array(
+				'length' => Andreani_Order_Mapper::round_measure( Andreani_Order_Mapper::convert_cm_to_dimension_unit( $measures['depth'] ) ),
+				'width'  => Andreani_Order_Mapper::round_measure( Andreani_Order_Mapper::convert_cm_to_dimension_unit( $measures['width'] ) ),
+				'height' => Andreani_Order_Mapper::round_measure( Andreani_Order_Mapper::convert_cm_to_dimension_unit( $measures['height'] ) ),
+				'weight' => Andreani_Order_Mapper::round_measure( Andreani_Order_Mapper::convert_kg_to_weight_unit( $measures['weight_kg'] ) ),
+			),
 			'id'           => $product_id,
 			'name'         => $product->get_name(),
 			'sku'          => Andreani_Product_Bultos::get_effective_sku( $product ),
@@ -180,10 +229,10 @@ class Andreani_Products_List {
 			'type'         => $product->get_type(),
 			'thumb_url'    => $thumb_url,
 			'thumb_url_lg' => $thumb_id ? wp_get_attachment_image_url( $thumb_id, 'thumbnail' ) : '',
-			'weight'       => floatval( $product->get_weight() ),
-			'length'       => floatval( $product->get_length() ),
-			'width'        => floatval( $product->get_width() ),
-			'height'       => floatval( $product->get_height() ),
+			'weight'       => Andreani_Order_Mapper::round_measure( $product->get_weight() ),
+			'length'       => Andreani_Order_Mapper::round_measure( $product->get_length() ),
+			'width'        => Andreani_Order_Mapper::round_measure( $product->get_width() ),
+			'height'       => Andreani_Order_Mapper::round_measure( $product->get_height() ),
 			'bultos'       => count( $bultos_adicionales ),
 			'main_ref'     => Andreani_Package_Builder::resolve_main_ref( $product ),
 			'bultos_data'  => Andreani_Product_Bultos::to_store_units( Andreani_Order_Mapper::get_bultos_adicionales( $product_id ) ),
@@ -191,7 +240,11 @@ class Andreani_Products_List {
 			'apilado'      => $apilado,
 			'state'        => $classification['state'],
 			'mode'         => $classification['mode'],
+			'units_per_box' => Andreani_Package_Builder::resolve_units_per_box( $product ),
+			'overflow'     => Andreani_Package_Builder::raw_overflow( $product ),
+			'overflow_effective' => Andreani_Package_Builder::resolve_overflow( $product ),
 			'reason'       => self::reason_text( $classification ),
+			'box'          => 'missing' === $classification['state'] ? null : Andreani_Package_Builder::store_box_advice( $product, 1 ),
 			'packages'     => 'missing' === $classification['state'] ? array() : Andreani_Package_Builder::draw_packages_for_product( $product, $thumb_units ),
 			'edit_url'     => $edit_url ?: '',
 		);
@@ -245,8 +298,9 @@ class Andreani_Products_List {
 		};
 		/* translators: %d: número de caja */
 		$label  = __( 'Caja %d', 'andreani-shipping' );
-		$parts  = array( sprintf( $label, 1 ) . ' · ' . $sides( $item['length'], $item['width'], $item['height'] ) );
-		$weight = (float) $item['weight'];
+		$first  = isset( $item['eff'] ) ? $item['eff'] : $item;
+		$parts  = array( sprintf( $label, 1 ) . ' · ' . $sides( $first['length'], $first['width'], $first['height'] ) );
+		$weight = (float) $first['weight'];
 
 		foreach ( array_values( $item['boxes'] ) as $position => $box ) {
 			$parts[] = sprintf( $label, $position + 2 ) . ' · ' . $sides( $box['depth'], $box['width'], $box['height'] );
@@ -262,21 +316,118 @@ class Andreani_Products_List {
 
 	/**
 	 * @param array $item Ítem de build_item().
+	 * @return array{label:string,dims:string,store:bool} Caja para una unidad; label vacío si el producto trae la suya o le faltan medidas.
+	 */
+	public static function pack_cell( array $item ) {
+		$advice = isset( $item['box'] ) ? $item['box'] : null;
+		$none   = array( 'label' => '', 'dims' => '', 'store' => false, 'assigned' => false, 'deleted' => false );
+		$state  = isset( $item['package_state'] ) ? $item['package_state'] : 'none';
+
+		if ( 'ok' === $state && ! empty( $item['package'] ) ) {
+			return array(
+				'label'    => $item['package']['name'],
+				'dims'     => Andreani_Store_Boxes::dims_text( $item['package'] ) . ( Andreani_Store_Boxes::is_set( $item['package'] ) ? '' : ' cm' ),
+				'store'    => true,
+				'assigned' => true,
+				'deleted'  => false,
+			);
+		}
+
+		if ( 'deleted' === $state ) {
+			return array_merge( $none, array( 'label' => __( 'Paquete eliminado', 'andreani-shipping' ), 'deleted' => true ) );
+		}
+
+		if ( ! $advice ) {
+			return $none;
+		}
+
+		if ( $advice['box'] ) {
+			return array( 'label' => $advice['box']['name'], 'dims' => Andreani_Store_Boxes::dims_text( $advice['box'] ) . ' cm', 'store' => true );
+		}
+
+		if ( ! $advice['suggested'] ) {
+			return $none;
+		}
+
+		$sides = $advice['suggested'];
+
+		return array(
+			'label' => __( 'Sugerida', 'andreani-shipping' ),
+			'dims'  => '~' . $sides['w'] . '×' . $sides['d'] . '×' . $sides['h'] . ' cm',
+			'store' => false,
+		);
+	}
+
+	/**
+	 * @param array $item Ítem de build_item().
 	 * @return string Cómo viaja cuando compran varias.
 	 */
 	public static function how_it_travels( array $item ) {
+		return self::how_cell( $item )['text'];
+	}
+
+	/**
+	 * @param array $item Ítem de build_item().
+	 * @return array{text:string,note:string,art:string,capacity:int} La frase de "Cómo viaja", su renglón de etiquetas, el dibujo y cuántas unidades entran por caja (0 en varias cajas).
+	 */
+	public static function how_cell( array $item ) {
 		$strings = Andreani_Product_Bultos::get_ui_strings();
 
-		if ( Andreani_Product_Bultos::MODE_APILADO === $item['mode'] ) {
-			/* translators: %d: unidades por pila */
-			return sprintf( __( 'Se apilan de a %d', 'andreani-shipping' ), (int) $item['apilado']['maxStackableUnits'] );
-		}
-
 		if ( Andreani_Product_Bultos::MODE_MULTIBULTO === $item['mode'] ) {
-			/* translators: %d: cajas que forman una unidad */
-			return sprintf( __( 'Viaja en %d cajas', 'andreani-shipping' ), (int) $item['bultos'] + 1 );
+			return array(
+				'text'     => sprintf( $strings['grid_in_boxes'], (int) $item['bultos'] + 1 ),
+				'note'     => $strings['grid_each_label'],
+				'art'      => 'multi',
+				'capacity' => 0,
+			);
 		}
 
-		return $strings['mode_single_title'];
+		$separate = Andreani_Product_Bultos::OVERFLOW_SEPARATE === $item['overflow_effective'];
+		$note     = $separate ? $strings['grid_each_label'] : '';
+
+		if ( Andreani_Product_Bultos::MODE_APILADO === $item['mode'] ) {
+			$capacity = (int) $item['apilado']['maxStackableUnits'];
+
+			return array(
+				'text'     => sprintf( $strings['grid_stacked'], $capacity ),
+				'note'     => $note,
+				'art'      => 'apilado',
+				'capacity' => $capacity,
+			);
+		}
+
+		$units = max( 1, isset( $item['units_per_box'] ) ? (int) $item['units_per_box'] : 1 );
+
+		return array(
+			'text'     => $units > 1 ? sprintf( $strings['grid_up_to'], $units ) : $strings['grid_one_per_box'],
+			'note'     => $note,
+			'art'      => 'box',
+			'capacity' => $units,
+		);
+	}
+
+	/**
+	 * @param array $item Ítem de build_item().
+	 * @return int Desde cuántas unidades el producto pasa a Bigger por su preferencia de etiquetas; 0 si no aplica.
+	 */
+	public static function bigger_from( array $item ) {
+		if ( 'missing' === $item['state'] || 'bigger' === $item['state'] || Andreani_Product_Bultos::MODE_MULTIBULTO === $item['mode'] ) {
+			return 0;
+		}
+
+		if ( Andreani_Product_Bultos::OVERFLOW_SEPARATE !== $item['overflow_effective'] ) {
+			return 0;
+		}
+
+		return self::how_cell( $item )['capacity'] + 1;
+	}
+
+	/**
+	 * @param array $item Ítem de build_item().
+	 * @return bool Si el modo de despacho del ítem merece mostrarse en la grilla.
+	 */
+	public static function has_how( array $item ) {
+		return Andreani_Product_Bultos::MODE_SINGLE !== $item['mode']
+			|| ( isset( $item['units_per_box'] ) && (int) $item['units_per_box'] > 1 );
 	}
 }

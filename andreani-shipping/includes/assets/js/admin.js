@@ -17,9 +17,8 @@
 
   function howHtml(mode, text) {
     const art = { apilado: 'apilado', multibulto: 'piezas' }[mode];
-    return art && text
-      ? '<span class="andreani-how"><svg class="andreani-how__icon" data-andr-icon="' + art + '" aria-hidden="true" focusable="false"></svg>' + escapeHtml(text) + '</span>'
-      : '';
+    const icon = art ? '<svg class="andreani-how__icon" data-andr-icon="' + art + '" aria-hidden="true" focusable="false"></svg>' : '';
+    return text ? '<span class="andreani-how andreani-how--inline">' + icon + escapeHtml(text) + '</span>' : '';
   }
 
   /* ========================================
@@ -56,7 +55,10 @@
     card(rate, cheapest) {
       const base = this.config().services_icons_url || '';
       const kind = this.kind(rate);
-      const chip = (tone, key) => ' <span class="andr-badge andr-badge--' + tone + ' andr-badge--sm">' + escapeHtml(this.t(key)) + '</span>';
+      const icons = (this.config().box_preview || {}).service_icons || {};
+      const chip = (tone, key, icon) => ' <span class="andr-badge andr-badge--' + tone + ' andr-badge--sm">'
+        + (icon && icons[icon] ? '<img class="andr-service-icon" src="' + escapeAttr(icons[icon]) + '" alt="" aria-hidden="true">' : '')
+        + escapeHtml(this.t(key)) + '</span>';
 
       return '<div class="andr-rate">'
         + '<span class="andr-rate__icon">'
@@ -64,7 +66,7 @@
         + '<img class="andr-rate__img andr-rate__img--hover" src="' + escapeAttr(base + kind.icon + '-rojo.svg') + '" alt="">'
         + '</span>'
         + '<span class="andr-rate__text">'
-        + '<span class="andr-rate__title">' + escapeHtml(this.t(kind.title)) + (kind.chip ? chip('info', kind.chip) : '') + (cheapest ? chip('success', 'rate_cheapest') : '') + '</span>'
+        + '<span class="andr-rate__title">' + escapeHtml(this.t(kind.title)) + (kind.chip ? chip('info', kind.chip, 'bigger') : '') + (cheapest ? chip('success', 'rate_cheapest') : '') + '</span>'
         + '<span class="andr-rate__sub">' + escapeHtml(String(rate.label || '')) + '</span>'
         + '</span>'
         + '<span class="andr-rate__price">' + this.price(rate.cost) + '</span>'
@@ -821,8 +823,9 @@
 
       const containerStatus = $container.find('select[name="andreani_status"]').val();
       const formStatus = $form.find('select[name="andreani_status"]').val();
-      const status = containerStatus !== undefined ? containerStatus :
-                     (formStatus !== undefined ? formStatus : this.currentParams.andreani_status);
+      // El select solo guarda estados sueltos: una combinación de chips ("a,b") lo deja en null y no debe pisar el filtro vigente.
+      const selectStatus = containerStatus !== undefined ? containerStatus : formStatus;
+      const status = selectStatus || this.currentParams.andreani_status;
 
       const $activePerPage = $('.andreani-per-page__btn.is-active');
       const perPage = $activePerPage.length ? $activePerPage.data('per-page') : (this.currentParams.per_page || '');
@@ -1849,6 +1852,13 @@
           $tabs.find('[data-tab="' + saved + '"]').trigger('click');
         }
       });
+
+      const anchor = window.location.hash ? document.getElementById(window.location.hash.slice(1)) : null;
+      const $panel = anchor ? $(anchor).closest('[data-panel]') : $();
+      if ($panel.length) {
+        $panel.closest('.andr-tabs').find('.andr-tabs__item[data-tab="' + $panel.attr('data-panel') + '"]').trigger('click');
+        anchor.scrollIntoView({ block: 'start' });
+      }
     }
   };
 
@@ -1888,12 +1898,9 @@
       // Status: CSV (errors,pending,ready) → cada token activa su chip. Aceptamos
       // 'error' (singular legacy del select dropdown) como alias de 'errors'.
       const statusRaw = params.get('andreani_status') || '';
-      const statusChipMap = { error: 'errors', errors: 'errors', pending: 'pending', ready: 'ready' };
+      const statusAlias = { error: 'errors' };
       statusRaw.split(',').map(s => s.trim()).filter(Boolean).forEach(s => {
-        const chipKey = statusChipMap[s];
-        if (chipKey) {
-          activateChip($('.andreani-chip[data-quick-filter="' + chipKey + '"]'));
-        }
+        activateChip($('.andreani-chip[data-filter-group="status"][data-quick-filter="' + (statusAlias[s] || s) + '"]'));
       });
 
       // Fecha: comparamos contra los rangos que generan "Hoy" / "Esta semana" / "Últimos 15 días".
@@ -2037,7 +2044,7 @@
           params.andreani_date_from = AndreaniGrid.startOfWeek();
         } else if (f === 'last-15') {
           params.andreani_date_from = AndreaniGrid.startOfDaysAgo(15);
-        } else if (f === 'errors' || f === 'pending' || f === 'ready') {
+        } else if ($(this).data('filter-group') === 'status') {
           statusValues.push(f);
         }
       });
@@ -2211,60 +2218,59 @@
       const weight = preview.weightText;
       const totalKg = packages.reduce((acc, p) => acc + p.kg * (p.count || 1), 0);
       const totalBoxes = data.total || packages.length;
-      const bigTitle = '<p class="andr-packing__title">'
-        + escapeHtml(totalBoxes === 1 ? this.text('packing_big_one') : preview.fill(this.text('packing_big_title'), preview.fmt(totalBoxes)))
-        + '</p>';
+      const items = data.items || [];
+      const same = items.length === 1;
+      const chip = (icon, label) => '<span class="andr-packing__chip">' + icon + escapeHtml(label) + '</span>';
+      const countChip = !same || data.units > 1
+        ? chip('', preview.fill(this.text(same ? 'packing_count_units' : 'packing_count_products'), preview.fmt(same ? data.units : items.length)))
+        : '';
+      const weightChip = chip('', preview.fill(this.text('packing_weight'), weight(totalKg)));
+      const service = (kind) => chip(preview.serviceIcon(kind), this.text(kind === 'bigger' ? 'packing_service_bigger' : 'packing_service_pack'));
+      const bagIcon = '<svg class="andr-packing__pkg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><rect x="5.5" y="2.5" width="13" height="19" rx="1.5"/><line x1="5.5" y1="7.5" x2="18.5" y2="7.5"/><line x1="9" y1="5" x2="15" y2="5"/><line x1="5.5" y1="19" x2="18.5" y2="19"/></svg>';
+      const boxIcon = '<svg class="andr-packing__pkg-icon" data-andr-icon="box" width="20" height="20" aria-hidden="true"></svg>';
+      const pkgRow = (label, bag, tip) => '<p class="andr-packing__pkg"' + (tip ? ' title="' + escapeAttr(tip) + '"' : '') + '>' + (bag ? bagIcon : boxIcon) + '<span>' + escapeHtml(label) + '</span></p>';
+      const contents = () => {
+        const shown = items.slice(0, 3).map((i) => '<li>' + escapeHtml(preview.fmt(i.quantity) + ' × ' + i.name)
+          + (i.assigned ? '<small class="andr-packing__sub">' + escapeHtml(preview.assignedText(i.assigned)) + '</small>' : '') + '</li>');
+        if (items.length > 3) shown.push('<li class="andr-packing__more">' + escapeHtml(preview.fill(this.text('packing_more'), items.length - 3)) + '</li>');
+        return '<ul class="andr-packing__items">' + shown.join('') + '</ul>';
+      };
+
       let boxes;
       let text;
+      let stack = false;
 
-      $body.removeClass('andr-packing--list');
+      const pack = data.bigger ? null : preview.packed(packages);
+      const info = pack ? pack.info : null;
+      const advice = pack ? preview.boxAdvice(packages, { storeBox: data.store_box }) : null;
 
-      if (data.bigger && preview.heterogeneous(packages)) {
-        $body.addClass('andr-packing--list').html('<div class="andr-packing__text">' + bigTitle
-          + '<ul class="andr-boxlist" data-andr="boxlist"></ul></div>'
-          + '<p class="andr-packing__hint">' + escapeHtml(this.text('packing_hint')) + '</p>');
-        preview.boxList($body.find('[data-andr="boxlist"]').get(0), packages, { box: this.text('packing_box'), units: this.text('packing_units') });
-        return;
-      }
-
-      if (data.bigger) {
-        boxes = preview.separate(preview.sample(packages), 'kraft');
-        let offset = 0;
-        const rows = packages.map((p) => {
-          const count = p.count || 1;
-          const head = count > 1
-            ? [preview.fmt(count) + ' × ' + (p.name || this.text('packing_box')), p.ref]
-            : [this.text('packing_box') + ' ' + (offset + 1), p.name, p.ref];
-          offset += count;
-
-          return '<li>' + escapeHtml(head.concat([
-            p.units > 1 ? preview.fill(this.text('packing_units'), p.units) : '',
-            preview.dims(p) + ' cm',
-            weight(p.kg),
-          ]).filter(Boolean).join(' · ')) + '</li>';
-        });
-        text = bigTitle + '<ul class="andr-packing__list">' + rows.join('') + '</ul>';
+      if (advice && advice.box) {
+        const bag = advice.box.type === 'bolsa';
+        boxes = preview.boxPiece(advice.box);
+        text = '<p class="andr-packing__title">' + escapeHtml(this.text(bag ? 'packing_title_bag' : 'packing_title_one')) + '</p>'
+          + pkgRow(preview.useBoxText(advice.box.name), bag, preview.boxDims(advice.box) + ' cm') + contents()
+          + '<div class="andr-packing__chips">' + countChip + weightChip + service('paqueteria') + '</div>';
+      } else if (info) {
+        boxes = info.ok ? [{ x: 0, y: 0, z: 0, w: info.w, d: info.d, h: info.h, tape: true, label: true, t: 'kraft' }] : pack.boxes;
+        text = '<p class="andr-packing__title">' + escapeHtml(this.text(info.ok ? 'packing_title_one' : 'packing_title_big_one')) + '</p>'
+          + pkgRow(preview.fill(this.text('packing_pkg_suggested'), info.w, info.d, info.h)) + contents()
+          + '<div class="andr-packing__chips">' + countChip + weightChip + service(info.ok ? 'paqueteria' : 'bigger') + '</div>';
       } else {
-        const pack = preview.packed(packages);
-        const info = pack.info;
-        boxes = pack.boxes;
-
-        const meta = '<p class="andr-packing__meta">' + escapeHtml(data.units === 1
-          ? preview.fill(this.text('packing_fits_one'), weight(totalKg))
-          : preview.fill(this.text('packing_fits_many'), preview.fmt(data.units), weight(totalKg))) + '</p>';
-
-        if (info && info.ok) {
-          text = '<p class="andr-packing__title">' + escapeHtml(preview.fill(this.text('packing_use_box'), info.w, info.d, info.h)) + '</p>' + meta;
-        } else {
-          text = info ? preview.tooBigHtml(info) : meta;
-        }
+        stack = true;
+        boxes = data.bigger ? preview.separate(preview.sample(packages), 'kraft') : pack.boxes;
+        const cards = preview.cards(packages).map((card) => '<li class="andr-packing__card"' + (card.title ? ' title="' + escapeAttr(card.title) + '"' : '') + '><strong>'
+          + escapeHtml(card.head) + '</strong><span>' + escapeHtml(card.detail) + '</span></li>');
+        text = '<p class="andr-packing__title">' + escapeHtml(totalBoxes === 1 ? this.text('packing_title_big_one') : preview.fill(this.text('packing_title_big'), preview.fmt(totalBoxes))) + '</p>'
+          + '<ul class="andr-packing__cards">' + cards.join('') + '</ul>'
+          + '<div class="andr-packing__chips">' + countChip + weightChip + service('bigger') + '</div>';
       }
 
-      $body.html('<div class="andr-packing__stage"><svg data-andr="stage" role="img" aria-label="' + escapeAttr(this.text('packing_stage')) + '"></svg></div>'
+      $body.toggleClass('andr-packing--stack', stack).html('<div class="andr-packing__stage"><svg data-andr="stage" role="img" aria-label="' + escapeAttr(this.text('packing_stage')) + '"></svg></div>'
         + '<div class="andr-packing__text">' + text + '</div>'
         + '<p class="andr-packing__hint">' + escapeHtml(this.text('packing_hint')) + '</p>');
 
-      preview.render($body.find('[data-andr="stage"]').get(0), boxes, { W: 160, H: 140, pad: 8, fit: true });
+      preview.mountIcons($body.get(0));
+      preview.render($body.find('[data-andr="stage"]').get(0), boxes, { W: stack ? 360 : 160, H: stack ? 150 : 140, pad: 8, fit: true });
     },
   };
 
@@ -2306,7 +2312,10 @@
 
       // Selector de elementos actionables que NO deben disparar el toggle.
       // Si el click cayó en alguno (o en un descendiente), lo dejamos pasar.
-      const ACTIONABLE = 'input, button, a, code, select, textarea, label, [role="button"], .andreani-copy-click, .andreani-error-trigger, .andreani-error-tooltip';
+      const ACTIONABLE = 'input, button, a, code, select, textarea, label, summary, [role="button"], .andreani-copy-click, .andreani-error-trigger, .andreani-error-tooltip';
+      $(document).on('click', (e) => {
+        if (!$(e.target).closest('.andreani-actions__more').length) $('.andreani-actions__more[open]').prop('open', false);
+      });
 
       // Click en cualquier parte del row del envío (delegado en tbody para
       // sobrevivir a reemplazos AJAX de la tabla).
@@ -2787,6 +2796,11 @@
   const AndreaniPrintSettings = {
     config: window.andreani_admin || {},
     loaded: false,
+    loading: false,
+    submitting: false,
+    savedKey: null,
+    pendingError: null,
+    ERROR_STORAGE_KEY: 'andreaniPrintSettingsError',
 
     previewLabel(x, y, w, h) {
       const r = (n) => +n.toFixed(2);
@@ -2847,54 +2861,93 @@
       return `<svg viewBox="0 0 ${vb.w} ${vb.h}" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><rect x="${ox}" y="${oy}" width="${paper.w}" height="${paper.h}" rx="6" style="fill:var(--andr-color-surface);stroke:var(--andr-color-border)"/>${labels}</svg>`;
     },
 
+    $root() {
+      return $('[data-print-settings]');
+    },
+
+    $modal() {
+      return $('#andreani-print-settings-modal');
+    },
+
+    noticeTarget() {
+      const $body = this.$root().closest('.andr-modal__body');
+      return $body.length ? $body : this.$root();
+    },
+
     renderPreview() {
-      const $modal = $('#andreani-print-settings-modal');
-      const $radio = $modal.find('.andreani-print-option__radio:checked');
-      $modal.find('[data-print-preview]').html($radio.length ? this.previewSvg($radio.data('preview-shape')) : '');
-      $modal.find('[data-print-preview-caption]').text($radio.length ? $radio.data('preview-caption') : '');
+      const $root = this.$root();
+      const $radio = $root.find('.andreani-print-option__radio:checked');
+      $root.find('[data-print-preview]').html($radio.length ? this.previewSvg($radio.data('preview-shape')) : '');
+      $root.find('[data-print-preview-caption]').text($radio.length ? $radio.data('preview-caption') : '');
     },
 
     init() {
-      const $modal = $('#andreani-print-settings-modal');
-      if (!$modal.length) return;
+      const $root = this.$root();
+      if (!$root.length) return;
 
       const self = this;
+      const $modal = this.$modal();
 
-      $(document).on('click', '#andreani-print-settings-trigger', (e) => {
-        e.preventDefault();
-        self.open();
-      });
-
-      $modal.on('click', '.andr-modal__backdrop, .andreani-modal__backdrop, .andr-modal__close, .andreani-modal__close', () => self.close());
-      $modal.on('change', '.andreani-print-option__radio', function() {
+      $root.on('change', '.andreani-print-option__radio', function() {
         $('#andreani-print-settings-save').prop('disabled', !$(this).is(':checked'));
         self.renderPreview();
       });
-      $modal.on('click', '#andreani-print-settings-save', () => self.save());
+      $('#andreani-print-settings-save').on('click', () => self.save());
 
-      $(document).on('keydown', (e) => {
-        if (e.key === 'Escape' && $modal.is(':visible')) self.close();
-      });
+      if ($modal.length) {
+        $(document).on('click', '#andreani-print-settings-trigger', (e) => {
+          e.preventDefault();
+          self.open();
+        });
+
+        $modal.on('click', '.andr-modal__backdrop, .andreani-modal__backdrop, .andr-modal__close, .andreani-modal__close', () => self.close());
+
+        $(document).on('keydown', (e) => {
+          if (e.key === 'Escape' && $modal.is(':visible')) self.close();
+        });
+      } else {
+        $(document).on('click', '.andr-tabs__item[data-tab="etiquetas"]', () => {
+          if (!self.loaded && !self.loading) self.load();
+        });
+
+        try {
+          self.pendingError = sessionStorage.getItem(self.ERROR_STORAGE_KEY);
+          sessionStorage.removeItem(self.ERROR_STORAGE_KEY);
+        } catch (err) {
+          self.pendingError = null;
+        }
+
+        $root.closest('form').on('submit', function(e) {
+          const key = $root.find('.andreani-print-option__radio:checked').val();
+          if (self.submitting || !self.loaded || !key || key === self.savedKey) return;
+
+          e.preventDefault();
+          e.stopPropagation();
+          self.saveBeforeSubmit(this, e.originalEvent && e.originalEvent.submitter, key);
+        });
+      }
     },
 
     open() {
-      const $modal = $('#andreani-print-settings-modal');
+      const $modal = this.$modal();
       $modal.show();
       if (AndreaniShipments.centerModal) AndreaniShipments.centerModal($modal);
       this.load();
     },
 
     close() {
-      const $modal = $('#andreani-print-settings-modal');
+      const $modal = this.$modal();
+      if (!$modal.length) return;
       $modal.hide();
       $modal.find('.andr-modal__container').css({ left: '', top: '', transform: '', position: '' });
     },
 
     showLoader(isLoading, onHidden) {
-      const $box = $('#andreani-print-settings-modal [data-print-loader]');
+      const $root = this.$root();
+      const $box = $root.find('[data-print-loader]');
 
       if (isLoading) {
-        $('#andreani-print-settings-modal [data-print-options]').prop('hidden', true);
+        $root.find('[data-print-options]').prop('hidden', true);
         AndreaniLoader.show($box, { size: 'lg', text: this.t('loader_print') });
       } else {
         AndreaniLoader.hide($box, onHidden);
@@ -2903,11 +2956,12 @@
 
     load() {
       const self = this;
-      const $modal = $('#andreani-print-settings-modal');
+      const $root = this.$root();
 
+      this.loading = true;
       this.showLoader(true);
       $('#andreani-print-settings-save').prop('disabled', true);
-      $modal.find('.andreani-temp-notice').remove();
+      $root.find('.andreani-temp-notice').remove();
 
       $.post(this.config.ajax_url || ajaxurl, {
         action: 'andreani_get_print_settings',
@@ -2916,50 +2970,94 @@
         .done((res) => {
           if (res.success) {
             const key = parseInt(res.data?.key, 10) || 1;
-            $modal.find('.andreani-print-option__radio').prop('checked', false);
-            $modal.find(`.andreani-print-option__radio[value="${key}"]`).prop('checked', true);
+            $root.find('.andreani-print-option__radio').prop('checked', false);
+            $root.find(`.andreani-print-option__radio[value="${key}"]`).prop('checked', true);
             $('#andreani-print-settings-save').prop('disabled', false);
             self.renderPreview();
-            self.showLoader(false, () => $('#andreani-print-settings-modal [data-print-options]').prop('hidden', false));
+            self.showLoader(false, () => $root.find('[data-print-options]').prop('hidden', false));
             self.loaded = true;
+            self.savedKey = String(key);
           } else {
             self.showLoadError(res.data?.message || self.t('print_load_error'));
           }
         })
-        .fail(() => self.showLoadError(self.t('network_error')));
+        .fail(() => self.showLoadError(self.t('network_error')))
+        .always(() => {
+          self.loading = false;
+          if (self.pendingError) {
+            self.showBlockError(self.pendingError);
+            self.pendingError = null;
+          }
+        });
+    },
+
+    persist(key) {
+      const self = this;
+
+      return $.post(this.config.ajax_url || ajaxurl, {
+        action: 'andreani_save_print_settings',
+        nonce: this.config.nonce_print_save,
+        key: key
+      }).then(
+        (res) => (res.success ? res : $.Deferred().reject(res.data?.message || self.t('print_save_error'))),
+        () => $.Deferred().reject(self.t('network_error'))
+      );
+    },
+
+    showBlockError(message) {
+      const $root = this.$root();
+      $root.find('.andreani-temp-notice').remove();
+      $root.prepend($('<div class="notice notice-error inline andreani-temp-notice" role="alert"></div>').append($('<p>').text(message)));
+    },
+
+    saveBeforeSubmit(form, submitter, key) {
+      const self = this;
+      const release = AndreaniLoader.busy(this.t('print_save_loading'));
+
+      this.persist(key)
+        .done(() => {
+          self.savedKey = String(key);
+          try { sessionStorage.removeItem(self.ERROR_STORAGE_KEY); } catch (err) { return; }
+        })
+        .fail((message) => {
+          self.showBlockError(message);
+          try { sessionStorage.setItem(self.ERROR_STORAGE_KEY, message); } catch (err) { return; }
+        })
+        .always(() => {
+          release();
+          self.submitting = true;
+          if (form.requestSubmit) {
+            form.requestSubmit(submitter || undefined);
+          } else {
+            form.submit();
+          }
+          self.submitting = false;
+        });
     },
 
     showLoadError(message) {
       this.showLoader(false);
-      $('#andreani-print-settings-modal [data-print-options]').prop('hidden', true);
-      AndreaniShipments.showNotice($('#andreani-print-settings-modal .andr-modal__body'), message, 'error');
+      this.$root().find('[data-print-options]').prop('hidden', true);
+      AndreaniShipments.showNotice(this.noticeTarget(), message, 'error');
     },
 
     save() {
       const self = this;
-      const $modal = $('#andreani-print-settings-modal');
-      const key = $modal.find('.andreani-print-option__radio:checked').val();
+      const key = this.$root().find('.andreani-print-option__radio:checked').val();
       if (!key) return;
 
       const $btn = $('#andreani-print-settings-save');
       $btn.prop('disabled', true);
       const release = AndreaniLoader.busy(this.t('print_save_loading'));
 
-      $.post(this.config.ajax_url || ajaxurl, {
-        action: 'andreani_save_print_settings',
-        nonce: this.config.nonce_print_save,
-        key: key
-      })
+      this.persist(key)
         .done((res) => {
-          if (res.success) {
-            self.close();
-            AndreaniShipments.showNotice($('.andreani-shipments-wrap, .andreani-settings-wrapper').first(), res.data?.message || self.t('print_save_success'), 'success');
-          } else {
-            AndreaniShipments.showNotice($('#andreani-print-settings-modal .andr-modal__body'), res.data?.message || self.t('print_save_error'), 'error');
-          }
+          self.savedKey = String(key);
+          self.close();
+          AndreaniShipments.showNotice($('.andreani-shipments-wrap, .andreani-settings-wrapper').first(), res.data?.message || self.t('print_save_success'), 'success');
         })
-        .fail(() => {
-          AndreaniShipments.showNotice($('#andreani-print-settings-modal .andr-modal__body'), self.t('network_error'), 'error');
+        .fail((message) => {
+          AndreaniShipments.showNotice(self.noticeTarget(), message, 'error');
         })
         .always(() => {
           $btn.prop('disabled', false);
@@ -3021,12 +3119,24 @@
       });
 
       $(document).on('keydown', function(e) {
-        if (e.key === 'Escape') self.toggleFilters(false);
+        if (e.key === 'Escape') {
+          self.toggleFilters(false);
+        }
       });
 
       $('#andreani-products-filters-close').on('click', () => self.toggleFilters(false));
-      $('#andreani-products-filters-clear, #andreani-products-pills-clear').on('click', () => self.loadTable({ paged: 1, service: [], mode: [] }));
-      $('#andreani-products-missing-link').on('click', () => self.loadTable({ paged: 1, service: ['missing'], mode: [] }));
+      $('#andreani-products-filters-clear, #andreani-products-pills-clear').on('click', () => self.loadTable({ paged: 1, service: [], mode: [], overflow: [], package: [] }));
+      $('#andreani-products-missing-link').on('click', () => self.loadTable({ paged: 1, service: ['missing'], mode: [], overflow: [], package: [] }));
+
+      $(document).on('click', '.andreani-product-select', (e) => e.stopPropagation());
+      $(document).on('change', '.andreani-product-select', () => self.updateBulk());
+      $(document).on('click', '[data-bulk-overflow]', function() {
+        self.bulkOverflow($(this).attr('data-bulk-overflow'));
+      });
+
+      $(document).on('click', '#andreani-bulk-pkg-open', () => self.togglePackagePanel());
+      $(document).on('click', '#andreani-bulk-pkg-cancel', () => self.togglePackagePanel(false));
+      $(document).on('click', '#andreani-bulk-pkg-apply', () => self.bulkPackage(false));
 
       $(document).on('click', '#andreani-products-pills-list .andreani-active-pill__remove', function() {
         const $pill = $(this).closest('.andreani-active-pill');
@@ -3086,8 +3196,10 @@
             self.$container.html(res.data.html);
             AndreaniBoxPreview.mountThumbs(self.$container.get(0));
             AndreaniBoxPreview.mountIcons(self.$container.get(0));
+            AndreaniBoxPreview.mountArt(self.$container.get(0));
             self.updateCounts(res.data.counts);
             self.updateAnalyzing(res.data.analyzing);
+            self.updateBulk();
           } else {
             self.$container.html('<p class="andreani-products-empty">' + escapeHtml((self.config.i18n || {}).products_error || 'Error al cargar.') + '</p>');
           }
@@ -3096,6 +3208,91 @@
           self.$container.html('<p class="andreani-products-empty">' + escapeHtml((self.config.i18n || {}).products_error || 'Error al cargar.') + '</p>');
         }))
         .always(() => { self.isLoading = false; });
+    },
+
+    updateBulk() {
+      const count = $('.andreani-product-select:checked').length;
+      $('#andreani-bulk').prop('hidden', count === 0);
+      $('#andreani-bulk-count').text(count + (count === 1 ? ' seleccionado' : ' seleccionados'));
+    },
+
+    bulkOverflow(overflow) {
+      const ids = $('.andreani-product-select:checked').map((i, el) => el.value).get();
+      if (!ids.length) return;
+
+      const $buttons = $('[data-bulk-overflow]').prop('disabled', true);
+      $.post(this.config.ajax_url || ajaxurl, {
+        action: 'andreani_bulk_overflow',
+        nonce: this.config.nonce_save_dims,
+        overflow,
+        product_ids: ids,
+      })
+        .done((res) => {
+          if (!res.success) return;
+          this.flash(res.data.message);
+          this.loadTable();
+        })
+        .always(() => $buttons.prop('disabled', false));
+    },
+
+    togglePackagePanel(open) {
+      const $panel = $('#andreani-bulk-pkg-panel');
+      const show = open === undefined ? $panel.prop('hidden') : open;
+      const $msg = $('#andreani-bulk-pkg-msg').prop('hidden', true).text('');
+
+      if (show) {
+        const packages = AndreaniBoxPreview.packages();
+        const group = (label, list) => (list.length
+          ? '<optgroup label="' + escapeAttr(label) + '">' + list.map((p) => '<option value="' + escapeAttr(p.id) + '">' + escapeHtml(p.name + ' · ' + window.AndreaniPackagePicker.dimsText(p)) + '</option>').join('') + '</optgroup>'
+          : '');
+        $('#andreani-bulk-pkg-select').html(
+          group($panel.attr('data-boxes-label'), packages.filter((p) => p.type !== 'juego')) + group($panel.attr('data-sets-label'), packages.filter((p) => p.type === 'juego'))
+        );
+        if (!packages.length) $msg.text($panel.attr('data-none')).prop('hidden', false);
+        $('#andreani-bulk-pkg-apply').prop('disabled', !packages.length);
+      }
+
+      $panel.prop('hidden', !show);
+      $('#andreani-bulk-pkg-open').attr('aria-expanded', show ? 'true' : 'false');
+    },
+
+    bulkPackage(convert) {
+      const ids = $('.andreani-product-select:checked').map((i, el) => el.value).get();
+      const packageId = $('#andreani-bulk-pkg-select').val();
+      if (!ids.length || !packageId) return;
+
+      const $apply = $('#andreani-bulk-pkg-apply').prop('disabled', true);
+      const $msg = $('#andreani-bulk-pkg-msg').prop('hidden', true).text('');
+      const done = () => this.togglePackagePanel(false);
+
+      $.post(this.config.ajax_url || ajaxurl, {
+        action: 'andreani_bulk_package',
+        nonce: this.config.nonce_save_dims,
+        package_id: packageId,
+        product_ids: ids,
+        convert: convert ? 1 : 0,
+      })
+        .done((res) => {
+          if (!res.success) {
+            $msg.text((res.data && res.data.message) || '').prop('hidden', false);
+            return;
+          }
+
+          if (res.data.needs_confirm) {
+            $msg.text($('#andreani-bulk-pkg-panel').attr('data-confirm').replace('%d', res.data.to_convert) + ' ')
+              .append($('<button type="button" class="andr-pem__hint-action"></button>').text($apply.text()).on('click', () => this.bulkPackage(true)))
+              .prop('hidden', false);
+            return;
+          }
+
+          done();
+          this.flash(res.data.message);
+          this.loadTable();
+        })
+        .fail((xhr) => {
+          $msg.text((xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) || '').prop('hidden', false);
+        })
+        .always(() => $apply.prop('disabled', false));
     },
 
     updateCounts(counts) {
@@ -3120,7 +3317,7 @@
         const value = $(this).attr('data-filter-value');
         const on = (params[group] || []).indexOf(value) !== -1;
         $(this).attr('aria-pressed', on ? 'true' : 'false').toggleClass('andreani-chip--active', on);
-        if (on) pills.push({ group, value, label: $(this).attr('data-filter-label') });
+        if (on) pills.push({ group, value, label: $(this).attr('data-filter-label'), icon: $(this).find('.andr-service-icon').attr('src') });
       });
 
       const $count = $('#andreani-products-filters-trigger .andreani-filter-trigger__count');
@@ -3132,6 +3329,7 @@
         const $el = $('<span class="andreani-active-pill"><span class="andreani-active-pill__text"></span>'
           + '<button type="button" class="andreani-active-pill__remove" aria-label="Quitar filtro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></span>');
         $el.attr({ 'data-pill-group': pill.group, 'data-pill-value': pill.value }).find('.andreani-active-pill__text').text(pill.label);
+        if (pill.icon) $el.find('.andreani-active-pill__text').prepend($('<img class="andr-service-icon" alt="" aria-hidden="true">').attr('src', pill.icon));
         $list.append($el);
       });
       $('#andreani-products-pills').toggleClass('is-active', pills.length > 0);
@@ -3191,9 +3389,65 @@
         ajaxUrl: this.config.ajax_url || ajaxurl,
         nonce: this.config.nonce_preview_bultos,
         getDraft: () => this.previewPayload(),
-        hint: () => (this.currentMode() === this.MODE_MULTIBULTO ? AndreaniBoxPreview.ignoredHint(this.collectBultos()) : ''),
+        hint: () => (this.currentMode() === this.MODE_MULTIBULTO && this.packageMode() !== 'juego' ? AndreaniBoxPreview.ignoredHint(this.collectBultos()) : ''),
+        blocked: () => (this.currentMode() === this.MODE_MULTIBULTO && this.packageMode() !== 'juego' ? AndreaniBoxPreview.incompleteText(this.collectBultos()) : ''),
+        onResult: (bigger) => AndreaniBoxPreview.applyBadge($('#andreani-edit-bigger-status'), { missing: false, reason: bigger }, {
+          ok: this.strings().box_status_ok,
+          bigger: this.strings().box_status_bigger,
+          missing: this.strings().box_status_missing,
+        }),
+      });
+      this.picker = window.AndreaniPackagePicker.create({
+        root: this.$panel.find('[data-andr="package"]'),
+        scope: this.$panel,
+        getMode: () => this.currentMode(),
+        getManual: () => this.manualPackage(),
+        onChange: () => {
+          if (this.currentMode() === this.MODE_MULTIBULTO && !this.packageMode() && !$('#andreani-bultos-cards .andreani-bulto-card').length) this.addCard();
+          this.afterChange();
+        },
       });
       this.bindEvents();
+      this.$panel.on('input change', '#andreani-edit-units, input[name="andreani_edit_overflow"]', () => this.afterChange());
+    },
+
+    packageMode() {
+      const pkg = this.picker && this.picker.effective();
+      if (!pkg) return '';
+      return pkg.type === 'juego' ? 'juego' : 'caja';
+    },
+
+    manualPackage() {
+      const value = (id) => parseFloat($(id).val()) || 0;
+      const own = { length: value('#andreani-edit-length'), width: value('#andreani-edit-width'), height: value('#andreani-edit-height'), weight: value('#andreani-edit-weight') };
+
+      if (this.currentMode() !== this.MODE_MULTIBULTO) {
+        return own.length > 0 && own.width > 0 && own.height > 0 ? { type: 'caja', length: own.length, width: own.width, height: own.height } : null;
+      }
+
+      const boxes = [Object.assign({ ref: $.trim($('#andreani-edit-main-ref').val()) }, own)].concat(this.collectBultos().map((b) => ({ ref: b.name, length: b.depth, width: b.width, height: b.height, weight: b.weight })));
+      const complete = boxes.every((b) => b.length > 0 && b.width > 0 && b.height > 0 && b.weight > 0);
+
+      return complete && boxes.length >= 2 ? { type: 'juego', boxes } : null;
+    },
+
+    effectiveInputs() {
+      const pkg = this.picker && this.picker.effective();
+      const value = (id) => parseFloat($(id).val()) || 0;
+
+      if (pkg && pkg.type === 'juego') {
+        const first = pkg.boxes[0];
+        return {
+          weight: first.weight, length: first.length, width: first.width, height: first.height,
+          bultos: pkg.boxes.slice(1).map((b) => ({ name: b.ref, height: b.height, width: b.width, depth: b.length, weight: b.weight })),
+        };
+      }
+
+      if (pkg) {
+        return { weight: value('#andreani-edit-weight'), length: pkg.length, width: pkg.width, height: pkg.height, bultos: [] };
+      }
+
+      return { weight: value('#andreani-edit-weight'), length: value('#andreani-edit-length'), width: value('#andreani-edit-width'), height: value('#andreani-edit-height'), bultos: this.collectBultos() };
     },
 
     strings() {
@@ -3255,10 +3509,11 @@
           $('#andreani-edit-bultos-invalid').hide();
           $(this).closest('.andreani-bulto-card').find('.andreani-bulto-card__incomplete').hide();
           self.markSameDims();
+          self.picker.refresh();
           self.recalcStatus();
         });
 
-      this.$panel.on('change', '.andr-seg__input', function() {
+      this.$panel.on('change', '[data-andr="mode-input"]', function() {
         self.setMode($(this).val());
       });
 
@@ -3277,44 +3532,7 @@
       $('#andreani-edit-discard-go').on('click', () => this.save(true));
       $('#andreani-edit-discard-cancel').on('click', () => $('#andreani-edit-confirm-discard').prop('hidden', true));
       $('#andreani-edit-quote-submit').on('click', () => this.quote());
-      this.$panel.on('input change', '[data-andr="qty"], [data-andr="qty-input"]', function() {
-        const qty = parseInt($(this).val(), 10);
-        if (qty >= 1 && qty <= 99) {
-          $('#andreani-edit-quote-qty').val(qty);
-          self.markQuoteStale();
-          self.syncQuoteContext();
-        }
-      });
-      this.$panel.on('click', '.andr-stepper__btn', function() {
-        const $qty = $('#andreani-edit-quote-qty');
-        $qty.val((parseInt($qty.val(), 10) || 1) + parseInt($(this).attr('data-step'), 10)).trigger('change');
-      });
-      this.$panel.on('change', '#andreani-edit-quote-qty', function() {
-        const qty = Math.min(99, Math.max(1, parseInt($(this).val(), 10) || 1));
-        $(this).val(qty);
-        const $qtyInput = self.$panel.find('[data-andr="qty-input"]');
-        if (parseInt($qtyInput.val(), 10) !== qty) $qtyInput.val(qty).trigger('change');
-        self.markQuoteStale();
-        self.syncQuoteContext();
-      });
-      this.$panel.on('click', '.andr-tabs__item[data-tab="pem-quote"]', () => this.syncQuoteContext());
-      new MutationObserver(() => this.syncQuoteContext()).observe(this.$panel.find('[data-andr="result"]').get(0), { childList: true, subtree: true });
-    },
-
-    syncQuoteContext() {
-      const qty = parseInt($('#andreani-edit-quote-qty').val(), 10) || 1;
-      const title = qty <= parseInt(this.$panel.find('[data-andr="qty"]').attr('max'), 10)
-        ? this.$panel.find('.andr-dispatch__result-title').first().text()
-        : '';
-      const unit = qty === 1 ? this.strings().preview_unit_one : this.strings().preview_unit_many;
-      $('#andreani-edit-quote-sum').text(qty + ' ' + unit + (title ? ' · ' + title : ''));
-
-      const src = this.$panel.find('.andr-dispatch__stage svg').get(0);
-      const dst = document.getElementById('andreani-edit-quote-art');
-      if (src && dst) {
-        if (src.getAttribute('viewBox')) dst.setAttribute('viewBox', src.getAttribute('viewBox'));
-        dst.innerHTML = src.innerHTML;
-      }
+      this.$panel.on('input change', '[data-andr="qty-input"]', () => this.markQuoteStale());
     },
 
     markQuoteStale() {
@@ -3329,7 +3547,9 @@
     snapshot() {
       return JSON.stringify([
         this.currentMode(),
-        this.$panel.find('input[type="number"], input[type="text"]').not('#andreani-edit-quote-cp, #andreani-edit-quote-qty, [data-andr="qty-input"], [data-andr="qty"]').map((i, el) => el.value).get(),
+        this.overflowValue(),
+        this.picker ? this.picker.value() : '',
+        this.$panel.find('input[type="number"], input[type="text"]').not('#andreani-edit-quote-cp, [data-andr="qty-input"]').map((i, el) => el.value).get(),
       ]);
     },
 
@@ -3385,6 +3605,8 @@
       $('#andreani-edit-sku').val($row.attr('data-sku') || '');
       this.refreshSkuHint();
       $('#andreani-edit-main-ref').val($row.attr('data-main-ref') || '');
+      $('#andreani-edit-units').val(parseInt($row.attr('data-units-per-box'), 10) || 1);
+      $('#andreani-edit-overflow').val($row.attr('data-overflow') || 'inherit');
       $('#andreani-edit-weight').val(this.numAttr($row, 'weight'));
       $('#andreani-edit-length').val(this.numAttr($row, 'length'));
       $('#andreani-edit-width').val(this.numAttr($row, 'width'));
@@ -3392,8 +3614,6 @@
       $('#andreani-edit-message').hide().text('').removeClass('andreani-products-inline-msg--success andreani-products-inline-msg--error');
       $('#andreani-edit-quote-results').prop('hidden', true).removeClass('is-stale').empty();
       $('#andreani-edit-quote-cp').val(AndreaniQuoteCp.get());
-      $('#andreani-edit-quote-qty').val(this.$panel.find('[data-andr="qty-input"]').val());
-      this.$panel.find('.andr-tabs__item[data-tab="pem-config"]').trigger('click');
       $('#andreani-edit-confirm').prop('hidden', true);
       $('#andreani-edit-apilado-invalid, #andreani-edit-bultos-invalid').hide();
 
@@ -3406,11 +3626,14 @@
       let apilado = parse('data-apilado-json', {});
       if (Array.isArray(apilado)) apilado = {};
       this.renderApilado(apilado);
+      this.$panel.find('[data-andr="capacity"]').removeAttr('data-last-mode');
 
       let mode = this.MODE_SINGLE;
-      if (bultos.length) mode = this.MODE_MULTIBULTO;
+      if (bultos.length || $row.attr('data-mode') === this.MODE_MULTIBULTO) mode = this.MODE_MULTIBULTO;
       else if (this.isValidApilado(apilado)) mode = this.MODE_APILADO;
       this.setMode(mode);
+      this.picker.set($row.attr('data-box-ref') || '');
+      this.afterChange();
 
       this.baseline = this.snapshot();
 
@@ -3469,7 +3692,7 @@
     },
 
     currentMode() {
-      const mode = this.$panel.find('.andr-seg__input:checked').val();
+      const mode = this.$panel.find('[data-andr="mode-input"]').val();
       return (mode === this.MODE_APILADO || mode === this.MODE_MULTIBULTO) ? mode : this.MODE_SINGLE;
     },
 
@@ -3478,24 +3701,17 @@
 
       $('#andreani-edit-confirm-discard').prop('hidden', true);
 
-      this.$panel.find('.andr-seg__input').each(function() {
-        $(this).prop('checked', $(this).val() === mode);
-      });
+      this.$panel.find('[data-andr="mode-input"]').val(mode);
 
-      if (mode === this.MODE_APILADO) {
-        const $maxUnits = $('#andreani-edit-apilado-max-units');
-        if (!$maxUnits.val()) $maxUnits.val($maxUnits.attr('min'));
-      }
-
-      if (mode === this.MODE_MULTIBULTO && !$('#andreani-bultos-cards .andreani-bulto-card').length) {
+      if (mode === this.MODE_MULTIBULTO && !$('#andreani-bultos-cards .andreani-bulto-card').length && !this.packageMode()) {
         this.addCard();
       }
 
-      $('#andreani-edit-panel-apilado').prop('hidden', mode !== this.MODE_APILADO);
       $('#andreani-edit-panel-multibulto').prop('hidden', mode !== this.MODE_MULTIBULTO);
       $('#andreani-edit-apilado-invalid').hide();
       $('#andreani-edit-bultos-invalid').hide();
 
+      this.picker.refresh();
       this.afterChange();
     },
 
@@ -3517,7 +3733,7 @@
         +     field('height', s.label_height, u.dimension, 'b-height', '0.01', b.height)
         +     field('weight', s.label_weight, u.weight, 'b-weight', '0.001', b.weight)
         +   '</div>'
-        +   '<button type="button" class="andr-btn andr-btn--ghost andr-btn--sm andreani-bulto-card__remove" aria-label="' + escapeAttr(s.piece_remove) + '">&times;</button>'
+        +   '<button type="button" class="andr-btn andr-btn--ghost andr-btn--sm andreani-bulto-card__remove" aria-label="' + escapeAttr(s.piece_remove) + '" title="' + escapeAttr(s.piece_remove) + '">&times;</button>'
         +   '<div class="andreani-bulto-card__warning andr-dispatch__warnbox" style="display:none;">'
         +     '<span>' + escapeHtml(s.same_dims_warning || '') + '</span>'
         +     '<button type="button" class="andr-btn andr-btn--secondary andr-btn--sm andreani-bulto-card__switch">' + escapeHtml(s.switch_to_apilado || '') + '</button>'
@@ -3542,6 +3758,8 @@
     afterChange() {
       const title = this.strings().piece_title;
       $('#andreani-edit-box-title').text(this.currentMode() === this.MODE_MULTIBULTO ? title + ' 1' : this.strings().box_single);
+      const $measures = $('#andreani-edit-measures-label');
+      $measures.text($measures.attr('data-wc')).prop('hidden', this.packageMode() === 'caja');
       $('#andreani-bultos-cards .andreani-bulto-card').each(function(i) {
         $(this).find('.andreani-bulto-card__title').text(title + ' ' + (i + 2));
       });
@@ -3566,6 +3784,11 @@
     },
 
     markSameDims() {
+      if (this.packageMode()) {
+        $('#andreani-bultos-cards .andreani-bulto-card__warning').hide();
+        return;
+      }
+
       const width = this.round2($('#andreani-edit-width').val());
       const height = this.round2($('#andreani-edit-height').val());
       const depth = this.round2($('#andreani-edit-length').val());
@@ -3609,15 +3832,26 @@
         width:         $('#andreani-edit-width').val(),
         height:        $('#andreani-edit-height').val(),
         dispatch_mode: mode,
-        bultos_json:   JSON.stringify(mode === this.MODE_MULTIBULTO ? this.collectBultos() : []),
-        main_ref:      mode === this.MODE_MULTIBULTO ? $.trim($('#andreani-edit-main-ref').val()) : '',
+        box_ref:       this.picker ? this.picker.value() : '',
+        bultos_json:   JSON.stringify(mode === this.MODE_MULTIBULTO && this.packageMode() !== 'juego' ? this.collectBultos() : []),
+        main_ref:      mode === this.MODE_MULTIBULTO && this.packageMode() !== 'juego' ? $.trim($('#andreani-edit-main-ref').val()) : '',
+        units_per_box: mode === this.MODE_SINGLE ? $('#andreani-edit-units').val() : 1,
+        overflow:      this.overflowValue(),
         apilado_json:  JSON.stringify(mode === this.MODE_APILADO ? (apilado || {}) : {}),
       };
     },
 
+    unitsValue() {
+      return parseInt($('#andreani-edit-units').val(), 10) || 1;
+    },
+
+    overflowValue() {
+      return $('#andreani-edit-overflow').val() || 'inherit';
+    },
+
     previewPayload() {
       const draft = this.draftPayload();
-      if (this.currentMode() === this.MODE_MULTIBULTO) {
+      if (this.currentMode() === this.MODE_MULTIBULTO && this.packageMode() !== 'juego') {
         draft.bultos_json = JSON.stringify(AndreaniBoxPreview.completeBultos(this.collectBultos()));
       }
       return draft;
@@ -3658,17 +3892,24 @@
     recalcStatus() {
       this.markQuoteStale();
       const mode = this.currentMode();
-      const value = (id) => parseFloat($(id).val()) || 0;
+      const eff = this.effectiveInputs();
 
       AndreaniBoxPreview.applyBadge($('#andreani-edit-bigger-status'), AndreaniBoxPreview.evaluateProduct({
-        weight: value('#andreani-edit-weight'),
-        length: value('#andreani-edit-length'),
-        width: value('#andreani-edit-width'),
-        height: value('#andreani-edit-height'),
+        weight: eff.weight,
+        length: eff.length,
+        width: eff.width,
+        height: eff.height,
         mode: mode,
         apilado: mode === this.MODE_APILADO ? this.apiladoForPreview() : null,
-        bultos: mode === this.MODE_MULTIBULTO ? this.collectBultos() : [],
-      }));
+        bultos: mode === this.MODE_MULTIBULTO ? eff.bultos : [],
+        unitsPerBox: mode === this.MODE_SINGLE ? this.unitsValue() : 1,
+      }), {
+        ok: this.strings().box_status_ok,
+        bigger: this.strings().box_status_bigger,
+        missing: this.strings().box_status_missing,
+      });
+
+      AndreaniBoxPreview.syncCapacity(this.$panel, { mode, overflow: this.overflowValue() });
 
       this.preview.refresh();
     },
@@ -3711,7 +3952,7 @@
         return;
       }
 
-      if (mode === this.MODE_MULTIBULTO && this.partialCards().length) {
+      if (mode === this.MODE_MULTIBULTO && this.packageMode() !== 'juego' && this.partialCards().length) {
         const $partial = this.partialCards();
         $partial.find('.andreani-bulto-card__incomplete').show();
         $partial.first().find('input[type="number"]').filter(function() { return !(parseFloat($(this).val()) > 0); }).first().focus();
@@ -3719,7 +3960,7 @@
         return;
       }
 
-      if (mode === this.MODE_MULTIBULTO && !this.hasCompleteBulto()) {
+      if (mode === this.MODE_MULTIBULTO && this.packageMode() !== 'juego' && !this.hasCompleteBulto()) {
         $('#andreani-edit-bultos-invalid').show();
         $('#andreani-bultos-cards .andreani-bulto-card').first().find('input').first().focus();
         return;
@@ -3750,6 +3991,7 @@
             self.close($newRow);
             AndreaniBoxPreview.mountThumbs($newRow.get(0));
             AndreaniBoxPreview.mountIcons($newRow.get(0));
+            AndreaniBoxPreview.mountArt($newRow.get(0));
             AndreaniProductsGrid.updateCounts(res.data.counts);
             AndreaniProductsGrid.flash(i18n.editor_saved || 'Producto actualizado.');
           } else {
@@ -3781,6 +4023,8 @@
       const $btn = $('#andreani-edit-quote-submit');
       const $results = $('#andreani-edit-quote-results').removeClass('is-stale');
 
+      if (!AndreaniQuoteCp.require($('#andreani-edit-quote-cp'))) return;
+
       AndreaniQuote.loading($results);
       $btn.prop('disabled', true);
 
@@ -3789,7 +4033,7 @@
         nonce:      this.config.nonce_test_quote,
         product_id: $('#andreani-edit-product-id').val(),
         cp_destino: ($('#andreani-edit-quote-cp').val() || '').trim(),
-        quantity:   $('#andreani-edit-quote-qty').val() || 1,
+        quantity:   this.$panel.find('[data-andr="qty-input"]').val() || 1,
       }, this.draftPayload()))
         .done((res) => AndreaniLoader.hide($results, () => AndreaniQuote.show($results, res)))
         .fail((xhr) => AndreaniLoader.hide($results, () => AndreaniQuote.show($results, null, xhr)))
@@ -3958,6 +4202,7 @@
         html += '<div class="andreani-sim__line">'
           + this.thumbHtml(l.thumb, l.packages)
           + '<span class="andreani-sim__line-text"><span class="andreani-product-item__name">' + escapeHtml(l.name) + '</span>'
+          + '<span class="andr-chip" data-line-chip="' + l.id + '"></span>'
           + (l.how ? '<span class="andreani-product-item__sku">' + howHtml(l.mode, l.how) + '</span>' : '') + '</span>'
           + '<span class="andreani-sim__stepper">'
           + '<button type="button" class="andr-btn andr-btn--secondary andr-btn--icon andr-btn--sm andreani-sim__step" data-id="' + l.id + '" data-d="-1" aria-label="' + escapeAttr(this.t('sim_remove')) + '">&minus;</button>'
@@ -3986,13 +4231,18 @@
 
     simulate() {
       const self = this;
-      const paint = (packages, mixed) => AndreaniBoxPreview.paint({
+      const paint = (packages, mixed, force, forceReason, forceNote, storeBox) => AndreaniBoxPreview.paint({
+        advice: true,
+        storeBox: storeBox || null,
         svg: document.getElementById('andreani-sim-stage'),
         result: document.getElementById('andreani-sim-result'),
         packages: packages,
         cart: true,
         list: true,
         mixed: mixed,
+        forceBigger: force,
+        forceReason: forceReason,
+        forceNote: forceNote,
         emptyText: self.t('sim_empty_preview'),
       });
       const id = ++this.simRequest;
@@ -4012,7 +4262,23 @@
         if (id !== self.simRequest || !res.success) return;
         const packages = res.data.packages || [];
         const names = self.lines.filter((l) => (res.data.skipped || []).indexOf(l.id) !== -1).map((l) => l.name);
-        paint(packages, new Set(packages.map((p) => p.product_id)).size > 1);
+        const strings = (self.config.i18n || {}).dispatch || {};
+        const reason = res.data.force_reason;
+        const forcing = res.data.force_bigger ? self.lines.find((l) => l.id === parseInt(res.data.force_line, 10)) : null;
+        let forceNote = forcing ? AndreaniBoxPreview.fill(reason === 'multibulto' ? strings.cart_forced_multi : strings.cart_forced_separate, forcing.name) : '';
+        if (forceNote && res.data.force_bundle) forceNote += ' ' + strings.cart_rest_together;
+        const bigger = paint(packages, new Set(packages.map((p) => p.product_id)).size > 1, !!res.data.force_bigger, res.data.force_reason, forceNote, res.data.store_box);
+        if (!bigger && forceNote) {
+          document.getElementById('andreani-sim-result').insertAdjacentHTML('beforeend', '<span class="andr-dispatch__note">' + $('<div>').text(forceNote).html() + '</span>');
+        }
+        const labels = {};
+        packages.forEach((p) => { labels[p.product_id] = (labels[p.product_id] || 0) + AndreaniBoxPreview.countOf(p); });
+        self.lines.forEach((l) => {
+          const count = labels[l.id] || 1;
+          $('[data-line-chip="' + l.id + '"]')
+            .text(count === 1 ? strings.chip_boxes_one : AndreaniBoxPreview.fill(strings.chip_boxes_many, count))
+            .toggleClass('is-many', count > 1);
+        });
         $skipped.text(names.length ? self.t('sim_skipped') + ' ' + names.join(', ') : '').prop('hidden', !names.length);
       }).fail(() => {
         if (id !== self.simRequest) return;
@@ -4029,6 +4295,8 @@
         AndreaniQuote.error($results, this.t('sim_empty_preview'));
         return;
       }
+
+      if (!AndreaniQuoteCp.require($('#andreani-sim-cp'))) return;
 
       AndreaniQuote.loading($results);
       $btn.prop('disabled', true);
@@ -4101,6 +4369,20 @@
       }
     },
 
+    clearError($inputs) {
+      $inputs.removeClass('is-invalid').removeAttr('aria-invalid').siblings('.andr-quote-field__error').remove();
+    },
+
+    require($input) {
+      this.clearError($input);
+
+      if (($input.val() || '').trim()) return true;
+
+      const text = ((window.andreani_admin || {}).i18n || {}).quote_cp_required || '';
+      $input.addClass('is-invalid').attr('aria-invalid', 'true').after('<span class="andr-quote-field__error" role="alert">' + escapeHtml(text) + '</span>').trigger('focus');
+      return false;
+    },
+
     init() {
       const saved = this.get();
       if (saved) {
@@ -4110,6 +4392,7 @@
       }
       $(document).on('input change', this.selector, (e) => {
         const value = (e.currentTarget.value || '').trim();
+        if (value) this.clearError($(this.selector));
         this.set(value);
         $(this.selector).not(e.currentTarget).val(value);
       });

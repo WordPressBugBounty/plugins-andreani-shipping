@@ -66,6 +66,8 @@ $box_row = static function ( $index, $number, $name, $values ) use ( $strings, $
 		</span>
 		<span class="andr-badge andr-badge--<?php echo esc_attr( $status_badges[ $status ][0] ); ?>" id="andreani-despacho-status">
 			<svg class="andr-dispatch__badge-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm-.75 3.5h1.5v4.5h-1.5V4.5zm0 6h1.5V12h-1.5v-1.5z"/></svg>
+			<?php if ( 'missing' !== $status ) { echo Andreani_Product_Bultos::service_icon( 'ok' === $status ? 'paqueteria' : 'bigger' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			} ?>
 			<span data-andr="badge-text"><?php echo esc_html( $status_badges[ $status ][1] ); ?></span>
 		</span>
 		<svg class="andr-dispatch__chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5 7.5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -73,15 +75,40 @@ $box_row = static function ( $index, $number, $name, $values ) use ( $strings, $
 
 	<div class="andr-dispatch__body" id="andreani-despacho-body"<?php echo $open ? '' : ' hidden'; ?>>
 
-	<div class="andr-ask">
-		<span class="andr-ask__q"><?php echo esc_html( $strings['mode_question'] ); ?></span>
-		<?php
-		$seg_name = Andreani_Product_Bultos::MODE_FIELD;
-		$seg_id   = 'andreani-despacho-mode-';
-		$seg_mode = $mode;
-		include ANDREANI_PLUGIN_DIR . 'includes/admin/views/dispatch-mode-segmented.php';
-		?>
+	<div class="andr-setup">
+	<div class="andr-setup__main">
+	<?php
+	$kind = array(
+		'prefix' => 'andreani-despacho-',
+		'name'   => Andreani_Product_Bultos::MODE_FIELD,
+		'mode'   => $mode,
+	);
+	include ANDREANI_PLUGIN_DIR . 'includes/admin/views/dispatch-kind.php';
+	?>
+
+	<?php
+	ob_start();
+	?>
+	<div class="andr-boxes__panel" id="andreani-despacho-panel-apilado" data-andr="stack-fields"<?php echo Andreani_Product_Bultos::MODE_APILADO === $mode ? '' : ' hidden'; ?>>
+		<?php Andreani_Product_Apilado::render_fields( $post->ID ); ?>
 	</div>
+	<?php
+	$cap = array(
+		'stack_html' => ob_get_clean(),
+		'prefix'     => 'andreani-despacho-',
+		'mode'       => $mode,
+		'units'      => array( 'name' => Andreani_Product_Bultos::UNITS_FIELD, 'value' => max( 1, (int) get_post_meta( $post->ID, Andreani_Product_Bultos::UNITS_META, true ) ) ),
+	);
+	include ANDREANI_PLUGIN_DIR . 'includes/admin/views/dispatch-capacity.php';
+	?>
+
+	<?php
+	$pkg = array(
+		'name'  => Andreani_Product_Bultos::BOX_REF_FIELD,
+		'value' => (string) get_post_meta( $post->ID, Andreani_Product_Bultos::BOX_REF_META, true ),
+	);
+	include ANDREANI_PLUGIN_DIR . 'includes/admin/views/dispatch-package.php';
+	?>
 
 	<div class="andr-boxes">
 		<div class="andr-boxes__grid">
@@ -92,13 +119,11 @@ $box_row = static function ( $index, $number, $name, $values ) use ( $strings, $
 				<span class="screen-reader-text"><?php echo esc_html( $strings['piece_reference'] ); ?></span>
 				<input type="text" name="andreani_main_box_ref" value="<?php echo esc_attr( (string) get_post_meta( $post->ID, Andreani_Product_Bultos::MAIN_REF_META, true ) ); ?>" placeholder="<?php echo esc_attr( $strings['main_ref_hint'] ); ?>" maxlength="60">
 			</label>
-			<span class="andr-box__summary" id="andreani-despacho-main-summary"></span>
 			<span class="andr-box__cells">
 				<?php foreach ( array( 'length', 'width', 'height', 'weight' ) as $andreani_cell ) : ?>
 					<span class="andr-box__cell" data-cell="<?php echo esc_attr( $andreani_cell ); ?>"></span>
 				<?php endforeach; ?>
 			</span>
-			<span class="andr-box__note"><?php echo esc_html( $strings['box_main_note'] ); ?></span>
 		</div>
 
 			<div id="andreani-bultos-list" class="andr-boxes__list">
@@ -110,11 +135,8 @@ $box_row = static function ( $index, $number, $name, $values ) use ( $strings, $
 			</div>
 		</div>
 
-		<div class="andr-boxes__panel" id="andreani-despacho-panel-apilado"<?php echo Andreani_Product_Bultos::MODE_APILADO === $mode ? '' : ' hidden'; ?>>
-			<?php Andreani_Product_Apilado::render_fields( $post->ID ); ?>
-		</div>
-
 		<div class="andr-boxes__panel andr-boxes__panel--multi" id="andreani-despacho-panel-multibulto"<?php echo Andreani_Product_Bultos::MODE_MULTIBULTO === $mode ? '' : ' hidden'; ?>>
+			<p class="andr-dispatch__note"><?php echo esc_html( $strings['multi_note'] ); ?></p>
 			<button type="button" class="andr-btn andr-btn--secondary andr-btn--sm" id="andreani-add-bulto"><?php echo esc_html( $strings['piece_add'] ); ?></button>
 
 			<p class="andr-dispatch__warnbox" id="andreani-bultos-invalid" style="display:none;"><?php echo esc_html( $strings['bultos_invalid'] ); ?></p>
@@ -135,7 +157,19 @@ $box_row = static function ( $index, $number, $name, $values ) use ( $strings, $
 		</div>
 	</div>
 
-	<?php include ANDREANI_PLUGIN_DIR . 'includes/admin/views/dispatch-preview.php'; ?>
+	<?php
+	$overflow = array(
+		'prefix' => 'andreani-despacho-',
+		'mode'   => $mode,
+		'field'  => array( 'name' => Andreani_Product_Bultos::OVERFLOW_FIELD, 'value' => Andreani_Product_Bultos::sanitize_overflow( get_post_meta( $post->ID, Andreani_Product_Bultos::OVERFLOW_META, true ) ) ),
+	);
+	include ANDREANI_PLUGIN_DIR . 'includes/admin/views/dispatch-overflow.php';
+	?>
+	</div>
+	<div class="andr-setup__side">
+		<?php include ANDREANI_PLUGIN_DIR . 'includes/admin/views/dispatch-preview.php'; ?>
+	</div>
+	</div>
 	</div>
 </div>
 

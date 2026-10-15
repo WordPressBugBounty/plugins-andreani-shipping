@@ -31,6 +31,7 @@ class Andreani_Plugin {
             'includes/class-andreani-upgrader.php',
             'includes/services/andreani-settings-service.php',
             'includes/services/andreani-cache-service.php',
+            'includes/shipping/class-andreani-settings-layout.php',
             'includes/api/andreani-api-manager.php',
             'includes/api/backend/andreani-shipments-api.php',
             'includes/assets/class-andreani-core-assets.php',
@@ -58,14 +59,17 @@ class Andreani_Plugin {
         if ( is_admin() ) {
             $admin_files = array(
                 'includes/admin/class-andreani-admin-menu.php',
+                'includes/admin/class-andreani-novedades.php',
                 'includes/admin/class-andreani-shipment-detail-view.php',
                 'includes/admin/class-andreani-order-packing.php',
+                'includes/admin/class-andreani-shipment-status.php',
                 'includes/admin/class-andreani-shipments-list.php',
                 'includes/admin/class-andreani-products-list.php',
                 'includes/admin/class-andreani-shipments-hydrator.php',
                 'includes/admin/class-andreani-order-metabox.php',
                 'includes/admin/class-andreani-ajax-handler.php',
                 'includes/admin/class-andreani-origen-ajax.php',
+                'includes/admin/class-andreani-boxes-page.php',
                 'includes/admin/class-andreani-admin-loader.php',
                 'includes/admin/class-andreani-admin-assets.php',
             );
@@ -217,6 +221,10 @@ class Andreani_Plugin {
             Andreani_Admin_Menu::get_instance();
         }
 
+        if ( class_exists( 'Andreani_Novedades' ) ) {
+            Andreani_Novedades::get_instance();
+        }
+
         if ( class_exists( 'Andreani_Order_Metabox' ) ) {
             Andreani_Order_Metabox::get_instance();
         }
@@ -227,6 +235,10 @@ class Andreani_Plugin {
 
         if ( class_exists( 'Andreani_Origen_Ajax' ) ) {
             Andreani_Origen_Ajax::get_instance();
+        }
+
+        if ( class_exists( 'Andreani_Boxes_Page' ) ) {
+            Andreani_Boxes_Page::get_instance();
         }
 
         if ( class_exists( 'Andreani_Admin_Assets' ) ) {

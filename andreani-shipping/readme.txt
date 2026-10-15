@@ -5,7 +5,7 @@ Copyright: 2025 Andreani.com
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.8.1
+Stable tag: 1.8.2
 Contributors: integracionandreani
 Donate link:
 Tags: woocommerce, shipping, andreani, envio, etiquetas
@@ -18,13 +18,16 @@ Plugin **oficial de Andreani** para WooCommerce. Tus clientes cotizan y eligen A
 
 **Para tiendas con envíos en Argentina.** Funciona para clientes **PyME, Corporativos y Middle Market**.
 
-= Novedades de la versión 1.8.0 =
+= Novedades de la versión 1.8.2 =
 
-* **Mirá cómo viaja cada producto** — "Ver mis productos" te muestra si va por Paquetería o Bigger y por qué, en cuántas cajas viaja y un dibujo de cómo se arma el envío.
-* **Configurá el despacho en la misma fila** — medidas, peso y forma de despacho (en su caja, se apilan o en varias cajas), sin abrir el producto.
-* **Simulador de carrito** — armá un pedido de prueba con tus productos y mirá cuántas cajas y etiquetas genera y cuánto sale el envío.
-* **Caja sugerida en cada pedido** — en "Ver mis envíos", cada pedido te dice cómo armar la caja y de qué medida.
-* **Rápido con catálogos grandes** — tus productos se analizan solos en segundo plano, y las pantallas responden igual con 10 que con miles de productos.
+* **Cuántos productos entran en una caja** — cargás las unidades por caja y elegís si viajan "Todo junto" o "Cada caja con su etiqueta" (Bigger).
+* **Paquetes guardados** — guardá tus cajas, sobres, bolsas y juegos de cajas, asignalos a tus productos y elegilos para declarar el envío.
+* **Mis productos rediseñado** — ves cómo viaja cada producto y probás un carrito en el simulador.
+* **Cómo armarlo con el paquete** — en cada pedido, el armado indica el paquete de tu tienda que corresponde.
+* **Menú y Configuración reordenados** — Modos de entrega, En tu tienda y Etiquetas.
+* **Estados unificados** — "Ver mis envíos" y el pedido usan los mismos seis estados, y el pedido tiene su metabox de Andreani.
+* **Novedades** — una sección para enterarte de lo nuevo sin salir del panel.
+* **Los productos que vienen en varias cajas ahora viajan siempre como Bigger** (una etiqueta por caja, solo a domicilio).
 
 = Paquetería o Bigger: el plugin lo resuelve =
 
@@ -360,6 +363,18 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 
 == Changelog ==
 
+= 1.8.2 =
+* Nuevo: Unidades por caja en cada producto y elección "Todo junto" o "Cada caja con su etiqueta" (Bigger)
+* Nuevo: Paquetes guardados (cajas, sobres o bolsas, y juegos de cajas) que se asignan a los productos y se eligen para declarar el envío
+* Nuevo: "Mis productos" rediseñado con "Cómo viaja" y simulador de carrito
+* Nuevo: "Cómo armarlo" indica el paquete asignado
+* Nuevo: Metabox de Andreani en el pedido y sección de Novedades
+* Mejora: Menú y Configuración reordenados (Modos de entrega, En tu tienda, Etiquetas)
+* Mejora: Estados de envío unificados entre "Ver mis envíos" y el pedido
+* Cambio: Los productos que vienen en varias cajas ahora viajan siempre como Bigger, con una etiqueta por caja y solo a domicilio
+* Fix: Los chips de estado de "Ver mis envíos" filtran por todos los estados
+* Mejora: Al editar o borrar un paquete guardado, los productos se vuelven a clasificar en segundo plano
+
 = 1.8.1 =
 * Corregido: el cotizador de la ficha de producto ahora cotiza la variación elegida en los productos variables
 
@@ -550,6 +565,9 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * Versión inicial publicada en el repositorio de WordPress
 
 == Upgrade Notice ==
+
+= 1.8.2 =
+Nuevos paquetes guardados y unidades por caja. Atención: los productos que vienen en varias cajas ahora viajan siempre como Bigger (una etiqueta por caja, solo a domicilio), por lo que su cotización puede cambiar.
 
 = 1.8.0 =
 Nueva pantalla de productos: ves cómo viaja cada producto, simulás un carrito y en cada pedido te sugerimos la caja. Tus productos se analizan solos en segundo plano; no tenés que configurar nada.

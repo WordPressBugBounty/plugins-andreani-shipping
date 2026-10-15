@@ -282,11 +282,12 @@ class Andreani_Cache_Service {
 				// si dependiera del id, editar medidas, bultos o apilado dejaría sirviendo
 				// la cotización vieja hasta que venciera el TTL.
 				if ( isset( $item['data'] ) && class_exists( 'Andreani_Package_Builder' ) ) {
-					$entry['bultos'] = Andreani_Package_Builder::build( $item['data'], $entry['qty'] );
+					$entry['bultos']        = Andreani_Package_Builder::build( $item['data'], $entry['qty'] );
+					$entry['units_per_box'] = Andreani_Package_Builder::resolve_units_per_box( $item['data'] );
+					$entry['overflow']      = Andreani_Package_Builder::resolve_overflow( $item['data'] );
 
-					if ( class_exists( 'Andreani_Order_Mapper' ) ) {
-						$entry['adicionales'] = Andreani_Order_Mapper::get_bultos_adicionales( $item['data']->get_id() );
-					}
+					$entry['adicionales'] = Andreani_Package_Builder::resolve_bultos( $item['data'] );
+					$entry['box_ref']     = Andreani_Package_Builder::assigned_package( $item['data'] )['ref'];
 				}
 
 				$items[] = $entry;
@@ -294,7 +295,14 @@ class Andreani_Cache_Service {
 			usort( $items, function( $a, $b ) {
 				return $a['id'] - $b['id'];
 			} );
-			$key_data['items'] = $items;
+			$key_data['items']        = $items;
+			$key_data['force_bigger'] = class_exists( 'Andreani_Package_Builder' ) && Andreani_Package_Builder::force_bigger_for_package( $package );
+
+			$boxes_hash = class_exists( 'Andreani_Store_Boxes' ) ? Andreani_Store_Boxes::hash() : '';
+
+			if ( '' !== $boxes_hash ) {
+				$key_data['store_boxes'] = $boxes_hash;
+			}
 		}
 
 		if ( isset( $package['contents_cost'] ) ) {

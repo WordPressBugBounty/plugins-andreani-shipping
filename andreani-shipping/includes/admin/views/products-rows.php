@@ -12,13 +12,12 @@ defined( 'ABSPATH' ) || exit;
 ?>
 <div class="andreani-products-list">
 	<div class="andreani-product-item andreani-product-item--head" aria-hidden="true">
-		<span></span>
-		<span><?php esc_html_e( 'Producto', 'andreani-shipping' ); ?></span>
-		<span><?php esc_html_e( 'Medidas', 'andreani-shipping' ); ?></span>
-		<span class="andreani-product-item__weight"><?php esc_html_e( 'Peso', 'andreani-shipping' ); ?></span>
-		<span><?php esc_html_e( 'Despacho', 'andreani-shipping' ); ?></span>
-		<span><?php esc_html_e( 'Servicio', 'andreani-shipping' ); ?></span>
-		<span></span>
+		<span class="andreani-product-item__select-cell"></span>
+		<span class="andreani-product-item__product"><?php esc_html_e( 'Producto', 'andreani-shipping' ); ?></span>
+		<span class="andreani-product-item__how"><?php esc_html_e( 'Cómo viaja', 'andreani-shipping' ); ?></span>
+		<span class="andreani-product-item__pack"><?php esc_html_e( 'Paquete', 'andreani-shipping' ); ?></span>
+		<span class="andreani-product-item__state"><?php esc_html_e( 'Servicio', 'andreani-shipping' ); ?></span>
+		<span class="andreani-product-item__chevron-cell"></span>
 	</div>
 	<?php foreach ( $items as $item ) : ?>
 		<?php require ANDREANI_PLUGIN_DIR . 'includes/admin/views/products-row.php'; ?>

@@ -61,3 +61,15 @@
 .andreani-page-card__body {
 	padding: 0 20px 16px;
 }
+
+.andreani-page-card__side {
+	display: flex;
+	align-items: center;
+	gap: var(--andr-sp-3);
+	margin-left: auto;
+	flex-shrink: 0;
+}
+
+.andreani-page-card__side .andreani-page-card__logo {
+	margin-left: 0;
+}

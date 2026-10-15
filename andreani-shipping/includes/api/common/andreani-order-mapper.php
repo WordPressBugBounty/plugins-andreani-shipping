@@ -134,6 +134,8 @@ class Andreani_Order_Mapper {
 		$products           = array();
 		$skipped            = array();
 		$missing_dimensions = array();
+		$decision           = Andreani_Package_Builder::decision_for_order( $order );
+		$bundle_value       = 0.0;
 
 		foreach ( $order->get_items() as $item_id => $item ) {
 			$product_id = $item->get_variation_id() ? $item->get_variation_id() : $item->get_product_id();
@@ -158,15 +160,17 @@ class Andreani_Order_Mapper {
 			$quantity = $item->get_quantity();
 			$price    = self::resolve_unit_price( $order->get_item_subtotal( $item, false, false ), $product->get_price(), $mostrar_sin_decimales );
 
-			if ( ! $product->get_weight() ) {
+			$measures = Andreani_Package_Builder::unit_measures( $product );
+
+			if ( $measures['weight_kg'] <= 0 ) {
 				Andreani_Utils::andreani_log( "[ORDEN] Producto sin peso: \"{$product->get_name()}\" (ID: {$product->get_id()}) - usando peso por defecto", 'warning' );
 			}
 
 			$missing_fields = array();
-			if ( ! $product->get_weight() ) $missing_fields[] = 'peso';
-			if ( ! $product->get_width() )  $missing_fields[] = 'ancho';
-			if ( ! $product->get_height() ) $missing_fields[] = 'alto';
-			if ( ! $product->get_length() ) $missing_fields[] = 'largo';
+			if ( $measures['weight_kg'] <= 0 ) $missing_fields[] = 'peso';
+			if ( $measures['width'] <= 0 )  $missing_fields[] = 'ancho';
+			if ( $measures['height'] <= 0 ) $missing_fields[] = 'alto';
+			if ( $measures['depth'] <= 0 ) $missing_fields[] = 'largo';
 			if ( ! empty( $missing_fields ) ) {
 				$missing_dimensions[] = array(
 					'product_id' => (int) $product->get_id(),
@@ -175,24 +179,24 @@ class Andreani_Order_Mapper {
 				);
 			}
 
+			if ( in_array( $item_id, $decision['bundled'], true ) ) {
+				$bundle_value += floatval( $price ) * intval( $quantity );
+				continue;
+			}
+
 			$bultos_adicionales = Andreani_Package_Builder::resolve_bultos( $product );
 
 			$total_bultos    = 1 + count( $bultos_adicionales );
 			$price_per_bulto = floatval( $price ) / $total_bultos;
 
-			$apilado = Andreani_Package_Builder::resolve_apilado( $product );
-			$apila   = ! empty( $apilado );
-
-			foreach ( Andreani_Package_Builder::build( $product, $quantity ) as $bulto ) {
-				$units = (int) $bulto['units'];
-
+			foreach ( Andreani_Package_Builder::lines( $product, $quantity ) as $line ) {
 				$products[] = array(
-					'price'    => floatval( $apila ? $price_per_bulto * $units : $price_per_bulto ),
-					'quantity' => $apila ? 1 : intval( $units ),
-					'kgrams'   => floatval( $bulto['weight_kg'] ),
-					'width'    => floatval( $bulto['width'] ),
-					'depth'    => floatval( $bulto['depth'] ),
-					'height'   => floatval( $bulto['height'] ),
+					'price'    => floatval( $price_per_bulto * ( $line['units'] / $line['quantity'] ) ),
+					'quantity' => intval( $line['quantity'] ),
+					'kgrams'   => floatval( $line['weight_kg'] ),
+					'width'    => floatval( $line['width'] ),
+					'depth'    => floatval( $line['depth'] ),
+					'height'   => floatval( $line['height'] ),
 				);
 			}
 
@@ -211,6 +215,17 @@ class Andreani_Order_Mapper {
 					'height'   => $b_height,
 				);
 			}
+		}
+
+		if ( $decision['bundle'] ) {
+			$products[] = array(
+				'price'    => floatval( $bundle_value ),
+				'quantity' => 1,
+				'kgrams'   => floatval( $decision['bundle']['weight_kg'] ),
+				'width'    => floatval( $decision['bundle']['width'] ),
+				'depth'    => floatval( $decision['bundle']['depth'] ),
+				'height'   => floatval( $decision['bundle']['height'] ),
+			);
 		}
 
 		if ( empty( $products ) ) {
@@ -364,8 +379,12 @@ class Andreani_Order_Mapper {
 		}
 	}
 
+	public static function round_measure( $value ) {
+		return round( (float) $value, 3 );
+	}
+
 	public static function convert_grams_to_weight_unit( $grams ) {
-		return self::convert_kg_to_weight_unit( floatval( $grams ) / 1000 );
+		return self::round_measure( self::convert_kg_to_weight_unit( floatval( $grams ) / 1000 ) );
 	}
 
 	public static function convert_kg_to_weight_unit( $kg ) {

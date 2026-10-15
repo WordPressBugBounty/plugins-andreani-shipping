@@ -32,6 +32,8 @@ class Andreani_Core_Assets {
 	const HANDLE_LOADER = 'andreani-loader';
 
 	const HANDLE_BOX_PREVIEW = 'andreani-box-preview';
+	const HANDLE_PACKAGE_PICKER = 'andreani-package-picker';
+	const HANDLE_C_PACKAGE = 'andreani-component-package';
 
 	public static function get_instance() {
 		if ( null === self::$instance ) {
@@ -85,6 +87,7 @@ class Andreani_Core_Assets {
 			self::HANDLE_C_DISPATCH => 'dispatch.css',
 			self::HANDLE_C_LOADER => 'loader.css',
 			self::HANDLE_C_PAGE_HEADER => 'page-header.css',
+			self::HANDLE_C_PACKAGE => 'package.css',
 		);
 
 		foreach ( $components as $handle => $file ) {
@@ -119,5 +122,18 @@ class Andreani_Core_Assets {
 			ANDREANI_PLUGIN_VERSION,
 			true
 		);
+
+		wp_register_script(
+			self::HANDLE_PACKAGE_PICKER,
+			ANDREANI_PLUGIN_URL . 'includes/assets/js/andreani-package-picker.js',
+			array( 'jquery', self::HANDLE_BOX_PREVIEW ),
+			ANDREANI_PLUGIN_VERSION,
+			true
+		);
+
+		$isotipo = (string) file_get_contents( ANDREANI_PLUGIN_DIR . 'includes/assets/img/andreani-isotipo.svg' );
+		if ( preg_match( '/<path d="([^"]+)"/', $isotipo, $path ) ) {
+			wp_localize_script( self::HANDLE_BOX_PREVIEW, 'AndreaniIsotipo', array( 'd' => $path[1] ) );
+		}
 	}
 }

@@ -9,6 +9,7 @@ class Andreani_Shipments_List extends WP_List_Table {
 
 	const PER_PAGE_DEFAULT = 10;
 	const PER_PAGE_OPTIONS = array( 5, 10, 25 );
+	const ACTIONS_VISIBLE  = 3;
 
 	// Estados visuales del envío. Fuente de verdad: el TrackingStatus logístico real
 	// (`_order_andreani_tracking_status`, lo asocia el pipeline de eventos); si no
@@ -157,9 +158,10 @@ class Andreani_Shipments_List extends WP_List_Table {
 
 		$type_caption = $type_info
 			? sprintf(
-				'<span class="andreani-order-number__type andreani-order-number__type--%1$s">%2$s</span>',
+				'<span class="andreani-order-number__type andreani-order-number__type--%1$s" title="%3$s">%2$s</span>',
 				esc_attr( $type_info->id() ),
-				esc_html( $type_info->short_label() )
+				esc_html( $type_info->short_label() ),
+				esc_attr( $type_info->label() )
 			)
 			: '';
 
@@ -176,21 +178,9 @@ class Andreani_Shipments_List extends WP_List_Table {
 	}
 
 	public function column_customer( $item ) {
-		$name  = esc_html( $item['customer_name'] );
-		$email = isset( $item['customer_email'] ) ? trim( (string) $item['customer_email'] ) : '';
+		$name = (string) $item['customer_name'];
 
-		$meta_lines = array();
-
-		if ( '' !== $email ) {
-			$meta_lines[] = '<span class="andreani-customer__email andreani-copy-click" data-copy-text="' . esc_attr( $email ) . '" title="' . esc_attr__( 'Click para copiar', 'andreani-shipping' ) . '" role="button" tabindex="0">' . esc_html( $email ) . '</span>';
-		}
-
-		$meta = '';
-		if ( $meta_lines ) {
-			$meta = '<div class="andreani-customer__meta">' . implode( '<br>', $meta_lines ) . '</div>';
-		}
-
-		return '<div class="andreani-customer__name">' . $name . '</div>' . $meta;
+		return '<div class="andreani-customer__name" title="' . esc_attr( $name ) . '">' . esc_html( $name ) . '</div>';
 	}
 
 	public function column_destination( $item ) {
@@ -208,10 +198,10 @@ class Andreani_Shipments_List extends WP_List_Table {
 		$line_2_parts = array_filter( array( $city, $state, $cp ) );
 
 		$line_1 = $line_1_parts
-			? '<div class="andreani-destination__line">' . esc_html( implode( ', ', $line_1_parts ) ) . '</div>'
+			? '<div class="andreani-destination__line" title="' . esc_attr( implode( ', ', $line_1_parts ) ) . '">' . esc_html( implode( ', ', $line_1_parts ) ) . '</div>'
 			: '';
 		$line_2 = $line_2_parts
-			? '<div class="andreani-destination__line andreani-destination__line--muted">' . esc_html( implode( ', ', $line_2_parts ) ) . '</div>'
+			? '<div class="andreani-destination__line andreani-destination__line--muted" title="' . esc_attr( implode( ', ', $line_2_parts ) ) . '">' . esc_html( implode( ', ', $line_2_parts ) ) . '</div>'
 			: '';
 
 		return '<div class="andreani-destination">' . $line_1 . $line_2 . '</div>';
@@ -234,8 +224,9 @@ class Andreani_Shipments_List extends WP_List_Table {
 		$config = self::get_service_config( $mode );
 
 		return sprintf(
-			'<span class="andr-badge andr-badge--icon-only %s" data-label="%s" aria-label="%s">%s</span>',
+			'<span class="andr-badge andr-badge--icon-only %s" data-label="%s" title="%s" aria-label="%s">%s</span>',
 			esc_attr( $config['class'] ),
+			esc_attr( $config['label'] ),
 			esc_attr( $config['label'] ),
 			esc_attr( $config['label'] ),
 			$config['icon'] // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
@@ -253,7 +244,6 @@ class Andreani_Shipments_List extends WP_List_Table {
 
 		$icon_home       = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
 		$icon_zap        = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>';
-		$icon_truck_big  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>';
 		$icon_store      = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9h18l-1.5 -3.5a2 2 0 0 0 -1.84 -1.5H6.34a2 2 0 0 0 -1.84 1.5L3 9z"/><path d="M3 9v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2 -2V9"/><path d="M9 22V12h6v10"/></svg>';
 
 		if ( false !== strpos( $normalized, 'llega' ) || false !== strpos( $normalized, 'arrives' ) ) {
@@ -276,7 +266,7 @@ class Andreani_Shipments_List extends WP_List_Table {
 			return array(
 				'label' => __( 'Bigger', 'andreani-shipping' ),
 				'class' => 'andr-badge--neutral',
-				'icon'  => $icon_truck_big,
+				'icon'  => Andreani_Product_Bultos::service_icon( 'bigger' ),
 			);
 		}
 
@@ -297,9 +287,10 @@ class Andreani_Shipments_List extends WP_List_Table {
 		$config = self::get_payment_status_config( $payment );
 
 		return sprintf(
-			'<span class="andr-badge andr-badge--icon-only %s" data-label="%s" aria-label="%s">%s</span>',
+			'<span class="andr-badge andr-badge--icon-only %s" data-label="%s" title="%s" aria-label="%s">%s</span>',
 			esc_attr( $config['class'] ),
 			esc_attr( $config['label'] ),
+			esc_attr( $config['label'] . ' — ' . $config['hint'] ),
 			esc_attr( $config['label'] . ' — ' . $config['hint'] ),
 			$config['icon'] // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
 		);
@@ -315,25 +306,24 @@ class Andreani_Shipments_List extends WP_List_Table {
 		$has_error = self::SHIPPING_STATUS_NOT_PACKAGED === $shipping_status && ! empty( $item['last_error'] );
 
 		if ( $has_error ) {
-			$label     = __( 'Hubo un error al empaquetar', 'andreani-shipping' );
-			$aria      = $label;
+			$config    = self::get_shipping_status_config( self::SHIPPING_STATUS_ERROR, $has_payment_step );
+			$label     = $config['label'];
+			$aria      = __( 'Hubo un error al empaquetar', 'andreani-shipping' );
 			$extra_cls = ' andr-status--has-error';
-			$dot       = '<span class="andr-status__error-dot" aria-hidden="true"></span>';
 		} else {
 			$label     = $config['label'];
 			$aria      = $config['label'] . ' — ' . $config['hint'];
 			$extra_cls = '';
-			$dot       = '';
 		}
 
 		return sprintf(
-			'<span class="andr-status andr-status--icon-only %s%s" data-label="%s" aria-label="%s">%s%s</span>',
+			'<span class="andr-status andr-status--icon-only %s%s" data-label="%s" title="%s" aria-label="%s">%s</span>',
 			esc_attr( $config['class'] ),
 			esc_attr( $extra_cls ),
 			esc_attr( $label ),
 			esc_attr( $aria ),
-			$config['icon'], // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
-			$dot // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML estatico interno.
+			esc_attr( $aria ),
+			$config['icon'] // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG estatico interno.
 		);
 	}
 
@@ -369,7 +359,7 @@ class Andreani_Shipments_List extends WP_List_Table {
 
 	private function build_identifier_row( $label, $value ) {
 		return sprintf(
-			'<span class="andreani-identifier andreani-copy-click" data-tracking="%1$s" data-copied="%2$s" role="button" tabindex="0"><span class="andreani-identifier__label">%3$s</span><span class="andreani-identifier__value">%1$s</span></span>',
+			'<span class="andreani-identifier andreani-copy-click" data-tracking="%1$s" data-copied="%2$s" role="button" tabindex="0"><span class="andreani-identifier__label">%3$s</span><span class="andreani-identifier__value" title="%1$s">%1$s</span></span>',
 			esc_attr( $value ),
 			esc_attr__( 'Copiado', 'andreani-shipping' ),
 			esc_html( $label )
@@ -384,9 +374,10 @@ class Andreani_Shipments_List extends WP_List_Table {
 
 		$timestamp = strtotime( $date );
 		return sprintf(
-			'<span title="%s">%s</span>',
+			'<span class="andreani-date" title="%1$s"><span class="andreani-date__full">%2$s</span><span class="andreani-date__short">%3$s</span></span>',
 			esc_attr( date_i18n( 'Y-m-d H:i:s', $timestamp ) ),
-			esc_html( date_i18n( 'd/m/Y', $timestamp ) )
+			esc_html( date_i18n( 'd/m/Y', $timestamp ) ),
+			esc_html( date_i18n( 'd/m', $timestamp ) )
 		);
 	}
 
@@ -452,6 +443,15 @@ class Andreani_Shipments_List extends WP_List_Table {
 
 		if ( empty( $actions ) ) {
 			return '<span class="andreani-actions--empty">-</span>';
+		}
+
+		if ( count( $actions ) > self::ACTIONS_VISIBLE ) {
+			$overflow = array_splice( $actions, self::ACTIONS_VISIBLE - 1 );
+			$actions[] = sprintf(
+				'<details class="andreani-actions__more"><summary class="andr-btn andr-btn--icon andr-btn--ghost andr-btn--sm" title="%1$s" aria-label="%1$s">&hellip;</summary><div class="andreani-actions__menu">%2$s</div></details>',
+				esc_attr__( 'Más acciones', 'andreani-shipping' ),
+				implode( '', $overflow )
+			);
 		}
 
 		return '<div class="andreani-actions">' . implode( '', $actions ) . '</div>';
@@ -934,6 +934,43 @@ class Andreani_Shipments_List extends WP_List_Table {
 		return $scope;
 	}
 
+	/**
+	 * @param string $csv Valor de andreani_status: tokens del vocabulario unificado ("errors" incluido) o un filtro legacy.
+	 * @return array{targets:string[],has_error:bool,legacy:string} Estados internos a conservar, flag de error y filtro legacy por SQL.
+	 */
+	public static function parse_status_filter( $csv ) {
+		$tokens  = array_values( array_filter( array_map( 'trim', explode( ',', (string) $csv ) ) ) );
+		$targets = array();
+
+		foreach ( $tokens as $token ) {
+			if ( in_array( $token, array( Andreani_Shipment_Status::NOT_PACKAGED, Andreani_Shipment_Status::PACKAGED, Andreani_Shipment_Status::READY, Andreani_Shipment_Status::IN_TRANSIT, Andreani_Shipment_Status::DELIVERED ), true ) ) {
+				$targets = array_merge( $targets, Andreani_Shipment_Status::internals_for( $token ) );
+			}
+		}
+
+		$targets   = array_values( array_unique( $targets ) );
+		$has_error = in_array( 'errors', $tokens, true );
+
+		return array(
+			'targets'   => $targets,
+			'has_error' => $has_error,
+			'legacy'    => ( empty( $targets ) && ! $has_error && 1 === count( $tokens ) ) ? $tokens[0] : '',
+		);
+	}
+
+	/**
+	 * @param array    $item      Fila del listado.
+	 * @param string[] $targets   Estados internos aceptados.
+	 * @param bool     $has_error Si "Con error" está activo.
+	 * @return bool
+	 */
+	public static function item_matches_status( array $item, array $targets, $has_error ) {
+		$status_match = ! empty( $targets ) && in_array( isset( $item['shipping_status'] ) ? $item['shipping_status'] : '', $targets, true );
+		$error_match  = $has_error && ! empty( $item['last_error'] );
+
+		return $status_match || $error_match;
+	}
+
 	private function get_shipments_data( $args ) {
 		$orders_args = array(
 			'type'     => 'shop_order',
@@ -958,32 +995,10 @@ class Andreani_Shipments_List extends WP_List_Table {
 		$client_type     = isset( $args['client_type'] ) ? $args['client_type'] : '';
 		$andreani_status = isset( $args['andreani_status'] ) ? $args['andreani_status'] : '';
 
-		$status_tokens = array_values( array_filter( array_map( 'trim', explode( ',', $andreani_status ) ) ) );
-
-		$runtime_status_map = array(
-			'not_packaged' => self::SHIPPING_STATUS_NOT_PACKAGED,
-			'packaged'     => self::SHIPPING_STATUS_PACKAGED,
-			'ready'        => self::SHIPPING_STATUS_READY,
-			'in_transit'   => self::SHIPPING_STATUS_IN_TRANSIT,
-			'delivered'    => self::SHIPPING_STATUS_DELIVERED,
-		);
-
-		$runtime_targets = array();
-		foreach ( $status_tokens as $token ) {
-			if ( isset( $runtime_status_map[ $token ] ) ) {
-				$runtime_targets[] = $runtime_status_map[ $token ];
-			}
-		}
-		$runtime_targets = array_values( array_unique( $runtime_targets ) );
-
-		// 'errors' es flag superpuesto (no estado): filtra por presencia de _andreani_last_error.
-		$filter_has_error = in_array( 'errors', $status_tokens, true );
-
-		// Modo legacy del select dropdown: 1 valor en {error, shipped, success} y SIN
-		// chip runtime → meta_query optimizado con paginado en DB.
-		$legacy_status = ( empty( $runtime_targets ) && ! $filter_has_error && 1 === count( $status_tokens ) )
-			? $status_tokens[0]
-			: '';
+		$status_filter    = self::parse_status_filter( $andreani_status );
+		$runtime_targets  = $status_filter['targets'];
+		$filter_has_error = $status_filter['has_error'];
+		$legacy_status    = $status_filter['legacy'];
 
 		$scope = self::build_filter_scope( $client_type, $legacy_status );
 		if ( ! empty( $scope ) ) {
@@ -1041,10 +1056,8 @@ class Andreani_Shipments_List extends WP_List_Table {
 			}
 
 			if ( $needs_runtime_filter ) {
-				$items = array_values( array_filter( $items, function ( $i ) use ( $runtime_targets, $filter_has_error ) {
-					$status_match = ! empty( $runtime_targets ) && in_array( isset( $i['shipping_status'] ) ? $i['shipping_status'] : '', $runtime_targets, true );
-					$error_match  = $filter_has_error && ! empty( $i['last_error'] );
-					return $status_match || $error_match;
+				$items = array_values( array_filter( $items, static function ( $i ) use ( $runtime_targets, $filter_has_error ) {
+					return self::item_matches_status( $i, $runtime_targets, $filter_has_error );
 				} ) );
 			}
 
@@ -1247,13 +1260,11 @@ class Andreani_Shipments_List extends WP_List_Table {
 
 		$configs = array(
 			self::SHIPPING_STATUS_NOT_PACKAGED => array(
-				'label' => __( 'Por Empaquetar', 'andreani-shipping' ),
 				'hint'  => __( 'El envío todavía no se generó en Andreani. Reintentá desde la columna de acciones.', 'andreani-shipping' ),
 				'class' => 'andr-status--not-packaged',
 				'icon'  => $icon_package_open,
 			),
 			self::SHIPPING_STATUS_PACKAGED => array(
-				'label' => __( 'Empaquetado', 'andreani-shipping' ),
 				'hint'  => $has_payment_step
 					? __( 'Generado en Andreani. Esperando que el cliente pague el envío en el portal de Andreani Pymes.', 'andreani-shipping' )
 					: __( 'Generado en Andreani. Listo para despachar.', 'andreani-shipping' ),
@@ -1261,13 +1272,11 @@ class Andreani_Shipments_List extends WP_List_Table {
 				'icon'  => $icon_package,
 			),
 			self::SHIPPING_STATUS_PENDING_ENTRY => array(
-				'label' => __( 'Pendiente de ingreso', 'andreani-shipping' ),
 				'hint'  => __( 'El envío se generó y está pendiente de ingreso a la red de Andreani.', 'andreani-shipping' ),
 				'class' => 'andr-status--pending-entry',
 				'icon'  => $icon_clock,
 			),
 			self::SHIPPING_STATUS_READY => array(
-				'label' => __( 'Listo', 'andreani-shipping' ),
 				'hint'  => $has_payment_step
 					? __( 'El cliente pagó el envío y está listo para despacharse.', 'andreani-shipping' )
 					: __( 'Marcado como enviado. Listo para que Andreani lo retire.', 'andreani-shipping' ),
@@ -1275,38 +1284,36 @@ class Andreani_Shipments_List extends WP_List_Table {
 				'icon'  => $icon_check,
 			),
 			self::SHIPPING_STATUS_IN_TRANSIT => array(
-				'label' => __( 'En camino', 'andreani-shipping' ),
 				'hint'  => __( 'Despachado y en camino al destino.', 'andreani-shipping' ),
 				'class' => 'andr-status--in-transit',
 				'icon'  => $icon_truck,
 			),
 			self::SHIPPING_STATUS_READY_PICKUP => array(
-				'label' => __( 'Listo para retirar', 'andreani-shipping' ),
 				'hint'  => __( 'Disponible para retirar en la sucursal de destino.', 'andreani-shipping' ),
 				'class' => 'andr-status--ready-pickup',
 				'icon'  => $icon_store,
 			),
 			self::SHIPPING_STATUS_DELIVERED => array(
-				'label' => __( 'Entregado', 'andreani-shipping' ),
 				'hint'  => __( 'Entregado al destinatario.', 'andreani-shipping' ),
 				'class' => 'andr-status--delivered',
 				'icon'  => $icon_check_circle,
 			),
 			self::SHIPPING_STATUS_NOT_DELIVERED => array(
-				'label' => __( 'No entregado', 'andreani-shipping' ),
 				'hint'  => __( 'No se pudo entregar. Andreani puede reintentar la visita.', 'andreani-shipping' ),
 				'class' => 'andr-status--not-delivered',
 				'icon'  => $icon_x_circle,
 			),
 			self::SHIPPING_STATUS_ERROR => array(
-				'label' => __( 'Error', 'andreani-shipping' ),
 				'hint'  => __( 'Error al crear el envío. Podés reintentar.', 'andreani-shipping' ),
 				'class' => 'andr-status--error',
 				'icon'  => $icon_alert,
 			),
 		);
 
-		return isset( $configs[ $status ] ) ? $configs[ $status ] : $configs[ self::SHIPPING_STATUS_ERROR ];
+		$config          = isset( $configs[ $status ] ) ? $configs[ $status ] : $configs[ self::SHIPPING_STATUS_ERROR ];
+		$config['label'] = Andreani_Shipment_Status::label( Andreani_Shipment_Status::unify( $status ) );
+
+		return $config;
 	}
 
 	public static function get_payment_status_config( $status ) {

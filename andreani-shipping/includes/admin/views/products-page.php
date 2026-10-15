@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
 
 	<div class="andreani-page-card">
 		<?php
-		$andreani_page_title = __( 'Ver mis productos', 'andreani-shipping' );
+		$andreani_page_title  = __( 'Mis productos', 'andreani-shipping' );
 		require ANDREANI_PLUGIN_DIR . 'includes/admin/views/page-card-header.php';
 		?>
 		<div class="andreani-page-card__body">
@@ -54,24 +54,40 @@ defined( 'ABSPATH' ) || exit;
 					<div class="andreani-filters-popover__body">
 						<?php
 						$filter_groups = array(
-							'service' => array(
+							array(
 								__( 'Servicio', 'andreani-shipping' ),
 								array(
-									Andreani_Products_Stats::CLASS_PAQUETERIA => __( 'Paquetería', 'andreani-shipping' ),
-									Andreani_Products_Stats::CLASS_BIGGER     => __( 'Bigger', 'andreani-shipping' ),
-									Andreani_Products_Stats::CLASS_MISSING    => __( 'Faltan medidas', 'andreani-shipping' ),
+									array( 'service', Andreani_Products_Stats::CLASS_PAQUETERIA, __( 'Paquetería', 'andreani-shipping' ) ),
+									array( 'service', Andreani_Products_Stats::CLASS_BIGGER, __( 'Bigger', 'andreani-shipping' ) ),
+									array( 'service', Andreani_Products_Stats::CLASS_MISSING, __( 'Faltan medidas', 'andreani-shipping' ) ),
 								),
 							),
-							'mode'    => array(
-								__( 'Despacho', 'andreani-shipping' ),
+							array(
+								__( 'Cómo viaja', 'andreani-shipping' ),
 								array(
-									Andreani_Product_Bultos::MODE_SINGLE     => __( 'Cada una en su caja', 'andreani-shipping' ),
-									Andreani_Product_Bultos::MODE_APILADO    => __( 'Se apilan', 'andreani-shipping' ),
-									Andreani_Product_Bultos::MODE_MULTIBULTO => __( 'Varias cajas', 'andreani-shipping' ),
+									array( 'mode', Andreani_Product_Bultos::MODE_SINGLE, __( 'En una caja', 'andreani-shipping' ) ),
+									array( 'mode', Andreani_Product_Bultos::MODE_APILADO, __( 'Se apilan', 'andreani-shipping' ) ),
+									array( 'mode', Andreani_Product_Bultos::MODE_MULTIBULTO, __( 'Varias cajas', 'andreani-shipping' ) ),
+									array( 'overflow', Andreani_Product_Bultos::OVERFLOW_SEPARATE, __( 'Cada caja con su etiqueta', 'andreani-shipping' ) ),
 								),
 							),
 						);
-						foreach ( $filter_groups as $group_key => $group ) :
+						if ( ! Andreani_Product_Bultos::overflow_supported() ) {
+							array_pop( $filter_groups[1][1] );
+						}
+						$filter_groups[] = array(
+							__( 'Paquete', 'andreani-shipping' ),
+							array(
+								array( 'package', 'unassigned', __( 'Sin paquete asignado', 'andreani-shipping' ) ),
+							),
+						);
+						$chip_icons = array(
+							'service'  => array(
+								Andreani_Products_Stats::CLASS_PAQUETERIA => 'paqueteria',
+								Andreani_Products_Stats::CLASS_BIGGER     => 'bigger',
+							),
+						);
+						foreach ( $filter_groups as $group ) :
 							?>
 							<section class="andreani-filters-section">
 								<header class="andreani-filters-section__header">
@@ -79,8 +95,9 @@ defined( 'ABSPATH' ) || exit;
 								</header>
 								<div class="andreani-filters-section__body">
 									<div class="andreani-quick-filters__group" role="group" aria-label="<?php echo esc_attr( $group[0] ); ?>">
-										<?php foreach ( $group[1] as $value => $label ) : ?>
-											<button type="button" class="andreani-chip" aria-pressed="false" data-filter-group="<?php echo esc_attr( $group_key ); ?>" data-filter-value="<?php echo esc_attr( $value ); ?>" data-filter-label="<?php echo esc_attr( $label ); ?>"><?php echo esc_html( $label ); ?> <span data-count="<?php echo esc_attr( $value ); ?>"><?php echo esc_html( number_format_i18n( $counts[ $value ] ) ); ?></span></button>
+										<?php foreach ( $group[1] as list( $group_key, $value, $label ) ) : ?>
+											<button type="button" class="andreani-chip" aria-pressed="false" data-filter-group="<?php echo esc_attr( $group_key ); ?>" data-filter-value="<?php echo esc_attr( $value ); ?>" data-filter-label="<?php echo esc_attr( $label ); ?>"><?php if ( isset( $chip_icons[ $group_key ][ $value ] ) ) { echo Andreani_Product_Bultos::service_icon( $chip_icons[ $group_key ][ $value ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+								} ?><?php echo esc_html( $label ); ?><?php if ( isset( $counts[ $value ] ) ) : ?> <span data-count="<?php echo esc_attr( $value ); ?>"><?php echo esc_html( number_format_i18n( $counts[ $value ] ) ); ?></span><?php endif; ?></button>
 										<?php endforeach; ?>
 									</div>
 								</div>
@@ -98,6 +115,7 @@ defined( 'ABSPATH' ) || exit;
 				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2.5 3.5h2.6l2.4 11.2a1.6 1.6 0 0 0 1.6 1.3h8.6a1.6 1.6 0 0 0 1.6-1.2l1.7-7.3H6.1"/></svg>
 				<?php esc_html_e( 'Simular un carrito', 'andreani-shipping' ); ?>
 			</button>
+
 		</div>
 
 		<div class="andreani-active-pills" id="andreani-products-pills">
@@ -120,6 +138,24 @@ defined( 'ABSPATH' ) || exit;
 			</span>
 		</div>
 
+		<div class="andreani-bulk" id="andreani-bulk" hidden>
+			<span class="andreani-bulk__count" id="andreani-bulk-count" aria-live="polite"></span>
+			<?php if ( Andreani_Product_Bultos::overflow_supported() ) : ?>
+			<button type="button" class="andr-btn andr-btn--secondary andr-btn--sm andreani-bulk__btn" data-bulk-overflow="<?php echo esc_attr( Andreani_Product_Bultos::OVERFLOW_SEPARATE ); ?>"><?php esc_html_e( 'Cada caja con su etiqueta', 'andreani-shipping' ); ?></button>
+			<button type="button" class="andr-btn andr-btn--secondary andr-btn--sm andreani-bulk__btn" data-bulk-overflow="<?php echo esc_attr( Andreani_Product_Bultos::OVERFLOW_TOGETHER ); ?>"><?php esc_html_e( 'Todo junto', 'andreani-shipping' ); ?></button>
+			<?php endif; ?>
+			<button type="button" class="andr-btn andr-btn--secondary andr-btn--sm andreani-bulk__btn" id="andreani-bulk-pkg-open" aria-expanded="false" aria-controls="andreani-bulk-pkg-panel"><?php esc_html_e( 'Asignar paquete…', 'andreani-shipping' ); ?></button>
+			<div class="andreani-bulk__pkg" id="andreani-bulk-pkg-panel" hidden
+				data-confirm="<?php echo esc_attr__( '%d productos pasan a «Varias cajas». ¿Asignar igual?', 'andreani-shipping' ); ?>"
+				data-none="<?php echo esc_attr__( 'Todavía no guardaste paquetes. Creá uno en Paquetes guardados.', 'andreani-shipping' ); ?>"
+				data-boxes-label="<?php echo esc_attr__( 'Cajas y sobres', 'andreani-shipping' ); ?>"
+				data-sets-label="<?php echo esc_attr__( 'Juegos de cajas', 'andreani-shipping' ); ?>">
+				<select id="andreani-bulk-pkg-select" class="andr-pkg__select" aria-label="<?php esc_attr_e( 'Paquete', 'andreani-shipping' ); ?>"></select>
+				<button type="button" class="andr-btn andr-btn--primary andr-btn--sm" id="andreani-bulk-pkg-apply"><?php esc_html_e( 'Asignar', 'andreani-shipping' ); ?></button>
+				<button type="button" class="andr-btn andr-btn--ghost andr-btn--sm" id="andreani-bulk-pkg-cancel"><?php esc_html_e( 'Cancelar', 'andreani-shipping' ); ?></button>
+				<p class="andreani-bulk__pkgmsg" id="andreani-bulk-pkg-msg" role="status" hidden></p>
+			</div>
+		</div>
 		<div id="andreani-products-table-container">
 			<?php Andreani_Admin_Loader::render( '', Andreani_Admin_Loader::SIZE_LG, Andreani_Admin_Loader::products_phrases() ); ?>
 		</div>

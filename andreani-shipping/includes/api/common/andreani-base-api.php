@@ -789,6 +789,7 @@ abstract class Andreani_Base_Api implements Andreani_API_Interface {
 			'destination'    => $destination,
 			'recipient'      => $recipient,
 			'products'       => $products,
+			'force_bigger'   => Andreani_Package_Builder::force_bigger_for_order( $order ),
 			'code_branch'    => $code_branch,
 			'shipping_total' => floatval( $order->get_shipping_total() ),
 			'remito'         => (string) $order->get_id(),

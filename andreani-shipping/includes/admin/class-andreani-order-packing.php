@@ -14,15 +14,17 @@ class Andreani_Order_Packing {
 	/**
 	 * @param array  $lines         Líneas del pedido: product, product_id, name, quantity y url de edición.
 	 * @param string $delivery_mode Modo de entrega con el que quedó el envío; vacío si todavía no se definió.
-	 * @return array{packages:array,units:int,total:int,missing:array,bigger:bool}
+	 * @return array{packages:array,units:int,items:array,total:int,missing:array,bigger:bool,store_box:?array}
 	 */
 	public static function build( array $lines, $delivery_mode = '' ) {
-		$packages = array();
-		$missing  = array();
-		$units    = 0;
-		$total    = 0;
+		$groups  = array();
+		$names   = array();
+		$missing = array();
+		$units   = 0;
+		$counted = array();
+		$items   = array();
 
-		foreach ( $lines as $line ) {
+		foreach ( $lines as $index => $line ) {
 			$product  = isset( $line['product'] ) ? $line['product'] : null;
 			$quantity = (int) $line['quantity'];
 
@@ -39,39 +41,55 @@ class Andreani_Order_Packing {
 				continue;
 			}
 
-			foreach ( Andreani_Package_Builder::draw_package_groups_for_product( $product, $quantity ) as $package ) {
-				$package['name'] = (string) $line['name'];
-				$packages[]      = $package;
-				$total          += $package['count'];
+			$drawn = Andreani_Package_Builder::annotate_groups( Andreani_Package_Builder::draw_package_groups_for_product( $product, $quantity ), $index, $product, $quantity );
+
+			foreach ( $drawn as $package ) {
+				$package['name']    = (string) $line['name'];
+				$groups[ $index ][] = $package;
 			}
 
-			$units += $quantity;
+			$item = array( 'name' => (string) $line['name'], 'quantity' => $quantity );
+
+			if ( ! empty( $drawn[0]['assigned'] ) ) {
+				$item['assigned'] = $drawn[0]['assigned'];
+			}
+
+			$names[ $index ]   = (string) $line['name'];
+			$units            += $quantity;
+			$counted[ $index ] = array( 'product' => $product, 'quantity' => $quantity );
+			$items[]           = $item;
 		}
+
+		$decision = Andreani_Package_Builder::cart_decision( $counted );
+		$packages = Andreani_Package_Builder::with_bundle( $groups, $names, $decision );
+		$total    = array_sum( array_column( $packages, 'count' ) );
 
 		return array(
 			'packages' => $packages,
 			'units'    => $units,
+			'items'    => $items,
 			'total'    => $total,
 			'missing'  => $missing,
-			'bigger'   => self::is_bigger( $packages, $delivery_mode ),
+			'bigger'   => self::is_bigger( $packages, $delivery_mode, $decision['force_bigger'] ),
+			'store_box' => Andreani_Package_Builder::store_box_of( $decision ),
 		);
 	}
 
 	private static function lacks_measures( $product ) {
-		foreach ( array( $product->get_width(), $product->get_height(), $product->get_length() ) as $dimension ) {
-			if ( Andreani_Order_Mapper::convert_dimension_to_cm( $dimension ) <= 0 ) {
-				return true;
-			}
-		}
+		$measures = Andreani_Package_Builder::unit_measures( $product );
 
-		return Andreani_Order_Mapper::convert_weight_to_unit( $product->get_weight(), 'kg' ) <= 0;
+		return $measures['width'] <= 0 || $measures['height'] <= 0 || $measures['depth'] <= 0 || $measures['weight_kg'] <= 0;
 	}
 
-	private static function is_bigger( array $packages, $delivery_mode ) {
+	private static function is_bigger( array $packages, $delivery_mode, $force = false ) {
 		$mode = strtolower( trim( (string) $delivery_mode ) );
 
 		if ( '' !== $mode ) {
 			return false !== strpos( $mode, 'bigger' );
+		}
+
+		if ( $force ) {
+			return true;
 		}
 
 		if ( empty( $packages ) ) {

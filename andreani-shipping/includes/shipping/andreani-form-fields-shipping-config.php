@@ -75,7 +75,7 @@ function andreani_render_shortcodes_info_content() {
 	$html .= '</div>';
 
 	$html .= '<p class="andreani-shortcodes-tip">' . wp_kses(
-		__( 'Si después de cambiar a <strong>Manual</strong> no ves el selector, activá <strong>Forzar carga de assets</strong> más abajo.', 'andreani-shipping' ),
+		__( 'Si después de cambiar a <strong>Manual</strong> no ves el selector, activá <strong>Forzar carga de assets</strong> en la pestaña Avanzado.', 'andreani-shipping' ),
 		array( 'strong' => array() )
 	) . '</p>';
 

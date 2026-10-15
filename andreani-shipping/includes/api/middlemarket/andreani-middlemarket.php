@@ -25,6 +25,7 @@ class Andreani_Middle_Market_Api extends Andreani_Base_Api {
 			'postal_code_origin'      => Andreani_Postcode::normalize( $this->cp_origen ),
 			'postal_code_destination' => $package['destination']['postcode'],
 			'products'                => $products,
+			'force_bigger'            => Andreani_Package_Builder::force_bigger_for_package( $package ),
 		);
 
 		$pin = Andreani_Origen::get_pin();
@@ -81,6 +82,7 @@ class Andreani_Middle_Market_Api extends Andreani_Base_Api {
 			),
 			'recipient'      => $context['recipient'],
 			'products'       => $context['products'],
+			'force_bigger'   => $context['force_bigger'],
 			'email_merchant' => get_option( 'woocommerce_email_from_address', '' ),
 			'remito'         => $context['remito'],
 		);
