@@ -27,6 +27,33 @@
 			$(document).on('click', '.andreani-calc-button', this.handleCalculate.bind(this));
 			$(document).on('keypress', '.andreani-calc-postcode', this.handleKeypress.bind(this));
 			$(document).on('click', this.handleClickOutside.bind(this));
+			$(document).on('found_variation', 'form.variations_form', this.handleVariationChange.bind(this));
+			$(document).on('reset_data', 'form.variations_form', this.handleVariationReset.bind(this));
+		},
+
+		handleVariationChange: function() {
+			$('.andreani-calc-widget').each(function() {
+				var $widget = $(this);
+				var hadQuote = $widget.find('.andreani-calc-results').children().length
+					|| $widget.find('.andreani-calc-error--visible').length;
+				if (hadQuote) {
+					$widget.find('.andreani-calc-button').trigger('click');
+				}
+			});
+		},
+
+		handleVariationReset: function() {
+			var self = this;
+			$('.andreani-calc-widget').each(function() {
+				var $widget = $(this);
+				$widget.find('.andreani-calc-results').empty();
+				self.clearError($widget);
+			});
+		},
+
+		getVariationId: function() {
+			var val = parseInt($('form.variations_form input[name="variation_id"]').val(), 10);
+			return val > 0 ? val : 0;
 		},
 
 		handleHover: function(e) {
@@ -83,6 +110,7 @@
 			var postcode = $widget.find('.andreani-calc-postcode').val().trim();
 			var productId = $widget.data('product-id');
 			var quantity = this.getQuantity();
+			var variationId = this.getVariationId();
 
 			if (!this.validatePostcode(postcode)) {
 				this.showError($widget, andreaniCotizador.i18n.invalidPostcode);
@@ -98,13 +126,13 @@
 				return;
 			}
 
-			var cached = this.getCache(productId, postcode, quantity);
+			var cached = this.getCache(productId, variationId, postcode, quantity);
 			if (cached) {
 				this.showResults($widget, cached);
 				return;
 			}
 
-			this.fetchRates($widget, productId, postcode, quantity);
+			this.fetchRates($widget, productId, variationId, postcode, quantity);
 		},
 
 		validatePostcode: function(postcode) {
@@ -153,7 +181,7 @@
 			return 0;
 		},
 
-		fetchRates: function($widget, productId, postcode, quantity) {
+		fetchRates: function($widget, productId, variationId, postcode, quantity) {
 			var self = this;
 
 			this.showLoading($widget);
@@ -166,6 +194,7 @@
 					action: 'andreani_cotizar_envio',
 					nonce: andreaniCotizador.nonce,
 					product_id: productId,
+					variation_id: variationId,
 					postcode: postcode,
 					quantity: quantity
 				},
@@ -173,7 +202,7 @@
 					self.hideLoading($widget);
 
 					if (response.success && response.data.rates) {
-						self.setCache(productId, postcode, quantity, response.data.rates);
+						self.setCache(productId, variationId, postcode, quantity, response.data.rates);
 						self.showResults($widget, response.data.rates);
 					} else {
 						var msg = response.data && response.data.message
@@ -237,16 +266,16 @@
 			$widget.find('.andreani-calc-button').prop('disabled', false);
 		},
 
-		getCacheKey: function(productId, postcode, quantity) {
-			return this.cacheKey + '_' + productId + '_' + postcode + '_' + quantity;
+		getCacheKey: function(productId, variationId, postcode, quantity) {
+			return this.cacheKey + '_' + productId + '_' + variationId + '_' + postcode + '_' + quantity;
 		},
 
-		getCache: function(productId, postcode, quantity) {
+		getCache: function(productId, variationId, postcode, quantity) {
 			if (typeof sessionStorage === 'undefined') {
 				return null;
 			}
 
-			var key = this.getCacheKey(productId, postcode, quantity);
+			var key = this.getCacheKey(productId, variationId, postcode, quantity);
 			var cached = sessionStorage.getItem(key);
 
 			if (!cached) {
@@ -269,12 +298,12 @@
 			return null;
 		},
 
-		setCache: function(productId, postcode, quantity, rates) {
+		setCache: function(productId, variationId, postcode, quantity, rates) {
 			if (typeof sessionStorage === 'undefined') {
 				return;
 			}
 
-			var key = this.getCacheKey(productId, postcode, quantity);
+			var key = this.getCacheKey(productId, variationId, postcode, quantity);
 			var data = {
 				rates: rates,
 				expires: Date.now() + andreaniCotizador.cacheTime

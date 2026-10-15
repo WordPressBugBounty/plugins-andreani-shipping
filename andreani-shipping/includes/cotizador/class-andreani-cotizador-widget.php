@@ -217,6 +217,7 @@ class Andreani_Cotizador_Widget {
 
 		$postcode = isset( $_POST['postcode'] ) ? sanitize_text_field( wp_unslash( $_POST['postcode'] ) ) : '';
 		$product_id = isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0;
+		$variation_id = isset( $_POST['variation_id'] ) ? absint( $_POST['variation_id'] ) : 0;
 		$quantity = isset( $_POST['quantity'] ) ? absint( $_POST['quantity'] ) : 1;
 
 		if ( empty( $postcode ) || ! Andreani_Postcode::is_valid( $postcode ) ) {
@@ -244,6 +245,8 @@ class Andreani_Cotizador_Widget {
 		if ( $quantity < 1 ) {
 			$quantity = 1;
 		}
+
+		$product = self::resolve_quote_product( $product, $variation_id );
 
 		$rates = $this->calculate_shipping_rates( $product, $postcode, $quantity );
 
@@ -316,15 +319,46 @@ class Andreani_Cotizador_Widget {
 		return $calculated_rates;
 	}
 
+	public static function resolve_quote_product( $product, $variation_id = 0 ) {
+		if ( ! $product || ! $product->is_type( 'variable' ) ) {
+			return $product;
+		}
+
+		if ( $variation_id > 0 ) {
+			$variation = wc_get_product( $variation_id );
+			if ( $variation && $variation->is_type( 'variation' ) && (int) $variation->get_parent_id() === (int) $product->get_id() ) {
+				return $variation;
+			}
+		}
+
+		foreach ( $product->get_children() as $child_id ) {
+			$child = wc_get_product( $child_id );
+			if ( $child && $child->is_type( 'variation' ) && self::has_shipping_data( $child ) ) {
+				return $child;
+			}
+		}
+
+		return $product;
+	}
+
+	private static function has_shipping_data( $product ) {
+		return (float) $product->get_weight() > 0
+			&& (float) $product->get_width() > 0
+			&& (float) $product->get_height() > 0
+			&& (float) $product->get_length() > 0;
+	}
+
 	private function build_package( $product, $postcode, $quantity ) {
+		$is_variation = $product->is_type( 'variation' );
+		$product_id   = $is_variation ? $product->get_parent_id() : $product->get_id();
 		$product_price = floatval( $product->get_price() );
 		$line_total = $product_price * $quantity;
 
 		$contents = array(
 			$product->get_id() => array(
-				'product_id'        => $product->get_id(),
-				'variation_id'      => 0,
-				'variation'         => array(),
+				'product_id'        => $product_id,
+				'variation_id'      => $is_variation ? $product->get_id() : 0,
+				'variation'         => $is_variation ? $product->get_variation_attributes() : array(),
 				'quantity'          => $quantity,
 				'data'              => $product,
 				'line_total'        => $line_total,

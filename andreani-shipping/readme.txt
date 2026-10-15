@@ -5,7 +5,7 @@ Copyright: 2025 Andreani.com
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.8.0
+Stable tag: 1.8.1
 Contributors: integracionandreani
 Donate link:
 Tags: woocommerce, shipping, andreani, envio, etiquetas
@@ -14,155 +14,187 @@ Cotizá tarifas, generá envíos, imprimí etiquetas y seguí tus pedidos con An
 
 == Description ==
 
-Plugin **oficial de Andreani** para integrar sus servicios de envío en tu tienda WooCommerce. Tus clientes eligen Andreani como opción de entrega durante el checkout, y vos gestionás todos los envíos —cotización, generación, etiquetas y seguimiento— desde el panel de administración, sin salir de WooCommerce.
+Plugin **oficial de Andreani** para WooCommerce. Tus clientes cotizan y eligen Andreani en el checkout, y vos generás los envíos, imprimís las etiquetas y seguís cada pedido sin salir de tu panel. Y antes de vender, ves cómo viaja cada producto: con qué servicio, en cuántas cajas y cuánto cuesta.
 
-**Disponible exclusivamente para tiendas con zonas de envío en Argentina.** Funciona para clientes **PyME, Corporativos y Middle Market**.
+**Para tiendas con envíos en Argentina.** Funciona para clientes **PyME, Corporativos y Middle Market**.
 
-= Novedades de la versión 1.6.4 =
+= Novedades de la versión 1.8.0 =
 
-* **Pestaña "Mi cuenta"** — los datos de tu cuenta de Andreani, la dirección desde la que despachás y la sucursal de origen, todo en un solo lugar.
-* **Sucursal de origen a tu elección** — fijá la sucursal desde la que salen tus envíos; si no elegís ninguna, Andreani la sigue asignando por tu código postal, igual que antes.
-* **Tu tienda como remitente** — la etiqueta vuelve a mostrar el nombre y la dirección de tu tienda; el nombre se precarga con el de tu empresa en Andreani y lo podés editar.
-* **Checkout por bloques de WooCommerce** — soporte nativo: el selector de sucursal de retiro y el DNI se integran solos, sin configurar nada. El checkout clásico sigue igual.
-* **Botón "Pagar"** — desde la grilla de envíos vas directo al portal de Andreani Pymes a pagar los envíos pendientes.
-* **Códigos postales en formato CPA** — un código postal de origen como C1425ABC ya no rompe el alta de los envíos.
+* **Mirá cómo viaja cada producto** — "Ver mis productos" te muestra si va por Paquetería o Bigger y por qué, en cuántas cajas viaja y un dibujo de cómo se arma el envío.
+* **Configurá el despacho en la misma fila** — medidas, peso y forma de despacho (en su caja, se apilan o en varias cajas), sin abrir el producto.
+* **Simulador de carrito** — armá un pedido de prueba con tus productos y mirá cuántas cajas y etiquetas genera y cuánto sale el envío.
+* **Caja sugerida en cada pedido** — en "Ver mis envíos", cada pedido te dice cómo armar la caja y de qué medida.
+* **Rápido con catálogos grandes** — tus productos se analizan solos en segundo plano, y las pantallas responden igual con 10 que con miles de productos.
+
+= Paquetería o Bigger: el plugin lo resuelve =
+
+Cada producto se clasifica solo, con las mismas reglas que usa Andreani:
+
+* **Paquetería** — hasta 50 kg, ningún lado de más de 165 cm y la suma de los tres lados hasta 300 cm. Todo el pedido viaja en una sola caja, con una etiqueta, a domicilio o a sucursal.
+* **Bigger** — cuando el pedido supera alguno de esos límites. Cada producto viaja en su propia caja, solo a domicilio.
+
+Si un producto se apila (sillas, banquetas) o viaja en varias cajas (un aire split, un mueble desarmado), lo configurás con una sola pregunta y el plugin calcula el resto.
 
 = Qué podés hacer =
 
 **En el checkout**
 
 * Método de envío "Andreani Envios" integrado en las zonas de WooCommerce.
-* Cálculo de tarifas en tiempo real durante el checkout.
-* Selección de sucursales Andreani para envíos Puerta a Sucursal.
-* Funciona con el checkout clásico y con el checkout por bloques de WooCommerce: el selector de sucursal y el DNI se integran solos.
+* Tarifas en tiempo real, a domicilio y a sucursal.
+* Selección de la sucursal Andreani de retiro.
+* Funciona con el checkout clásico y con el checkout por bloques: el selector de sucursal y el DNI se integran solos.
 * Cotizador opcional en la página de producto.
-* Envío gratis configurable por monto mínimo y por modo de entrega.
+* Envío gratis por monto mínimo y por modo de entrega.
+
+**Tus productos**
+
+* "Ver mis productos": servicio de cada producto con su motivo, medidas, peso y forma de despacho, con filtros y búsqueda por nombre o SKU.
+* Tres formas de despacho: en su caja, se apilan o en varias cajas, con un dibujo de cómo queda el envío para la cantidad que elijas.
+* Probar cotización a cualquier código postal, incluso con cambios que todavía no guardaste.
+* Simulador de carrito para cotizar compras con varios productos.
+* Aviso de los productos sin medidas, que no se pueden enviar con Andreani.
+* SKU de Andreani opcional: si tu producto ya tiene SKU en WooCommerce, se usa ese.
 
 **Gestión de envíos**
 
-* Generación automática de la orden de envío al confirmar el pedido.
-* Grilla administrativa para gestionar todos los envíos desde un solo lugar.
-* Reintento de envíos que no se pudieron generar.
-* Botón "Pagar" para ir al portal de Andreani Pymes a pagar los envíos pendientes, desde la grilla.
-* Exportación a CSV de los envíos.
+* La orden de envío se genera sola al confirmarse el pedido.
+* "Ver mis envíos": todos tus envíos en un solo lugar, con búsqueda por pedido, cliente o número de seguimiento, y filtros por estado.
+* Caja sugerida para armar cada pedido.
+* Reintento de los envíos que no se pudieron generar.
+* Botón "Pagar" para ir al portal de Andreani Pymes a pagar los envíos pendientes.
+* Exportación de los envíos a CSV.
+
+**Etiquetas**
+
+* Etiquetas en PDF para clientes PyME, Middle Market y Corporativos.
+* Formato A4 o térmica (Zebra), con vista previa y cantidad de etiquetas por página.
+* Descarga masiva desde "Ver mis envíos".
+
+**Seguimiento**
+
+* Número de seguimiento en el pedido apenas se genera el envío.
+* Estado del envío actualizado automáticamente desde Andreani.
+* Línea de tiempo del envío en el detalle del pedido.
 
 **Origen y remitente**
 
 * Pestaña "Mi cuenta" con los datos de tu cuenta de Andreani, la dirección desde la que despachás y la sucursal de origen.
-* Sucursal de origen fijable, o automática por tu código postal.
+* Sucursal de origen a tu elección, o automática por tu código postal.
 * La etiqueta sale con el nombre y la dirección de tu tienda como remitente.
-
-**Etiquetas**
-
-* Descarga de etiquetas en PDF para clientes PyME, Middle Market y Corporativos.
-* Formato de impresión configurable: A4 o etiqueta térmica (Zebra), con cantidad de etiquetas por página.
-* Descarga masiva desde la grilla.
-
-**Seguimiento**
-
-* Número de seguimiento visible en el pedido apenas se genera.
-* Estado logístico real del envío, actualizado automáticamente desde Andreani.
-* Línea de tiempo del envío en el detalle del pedido.
-
-**Productos**
-
-* Panel "Ver mis productos" con el peso, las dimensiones y los bultos de cada producto.
-* Filtro para encontrar rápido los productos sin peso o sin dimensiones — los que no pueden cotizar en el checkout.
-* Probador de cotización por código postal para verificar que un producto cotiza correctamente, sin tener que generar una orden.
 
 **Compatibilidad**
 
-* Compatible con Elementor, Divi, Bricks y otros page builders.
-* Compatible con HPOS (High-Performance Order Storage) de WooCommerce.
-* Compatible de forma nativa con el checkout por bloques (Gutenberg / WC Blocks) y con el checkout clásico.
-* API pública para desarrolladores (ver sección "Para desarrolladores").
+* Compatible con HPOS (almacenamiento de pedidos de alto rendimiento) y con el checkout por bloques de WooCommerce.
+* Compatible con Elementor, Divi, Bricks y otros page builders, mediante shortcodes.
+* Liviano para tu servidor: consultas acotadas y procesos en segundo plano.
+* API pública para desarrolladores (ver "Para desarrolladores").
 
 = Antes de empezar =
 
-Necesitás generar tu **Credential ID** según tu tipo de cliente:
+Necesitás tu **Credential ID** de Andreani:
 
-* **Clientes PyME:** https://pymes.andreani.com/integraciones/ (seleccioná la opción WooCommerce)
+* **Clientes PyME:** https://pymes.andreani.com/integraciones/ (elegí la opción WooCommerce)
 * **Clientes Corporativos:** https://corporativo.andreani.com/woocommerce
 
-Una vez generada la credencial, configurás el método "Andreani Envios" en *WooCommerce → Ajustes → Envío → Zonas de envío*.
+Con la credencial, configurás el método "Andreani Envios" en *WooCommerce → Ajustes → Envío → Zonas de envío*.
 
 == Installation ==
 
-= Requisitos previos =
+= Requisitos =
 
-* WordPress 5.8 o superior y WooCommerce 5.0 o superior.
+* WordPress 5.8 o superior y WooCommerce 7.1 o superior.
 * PHP 7.4 o superior.
 * Una tienda con zonas de envío en Argentina.
-* Tu **Credential ID** de Andreani (ver más abajo cómo obtenerlo).
+* Tu **Credential ID** de Andreani (en el paso 2 te contamos cómo obtenerlo).
 
-= Paso 1 — Instalar el plugin =
+= Paso 1 — Instalá el plugin =
 
-Desde el panel de WordPress: andá a *Plugins → Añadir nuevo*, buscá **"Andreani WooCommerce"**, instalalo y activalo. También podés subir el archivo ZIP manualmente desde *Plugins → Añadir nuevo → Subir plugin*.
+En el panel de WordPress, andá a *Plugins → Añadir nuevo*, buscá **"Andreani WooCommerce"**, instalalo y activalo. También podés subir el ZIP desde *Plugins → Añadir nuevo → Subir plugin*.
 
-= Paso 2 — Obtener tu Credential ID =
-
-Generá tu credencial según tu tipo de cliente:
+= Paso 2 — Obtené tu Credential ID =
 
 * **PyME:** https://pymes.andreani.com/integraciones/ (elegí la opción WooCommerce).
 * **Corporativo:** https://corporativo.andreani.com/woocommerce
 
-= Paso 3 — Configurar el método de envío =
+= Paso 3 — Configurá el método de envío =
 
 1. Andá a *WooCommerce → Ajustes → Envío → Zonas de envío*.
-2. Entrá a la zona donde querés ofrecer Andreani (o creá una nueva para Argentina).
-3. Agregá el método de envío **"Andreani Envios"**.
-4. Editá el método y pegá tu **Credential ID**. El plugin detecta automáticamente tu tipo de cliente al validar la credencial.
-5. Ajustá las opciones que necesites: contratos, costos adicionales, envío gratis, cotizador en producto y formato de impresión de etiquetas.
+2. Entrá a la zona donde querés ofrecer Andreani, o creá una para Argentina.
+3. Agregá el método **"Andreani Envios"**.
+4. Pegá tu **Credential ID**. El plugin detecta solo tu tipo de cliente.
+5. Ajustá lo que necesites: origen y remitente, servicios, envío gratis, cotizador en producto y formato de etiquetas.
 
-= Paso 4 — ¡Listo! =
+También llegás a esta pantalla desde *Andreani → Configuración*.
 
-Tus clientes ya pueden elegir Andreani en el checkout. Gestioná todos tus envíos desde *Andreani → Envíos* en el panel de administración.
+= Paso 4 — Revisá tus productos =
+
+Andá a *Andreani → Ver mis productos*. Ahí ves qué productos ya están listos para enviar, cuáles van por Bigger y cuáles no tienen medidas. Sin peso y medidas, un producto no se puede cotizar ni enviar con Andreani.
+
+Si algún producto se apila o viaja en varias cajas, configuralo desde la misma fila y probá la cotización antes de vender.
+
+= Paso 5 — ¡Listo! =
+
+Tus clientes ya pueden elegir Andreani en el checkout. Los envíos se generan solos al confirmarse cada pedido, y los gestionás desde *Andreani → Ver mis envíos*.
 
 == Frequently Asked Questions ==
 
-= ¿Qué necesito para empezar a usar el plugin? =
+= ¿Qué necesito para empezar? =
 
-Una tienda WooCommerce con zonas de envío en Argentina y tu **Credential ID** de Andreani. Lo generás en https://pymes.andreani.com/integraciones/ (PyME) o https://corporativo.andreani.com/woocommerce (Corporativo).
+Una tienda WooCommerce con zonas de envío en Argentina y tu **Credential ID** de Andreani. Lo generás en https://pymes.andreani.com/integraciones/ (PyME) o https://corporativo.andreani.com/woocommerce (Corporativo). El plugin detecta solo si sos cliente **PyME, Corporativo o Middle Market** y habilita lo que corresponde.
 
-= ¿El plugin sirve para clientes PyME y Corporativos? =
+= Andreani no aparece en el checkout. ¿Qué reviso? =
 
-Sí. Soporta clientes **PyME, Corporativos y Middle Market**. El plugin detecta tu tipo de cliente automáticamente cuando validás tu Credential ID, y habilita las funciones que correspondan.
+1. Que el método "Andreani Envios" esté agregado a la **zona de envío** que cubre el código postal del comprador.
+2. Que tu **Credential ID** esté cargado y validado.
+3. Que los productos del carrito tengan **peso y medidas**. En *Andreani → Ver mis productos* ves cuáles no los tienen y podés probar la cotización.
 
-= Andreani no aparece como opción en el checkout. ¿Qué reviso? =
+Si sigue sin aparecer, activá el modo debug y revisá los registros en *WooCommerce → Estado → Logs*.
 
-Verificá que: (1) el método "Andreani Envios" esté agregado a la **zona de envío** que cubre el código postal del comprador, (2) tu **Credential ID** esté cargado y validado, y (3) el producto tenga **peso y dimensiones** cargados (sin esos datos no se puede cotizar). Desde la versión 1.6.0, el panel **Ver mis productos** (en el menú *Andreani*) te muestra de un vistazo qué productos no tienen peso o dimensiones, y te deja probar la cotización por código postal. Activá el modo debug (ver más abajo) para ver el detalle en los logs.
+= ¿Cuándo un envío va por Paquetería y cuándo por Bigger? =
+
+Va por **Paquetería** si el pedido pesa hasta 50 kg, ningún lado mide más de 165 cm y la suma de los tres lados no pasa de 300 cm. Si supera alguno de esos límites, va por **Bigger**. En *Ver mis productos* cada producto muestra su servicio y el motivo, por ejemplo "Pesa 57 kg (máx. 50)".
+
+= ¿Cuántas cajas y etiquetas genera un pedido? =
+
+En **Paquetería**, todo el pedido viaja en una sola caja, con una etiqueta. En **Bigger**, cada producto viaja en su propia caja, con su etiqueta, y solo a domicilio. Con el **Simulador de carrito** ves cuántas cajas y etiquetas genera una compra antes de que pase.
+
+= Mi producto viaja en varias cajas o se apila. ¿Cómo lo configuro? =
+
+En *Ver mis productos*, abrí el producto y elegí cómo se despacha:
+
+* **En su caja:** cada unidad viaja en su propia caja.
+* **Se apilan:** varias unidades viajan una sobre otra, como sillas o banquetas. Indicás cuántas entran por pila y cuánto crece la pila con cada una.
+* **Varias cajas:** una sola unidad viaja en más de una caja, como un aire split o un mueble desarmado. Cargás las medidas y el peso de cada caja.
+
+El dibujo y la cotización se actualizan mientras cargás, antes de guardar.
+
+= ¿La caja sugerida es exacta? =
+
+Es orientativa. Se calcula con las medidas y el peso que tenés cargados en tus productos: si están bien, la sugerencia es confiable. Te sirve para elegir la caja al preparar el pedido.
+
+= ¿Puedo probar cuánto cuesta un envío antes de vender? =
+
+Sí. En *Ver mis productos* cada producto tiene **Probar cotización**, a cualquier código postal y para 1 a 99 unidades. Para compras con varios productos, usá el **Simulador de carrito**.
 
 = ¿Puedo imprimir etiquetas siendo cliente PyME? =
 
-Sí. Desde la versión 1.6.0, la descarga de etiquetas en PDF está disponible para clientes **PyME, Middle Market y Corporativos**. Antes era exclusivo de Corporativos.
-
-= ¿Qué formatos de impresión de etiquetas soporta? =
-
-Podés elegir entre **A4** o **etiqueta térmica (Zebra)**, y configurar la **cantidad de etiquetas por página**. Se configura en las opciones del método de envío.
-
-= ¿Puedo descargar varias etiquetas a la vez? =
-
-Sí. Desde la **grilla de envíos** (*Andreani → Envíos*) seleccionás los envíos que quieras y descargás todas las etiquetas en una sola operación.
+Sí. Las etiquetas en PDF están disponibles para clientes **PyME, Middle Market y Corporativos**, en formato A4 o térmica (Zebra). Desde *Andreani → Ver mis envíos* podés seleccionar varios envíos y descargar todas las etiquetas juntas.
 
 = ¿Cómo veo el estado de un envío? =
 
-El estado logístico (pendiente de ingreso, en camino, listo para retirar, entregado, no entregado) se muestra en la grilla de envíos y en el detalle de cada pedido, y se **actualiza automáticamente** desde Andreani. El número de seguimiento aparece apenas Andreani genera el envío.
+El estado (pendiente de ingreso, en camino, listo para retirar, entregado, no entregado) se muestra en *Ver mis envíos* y en el detalle de cada pedido, y se **actualiza automáticamente** desde Andreani durante los primeros 30 días del envío. Los envíos más viejos se actualizan cuando los abrís.
 
-= ¿Funciona con mi page builder (Elementor, Divi, Bricks)? =
+= ¿El plugin hace más lenta mi tienda? =
 
-Sí. El plugin es compatible con Elementor, Divi, Bricks y otros builders mediante shortcodes (`[andreani_sucursales]` y `[andreani_dni_field]`), sin configuración adicional. Ver la sección "Para desarrolladores".
+No. Las consultas a la base de datos están acotadas, el análisis de tus productos corre en segundo plano y las llamadas a Andreani tienen un tiempo máximo de espera. Las pantallas del plugin responden igual con 10 que con miles de productos y pedidos.
 
-= ¿Es compatible con HPOS (almacenamiento de pedidos de alto rendimiento)? =
+= ¿Funciona con mi page builder o con el checkout por bloques? =
 
-Sí, el plugin es totalmente compatible con HPOS de WooCommerce.
+Sí. El checkout por bloques de WooCommerce tiene soporte nativo: el selector de sucursal y el DNI se integran solos. Con Elementor, Divi, Bricks y otros builders podés usar los shortcodes `[andreani_sucursales]` y `[andreani_dni_field]`. Ver "Para desarrolladores".
 
-= ¿Funciona con el checkout de bloques (Gutenberg / WC Blocks)? =
+= ¿Es compatible con HPOS? =
 
-Sí. Desde 1.6.4 el soporte es nativo y automático: el selector de sucursal de retiro y el campo DNI se integran solos en el checkout por bloques, sin configurar nada. El checkout clásico y el modo manual con shortcodes siguen funcionando igual que antes.
-
-= ¿Cómo activo los logs para diagnosticar un problema? =
-
-Activá el modo debug en la configuración del plugin. Los registros quedan disponibles en *WooCommerce → Estado → Logs*.
+Sí. El plugin es compatible con el almacenamiento de pedidos de alto rendimiento (HPOS) de WooCommerce y con el almacenamiento clásico.
 
 == Screenshots ==
 
@@ -171,12 +203,14 @@ Activá el modo debug en la configuración del plugin. Los registros quedan disp
 3. Probar cotización: probá las tarifas de un producto con tu CP y la cantidad que quieras.
 4. Simulador de carrito: armá un pedido con varios productos y mirá cómo viajan juntos y cuánto sale.
 5. Ver mis envíos: gestioná todos tus envíos de Andreani desde un solo lugar, con estado logístico, pago y descarga de etiquetas.
-6. Detalle del envío: seguimiento paso a paso y la caja sugerida para armarlo (solapa Cómo armarlo).
+6. Cómo armarlo: la caja sugerida para preparar cada pedido, según las medidas de tus productos.
 7. Ficha de producto de WooCommerce: elegí cómo se despacha (en su caja, apilado o en varias cajas) desde la pestaña Envío.
 8. Configuración de la cuenta Andreani con tu Credencial ID.
 9. Selección de sucursal Andreani durante el checkout.
 10. Cotizador de envío en la página de producto.
 11. Formato de impresión de etiquetas (A4 o térmica Zebra), con vista previa de cómo salen.
+12. Resumen del envío: origen y destino, destinatario, contenido y datos de Andreani en la misma fila.
+13. Seguimiento del envío: número de seguimiento y cada paso, de pendiente de ingreso a entregado.
 
 == External services ==
 
@@ -325,6 +359,9 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * El checkbox *Forzar carga de assets*: **sigue funcionando** pero casi nunca es necesario. Úsalo solo como último recurso.
 
 == Changelog ==
+
+= 1.8.1 =
+* Corregido: el cotizador de la ficha de producto ahora cotiza la variación elegida en los productos variables
 
 = 1.8.0 =
 * Nuevo: "Ver mis productos" muestra cómo viaja cada producto: el servicio (Paquetería o Bigger), cómo se acomodan varias unidades y un dibujo de la caja. Editás medidas y despacho en la misma fila, sin salir de la lista
