@@ -96,6 +96,10 @@ class Andreani_Package_Builder {
 	 * @return array{width:float,height:float,depth:float,weight_kg:float}
 	 */
 	public static function unit_measures( $product ) {
+		if ( 'deleted' === self::assigned_package( $product )['state'] ) {
+			return array( 'width' => 0.0, 'height' => 0.0, 'depth' => 0.0, 'weight_kg' => 0.0 );
+		}
+
 		$package = self::active_package( $product );
 
 		if ( $package && Andreani_Store_Boxes::is_set( $package ) ) {
@@ -130,18 +134,36 @@ class Andreani_Package_Builder {
 
 	/**
 	 * @param WC_Product $product Producto o variación.
-	 * @return array{ref:string,state:string,package:?array} state: none, ok o deleted. Una variación sin modo propio usa el paquete del padre.
+	 * @return array{ref:string,state:string,package:?array} state: none, ok o deleted (referencia a un paquete que ya no existe, o juego borrado). Una variación sin modo propio usa el paquete del padre.
 	 */
 	public static function assigned_package( $product ) {
 		$ref = trim( (string) self::inherited_meta( $product, Andreani_Product_Bultos::BOX_REF_META ) );
 
 		if ( '' === $ref ) {
-			return array( 'ref' => '', 'state' => 'none', 'package' => null );
+			$lost = 'yes' === self::inherited_meta( $product, Andreani_Product_Bultos::BOX_LOST_META );
+
+			return array( 'ref' => '', 'state' => $lost ? 'deleted' : 'none', 'package' => null );
 		}
 
 		$package = Andreani_Store_Boxes::find( $ref );
 
+		if ( ! $package && 'yes' !== self::inherited_meta( $product, Andreani_Product_Bultos::BOX_LOST_META ) && ! self::is_multibulto_product( $product ) ) {
+			return array( 'ref' => $ref, 'state' => 'none', 'package' => null );
+		}
+
 		return array( 'ref' => $ref, 'state' => $package ? 'ok' : 'deleted', 'package' => $package );
+	}
+
+	/**
+	 * @param WC_Product $product Producto o variación.
+	 * @return bool Si el producto se despacha en varias cajas según su modo guardado, su clasificación o sus bultos propios.
+	 */
+	private static function is_multibulto_product( $product ) {
+		$multibulto = Andreani_Product_Bultos::MODE_MULTIBULTO;
+
+		return $multibulto === self::inherited_meta( $product, Andreani_Product_Bultos::MODE_META )
+			|| $multibulto === self::inherited_meta( $product, '_andreani_dispatch_mode_class' )
+			|| ! empty( self::own_bultos( $product ) );
 	}
 
 	/**
@@ -630,7 +652,9 @@ class Andreani_Package_Builder {
 			$package['name']  = sprintf( __( '%s (todo junto)', 'andreani-shipping' ), implode( ', ', $names ) );
 
 			if ( ! empty( $bundle['store_box'] ) ) {
-				$package['ref'] = $bundle['store_box']['name'];
+				$package['ref']       = $bundle['store_box']['name'];
+				$package['store_box'] = $bundle['store_box'];
+				$package['store_for'] = implode( ', ', $names );
 			}
 
 			$packages[]       = $package;

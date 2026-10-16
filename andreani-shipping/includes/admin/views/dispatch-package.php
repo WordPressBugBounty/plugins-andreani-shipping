@@ -20,6 +20,7 @@ $pkg_strings = Andreani_Product_Bultos::get_ui_strings();
 	</div>
 	<p class="andr-pkg__note" data-pkg-hint hidden></p>
 	<p class="andr-pkg__suggest" data-pkg-suggest role="status" hidden></p>
+	<p class="andr-dispatch__warnbox" data-pkg-nofit role="status" hidden></p>
 	<p class="andr-dispatch__warnbox" data-pkg-deleted role="alert" hidden><?php echo esc_html( $pkg_strings['pkg_deleted'] ); ?></p>
 	<ul class="andr-pkg__boxes" data-pkg-boxes hidden></ul>
 </div>

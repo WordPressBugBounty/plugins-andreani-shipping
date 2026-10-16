@@ -39,7 +39,7 @@
     },
 
     esc(value) {
-      return $('<div>').text(value).html();
+      return String(value == null ? '' : value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
     },
 
     fmt(value) {
@@ -337,6 +337,24 @@
       this.$modal.find('[data-bx-save]').prop('disabled', !!dup);
     },
 
+    nameKey(name) {
+      return String(name || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    },
+
+    problem(box) {
+      const key = this.nameKey(box.name);
+
+      if (!key) return t.name_required;
+
+      if (this.boxes.some((other, i) => i !== this.editing.index && this.nameKey(other.name) === key)) return t.name_duplicate;
+
+      const max = parseFloat(cfg.side_max) || 0;
+      const pieces = box.type === 'juego' ? box.boxes : [box];
+      const over = pieces.some((p) => [p.length, p.width, p.height].some((n) => max > 0 && parseFloat(n) > max + 0.01));
+
+      return over ? this.fill(t.side_max, this.fmt(max) + ' ' + this.unit) : '';
+    },
+
     saveSet() {
       const rows = this.readSet().map((r) => ({
         ref: String(r.ref || '').trim(),
@@ -353,6 +371,13 @@
       }
 
       const box = { name: (this.val('name') || '').trim(), type: 'juego', boxes: complete };
+      const problem = this.problem(box);
+
+      if (problem) {
+        this.showError(problem);
+        return;
+      }
+
       const list = this.boxes.slice();
 
       if (this.editing.index < 0) {
@@ -390,6 +415,13 @@
         width: width,
         height: bag && !(height > 0) ? this.fmt(5 * this.factor) : height,
       };
+      const problem = this.problem(box);
+
+      if (problem) {
+        this.showError(problem);
+        return;
+      }
+
       const list = this.boxes.slice();
 
       if (this.editing.index < 0) {

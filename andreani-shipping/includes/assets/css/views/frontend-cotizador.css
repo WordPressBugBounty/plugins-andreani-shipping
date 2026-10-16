@@ -200,6 +200,7 @@
 	padding: 0;
 	width: 56px;
 	height: 56px;
+	box-sizing: border-box;
 	box-shadow: 0 4px 20px var(--andreani-calc-shadow);
 	z-index: 101;
 	overflow: hidden;
@@ -231,6 +232,23 @@
 	animation: expand-bounce 0.6s cubic-bezier(0.34, 1.45, 0.64, 1);
 }
 
+.andreani-calc-widget--expanded:not(.andreani-calc-widget--floating) {
+	display: block;
+	width: 320px;
+	max-width: 100%;
+	height: auto;
+}
+
+.andreani-calc-widget--expanded.andreani-calc-widget--align-right:not(.andreani-calc-widget--floating) {
+	margin-left: auto;
+}
+
+.andreani-calc-widget--expanded:not(.andreani-calc-widget--floating) .andreani-calc-content {
+	position: relative;
+	width: 100%;
+	max-width: 100%;
+}
+
 @keyframes expand-bounce {
 	0% { transform: scale(0.3); }
 	50% { transform: scale(1.05); }
@@ -244,7 +262,7 @@
 }
 
 @media (max-width: 380px) {
-	.andreani-calc-widget--expanded .andreani-calc-content {
+	.andreani-calc-widget--expanded.andreani-calc-widget--floating .andreani-calc-content {
 		width: calc(100vw - 32px);
 		left: 50%;
 		transform: translateX(-50%) scale(1) rotate(0deg);
@@ -349,6 +367,12 @@
 	justify-content: center;
 	transition: all var(--andreani-calc-transition);
 	flex-shrink: 0;
+	box-sizing: border-box;
+	min-width: 36px;
+	min-height: 36px;
+	margin: 0;
+	padding: 0;
+	line-height: 1;
 }
 
 .andreani-calc-button:hover {
@@ -369,6 +393,8 @@
 }
 
 .andreani-calc-button svg {
+	display: block;
+	flex-shrink: 0;
 	width: 16px;
 	height: 16px;
 }

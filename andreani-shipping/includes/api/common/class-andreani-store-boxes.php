@@ -240,6 +240,117 @@ class Andreani_Store_Boxes {
 	}
 
 	/**
+	 * @param string $json Lista de paquetes en JSON con las medidas en la unidad de la tienda.
+	 * @return array|null Primer error de validación: code name_required, name_duplicate (con name) o side_max (con max en la unidad de la tienda); null si no hay.
+	 */
+	public static function validation_error( $json ) {
+		$decoded = json_decode( (string) $json, true );
+
+		return is_array( $decoded ) ? self::validate_entries( $decoded, array() ) : null;
+	}
+
+	/**
+	 * @param array      $package Caja o bolsa guardada (en cm; el grosor de la bolsa es su alto).
+	 * @param WC_Product $product Producto o variación.
+	 * @return string Medidas del producto en la unidad de la tienda si no entran en el paquete (lados ordenados, sin margen); vacío si entra o no tiene medidas.
+	 */
+	public static function product_misfit( array $package, $product ) {
+		if ( self::is_set( $package ) ) {
+			return '';
+		}
+
+		$need = array_map( array( 'Andreani_Order_Mapper', 'convert_dimension_to_cm' ), array( $product->get_length(), $product->get_width(), $product->get_height() ) );
+		$have = array( $package['length'], $package['width'], $package['height'] );
+
+		rsort( $need );
+		rsort( $have );
+
+		if ( min( $need ) <= 0 ) {
+			return '';
+		}
+
+		foreach ( $need as $i => $side ) {
+			if ( round( $side, 2 ) > round( $have[ $i ], 2 ) ) {
+				$shown = array_map( function ( $cm ) {
+					return (string) round( Andreani_Order_Mapper::convert_cm_to_dimension_unit( $cm ), 2 );
+				}, $need );
+
+				return implode( '×', $shown ) . ' ' . get_option( 'woocommerce_dimension_unit', 'cm' );
+			}
+		}
+
+		return '';
+	}
+
+	private static function name_key( $name ) {
+		return mb_strtolower( trim( preg_replace( '/\s+/u', ' ', (string) $name ) ) );
+	}
+
+	private static function validate_entries( array $entries, array $other_names ) {
+		$stored = array();
+
+		foreach ( self::all() as $box ) {
+			$stored[ $box['id'] ] = self::name_key( $box['name'] );
+		}
+
+		$count = array_count_values( $other_names );
+		$rows  = array();
+
+		foreach ( $entries as $entry ) {
+			if ( ! is_array( $entry ) ) {
+				continue;
+			}
+
+			$sides = array();
+
+			if ( isset( $entry['boxes'] ) && is_array( $entry['boxes'] ) ) {
+				foreach ( $entry['boxes'] as $piece ) {
+					$sides = array_merge( $sides, is_array( $piece ) ? self::raw_sides( $piece ) : array() );
+				}
+			} else {
+				$sides = self::raw_sides( $entry );
+			}
+
+			foreach ( $sides as $value ) {
+				if ( Andreani_Order_Mapper::convert_dimension_to_cm( str_replace( ',', '.', (string) $value ) ) > self::SIDE_MAX_CM + 0.01 ) {
+					return array( 'code' => 'side_max', 'max' => round( Andreani_Order_Mapper::convert_cm_to_dimension_unit( self::SIDE_MAX_CM ), 2 ) );
+				}
+			}
+
+			$name = isset( $entry['name'] ) && is_scalar( $entry['name'] ) ? trim( sanitize_text_field( (string) $entry['name'] ) ) : '';
+			$key  = self::name_key( $name );
+			$id   = isset( $entry['id'] ) && is_string( $entry['id'] ) ? $entry['id'] : '';
+
+			if ( '' === $key ) {
+				return array( 'code' => 'name_required' );
+			}
+
+			$count[ $key ] = ( isset( $count[ $key ] ) ? $count[ $key ] : 0 ) + 1;
+			$rows[]        = array( $key, $name, '' !== $id && isset( $stored[ $id ] ) && $stored[ $id ] === $key );
+		}
+
+		foreach ( $rows as $row ) {
+			if ( ! $row[2] && $count[ $row[0] ] > 1 ) {
+				return array( 'code' => 'name_duplicate', 'name' => $row[1] );
+			}
+		}
+
+		return null;
+	}
+
+	private static function raw_sides( array $entry ) {
+		$sides = array();
+
+		foreach ( array( 'length', 'width', 'height' ) as $side ) {
+			if ( isset( $entry[ $side ] ) && is_scalar( $entry[ $side ] ) ) {
+				$sides[] = $entry[ $side ];
+			}
+		}
+
+		return $sides;
+	}
+
+	/**
 	 * @param string $json Lista de cajas en JSON con las medidas en la unidad de la tienda.
 	 * @return bool Si las cajas guardadas cambiaron.
 	 */
@@ -261,6 +372,31 @@ class Andreani_Store_Boxes {
 		return true;
 	}
 
+	/**
+	 * @param array $before Paquetes antes de guardar.
+	 * @param array $after  Paquetes después de guardar.
+	 * @return array<string,bool> Id de cada paquete que ya no está, con si era un juego de cajas.
+	 */
+	public static function removed( array $before, array $after ) {
+		$kept = array();
+
+		foreach ( $after as $box ) {
+			if ( isset( $box['id'] ) ) {
+				$kept[ $box['id'] ] = true;
+			}
+		}
+
+		$removed = array();
+
+		foreach ( $before as $box ) {
+			if ( isset( $box['id'] ) && '' !== $box['id'] && ! isset( $kept[ $box['id'] ] ) ) {
+				$removed[ $box['id'] ] = self::is_set( $box );
+			}
+		}
+
+		return $removed;
+	}
+
 	private static function without_ids( array $boxes ) {
 		return array_map( function ( $box ) {
 			unset( $box['id'] );
@@ -278,7 +414,18 @@ class Andreani_Store_Boxes {
 	public static function add_from_json( $json ) {
 		$result  = array( 'status' => 'invalid', 'package' => null, 'name' => '' );
 		$decoded = json_decode( (string) $json, true );
-		$new     = is_array( $decoded ) ? self::from_json( wp_json_encode( array( $decoded ) ) ) : null;
+
+		if ( is_array( $decoded ) ) {
+			$error = self::validate_entries( array( $decoded ), array_map( function ( $box ) {
+				return self::name_key( $box['name'] );
+			}, self::all() ) );
+
+			if ( $error ) {
+				return array_merge( $result, $error, array( 'status' => $error['code'] ) );
+			}
+		}
+
+		$new =is_array( $decoded ) ? self::from_json( wp_json_encode( array( $decoded ) ) ) : null;
 
 		if ( empty( $new ) ) {
 			return $result;

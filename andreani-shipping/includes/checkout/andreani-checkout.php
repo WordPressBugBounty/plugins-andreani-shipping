@@ -61,6 +61,31 @@ class Andreani_Checkout {
     }
 
     public function update_checkout_fields( $fields ) {
+        if ( ! function_exists( 'WC' ) || ! WC()->cart || WC()->cart->needs_shipping() ) {
+            $fields = $this->add_dni_fields( $fields );
+        }
+
+        $fields['shipping']['shipping_phone'] = array(
+            'label'    => __( 'Teléfono', 'andreani-shipping' ),
+            'required' => true,
+            'class'    => array( 'form-row-wide' ),
+            'clear'    => true,
+            'priority' => 110,
+            'type'     => 'tel',
+        );
+
+        if ( isset( $fields['billing']['billing_phone'] ) ) {
+            $fields['billing']['billing_phone']['required'] = true;
+        }
+
+        if ( isset( $fields['shipping']['shipping_phone'] ) ) {
+            $fields['shipping']['shipping_phone']['required'] = true;
+        }
+
+        return $fields;
+    }
+
+    private function add_dni_fields( $fields ) {
         $dni_field_names = array( 'billing_dni', 'billing_vat', 'billing_cedula', 'billing_document', 'billing_cuit' );
 
         $billing_dni_exists = false;
@@ -88,23 +113,6 @@ class Andreani_Checkout {
 
         if ( ! $shipping_dni_exists ) {
             $fields['shipping']['shipping_dni'] = $this->render_dni_field_markup( 'shipping' );
-        }
-
-        $fields['shipping']['shipping_phone'] = array(
-            'label'    => __( 'Teléfono', 'andreani-shipping' ),
-            'required' => true,
-            'class'    => array( 'form-row-wide' ),
-            'clear'    => true,
-            'priority' => 110,
-            'type'     => 'tel',
-        );
-
-        if ( isset( $fields['billing']['billing_phone'] ) ) {
-            $fields['billing']['billing_phone']['required'] = true;
-        }
-
-        if ( isset( $fields['shipping']['shipping_phone'] ) ) {
-            $fields['shipping']['shipping_phone']['required'] = true;
         }
 
         return $fields;

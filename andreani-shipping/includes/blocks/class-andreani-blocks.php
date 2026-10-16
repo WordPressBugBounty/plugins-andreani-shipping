@@ -144,19 +144,53 @@ class Andreani_Blocks {
 		}
 
 		woocommerce_register_additional_checkout_field(
-			array(
-				'id'                => self::DNI_FIELD_ID,
-				'label'             => __( 'DNI', 'andreani-shipping' ),
-				'location'          => 'address',
-				'type'              => 'text',
-				'required'          => true,
-				'attributes'        => array(
-					'autocomplete' => 'off',
-					'maxLength'    => 11,
+			array_merge(
+				array(
+					'id'                => self::DNI_FIELD_ID,
+					'label'             => __( 'DNI', 'andreani-shipping' ),
+					'location'          => 'address',
+					'type'              => 'text',
+					'required'          => true,
+					'attributes'        => array(
+						'autocomplete' => 'off',
+						'maxLength'    => 11,
+					),
+					'sanitize_callback' => array( __CLASS__, 'sanitize_dni' ),
+					'validate_callback' => array( __CLASS__, 'validate_dni' ),
 				),
-				'sanitize_callback' => array( __CLASS__, 'sanitize_dni' ),
-				'validate_callback' => array( __CLASS__, 'validate_dni' ),
+				self::dni_shipping_rules()
 			)
+		);
+	}
+
+	/**
+	 * El DNI solo se pide cuando el carrito lleva envío. Las reglas condicionales existen
+	 * desde las versiones de WooCommerce que traen el documento de checkout; en las anteriores
+	 * el campo sigue siendo obligatorio.
+	 *
+	 * @return array
+	 */
+	public static function dni_shipping_rules() {
+		if ( ! class_exists( '\Automattic\WooCommerce\Blocks\Domain\Services\CheckoutFieldsSchema\DocumentObject' ) ) {
+			return array();
+		}
+
+		$when = function ( $needs_shipping ) {
+			return array(
+				'type'       => 'object',
+				'properties' => array(
+					'cart' => array(
+						'properties' => array(
+							'needs_shipping' => array( 'const' => $needs_shipping ),
+						),
+					),
+				),
+			);
+		};
+
+		return array(
+			'required' => $when( true ),
+			'hidden'   => $when( false ),
 		);
 	}
 

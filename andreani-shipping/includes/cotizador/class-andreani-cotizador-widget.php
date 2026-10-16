@@ -202,9 +202,9 @@ class Andreani_Cotizador_Widget {
 				'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
 				'nonce'     => wp_create_nonce( 'andreani_calc_nonce' ),
 				'i18n'      => array(
-					'invalidPostcode' => __( 'Ingresa un código postal válido.', 'andreani-shipping' ),
+					'invalidPostcode' => __( 'Ingresá un código postal válido.', 'andreani-shipping' ),
 					'noRates'         => __( 'No hay opciones de envío para este código postal.', 'andreani-shipping' ),
-					'error'           => __( 'Error al calcular. Intenta nuevamente.', 'andreani-shipping' ),
+					'error'           => __( 'Error al calcular. Intentá nuevamente.', 'andreani-shipping' ),
 					'free'            => __( 'Gratis', 'andreani-shipping' ),
 				),
 				'cacheTime' => 15 * 60 * 1000,
@@ -218,7 +218,7 @@ class Andreani_Cotizador_Widget {
 		$postcode = isset( $_POST['postcode'] ) ? sanitize_text_field( wp_unslash( $_POST['postcode'] ) ) : '';
 		$product_id = isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0;
 		$variation_id = isset( $_POST['variation_id'] ) ? absint( $_POST['variation_id'] ) : 0;
-		$quantity = isset( $_POST['quantity'] ) ? absint( $_POST['quantity'] ) : 1;
+		$quantity = isset( $_POST['quantity'] ) ? min( 99, max( 1, absint( $_POST['quantity'] ) ) ) : 1;
 
 		if ( empty( $postcode ) || ! Andreani_Postcode::is_valid( $postcode ) ) {
 			wp_send_json_error( array(

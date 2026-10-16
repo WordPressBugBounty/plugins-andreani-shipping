@@ -44,6 +44,9 @@ class Andreani_Products_Stats {
 	const PROGRESS_TRANSIENT = 'andreani_products_progress';
 	const PROGRESS_TTL       = 15;
 
+	const CHECK_TRANSIENT = 'andreani_classify_checked';
+	const CHECK_TTL       = 600;
+
 	private static $left_hint  = null;
 	private static $pending    = array();
 	private static $hooked_end = false;
@@ -65,7 +68,7 @@ class Andreani_Products_Stats {
 			add_action( 'update_option_' . $option, array( __CLASS__, 'restart' ) );
 		}
 
-		add_action( 'andreani_store_boxes_changed', array( __CLASS__, 'requeue_assigned' ) );
+		add_action( 'andreani_store_boxes_changed', array( __CLASS__, 'requeue_assigned' ), 10, 1 );
 		add_action( self::BATCH_HOOK, array( __CLASS__, 'run_batch' ) );
 		add_action( 'admin_init', array( __CLASS__, 'maybe_start' ) );
 	}
@@ -78,23 +81,31 @@ class Andreani_Products_Stats {
 	 * @return string[] Metas de producto cuyo cambio puede alterar la clasificación.
 	 */
 	public static function watched_meta_keys() {
-		return array( '_weight', '_length', '_width', '_height', '_virtual', Andreani_Product_Bultos::META_KEY, Andreani_Product_Apilado::META_KEY, Andreani_Product_Bultos::UNITS_META, Andreani_Product_Bultos::OVERFLOW_META, Andreani_Product_Bultos::BOX_REF_META );
+		return array( '_weight', '_length', '_width', '_height', '_virtual', Andreani_Product_Bultos::META_KEY, Andreani_Product_Apilado::META_KEY, Andreani_Product_Bultos::UNITS_META, Andreani_Product_Bultos::OVERFLOW_META, Andreani_Product_Bultos::BOX_REF_META, Andreani_Product_Bultos::BOX_LOST_META );
 	}
 
 	/**
 	 * Un paquete editado o borrado cambia las medidas de los productos que lo tienen asignado:
-	 * se descarta su clasificación y la reclasifica el lote en segundo plano.
+	 * se reclasifican en el acto si son pocos y, si no, los toma el lote en segundo plano.
+	 *
+	 * @param int[] $released Productos que acaban de soltar un paquete borrado.
 	 */
-	public static function requeue_assigned() {
+	public static function requeue_assigned( $released = array() ) {
 		global $wpdb;
 
 		$ids = $wpdb->get_col( $wpdb->prepare( "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value <> ''", Andreani_Product_Bultos::BOX_REF_META ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$ids = array_values( array_unique( array_merge( array_map( 'intval', (array) $ids ), array_map( 'intval', (array) $released ) ) ) );
 
 		if ( empty( $ids ) ) {
 			return;
 		}
 
-		foreach ( array_chunk( array_map( 'intval', $ids ), self::BATCH_SIZE * 5 ) as $chunk ) {
+		if ( count( $ids ) <= self::BATCH_SIZE ) {
+			self::classify_ids( $ids );
+			return;
+		}
+
+		foreach ( array_chunk( $ids, self::BATCH_SIZE * 5 ) as $chunk ) {
 			self::clear_metas( $chunk );
 		}
 
@@ -125,6 +136,10 @@ class Andreani_Products_Stats {
 		$ids           = array_keys( self::$pending );
 		self::$pending = array();
 
+		self::classify_ids( $ids );
+	}
+
+	private static function classify_ids( array $ids ) {
 		foreach ( $ids as $id ) {
 			$product = wc_get_product( $id );
 
@@ -496,7 +511,26 @@ class Andreani_Products_Stats {
 
 		if ( 'yes' === get_option( self::OPTION_RUNNING, 'no' ) ) {
 			self::schedule_batch();
+			return;
 		}
+
+		self::resume_if_unclassified();
+	}
+
+	private static function resume_if_unclassified() {
+		if ( false !== get_transient( self::CHECK_TRANSIENT ) ) {
+			return;
+		}
+
+		global $wpdb;
+
+		$pending = $wpdb->get_var( self::scope_sql( 'ids', 1 ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+
+		if ( $pending ) {
+			self::start_backfill();
+		}
+
+		set_transient( self::CHECK_TRANSIENT, 1, self::CHECK_TTL );
 	}
 
 	/**

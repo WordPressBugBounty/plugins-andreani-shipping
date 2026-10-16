@@ -194,6 +194,13 @@
 			scope: $section,
 			getMode: currentMode,
 			getManual: manualPackage,
+			getSize: function () {
+				return {
+					length: num( 'input[name="_length"]' ),
+					width: num( 'input[name="_width"]' ),
+					height: num( 'input[name="_height"]' )
+				};
+			},
 			onChange: function () {
 				syncMode();
 			}
@@ -207,6 +214,10 @@
 				return currentMode() === MODE_MULTIBULTO && packageMode() !== 'juego' ? Preview.ignoredHint( bultos() ) : '';
 			},
 			blocked: function () {
+				if ( apiladoIsInvalid() ) {
+					return i18n.stack_incomplete || '';
+				}
+
 				return currentMode() === MODE_MULTIBULTO && packageMode() !== 'juego' ? Preview.incompleteText( bultos() ) : '';
 			},
 			onResult: function ( bigger ) {

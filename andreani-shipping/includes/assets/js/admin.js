@@ -12,7 +12,7 @@
   }
 
   function escapeAttr(str) {
-    return escapeHtml(String(str == null ? '' : str)).replace(/"/g, '&quot;');
+    return escapeHtml(String(str == null ? '' : str)).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   function howHtml(mode, text) {
@@ -2242,7 +2242,7 @@
 
       const pack = data.bigger ? null : preview.packed(packages);
       const info = pack ? pack.info : null;
-      const advice = pack ? preview.boxAdvice(packages, { storeBox: data.store_box }) : null;
+      const advice = pack && !packages.some((p) => p.fixed) ? preview.boxAdvice(packages, { storeBox: data.store_box }) : null;
 
       if (advice && advice.box) {
         const bag = advice.box.type === 'bolsa';
@@ -2260,9 +2260,13 @@
         boxes = data.bigger ? preview.separate(preview.sample(packages), 'kraft') : pack.boxes;
         const cards = preview.cards(packages).map((card) => '<li class="andr-packing__card"' + (card.title ? ' title="' + escapeAttr(card.title) + '"' : '') + '><strong>'
           + escapeHtml(card.head) + '</strong><span>' + escapeHtml(card.detail) + '</span></li>');
-        text = '<p class="andr-packing__title">' + escapeHtml(totalBoxes === 1 ? this.text('packing_title_big_one') : preview.fill(this.text('packing_title_big'), preview.fmt(totalBoxes))) + '</p>'
+        const kind = data.bigger ? 'bigger' : 'paqueteria';
+        const title = totalBoxes === 1
+          ? this.text(data.bigger ? 'packing_title_big_one' : 'packing_title_one')
+          : preview.fill(this.text(data.bigger ? 'packing_title_big' : 'packing_title_pack'), preview.fmt(totalBoxes));
+        text = '<p class="andr-packing__title">' + escapeHtml(title) + '</p>'
           + '<ul class="andr-packing__cards">' + cards.join('') + '</ul>'
-          + '<div class="andr-packing__chips">' + countChip + weightChip + service('bigger') + '</div>';
+          + '<div class="andr-packing__chips">' + countChip + weightChip + service(kind) + '</div>';
       }
 
       $body.toggleClass('andr-packing--stack', stack).html('<div class="andr-packing__stage"><svg data-andr="stage" role="img" aria-label="' + escapeAttr(this.text('packing_stage')) + '"></svg></div>'
@@ -3286,7 +3290,7 @@
           }
 
           done();
-          this.flash(res.data.message);
+          this.flash(res.data.message, res.data.warnings);
           this.loadTable();
         })
         .fail((xhr) => {
@@ -3335,11 +3339,17 @@
       $('#andreani-products-pills').toggleClass('is-active', pills.length > 0);
     },
 
-    flash(message) {
+    flash(message, warnings) {
       $('.andreani-products-flash').remove();
       const $msg = $('<p class="andreani-products-flash andreani-products-inline-msg andreani-products-inline-msg--success" role="status"></p>').text(message);
       this.$container.before($msg);
       setTimeout(() => $msg.remove(), 3500);
+
+      if (warnings && warnings.length) {
+        const $warn = $('<p class="andreani-products-flash andreani-products-inline-msg andreani-products-inline-msg--warning" role="status"></p>').text(warnings.join(' '));
+        this.$container.before($warn);
+        setTimeout(() => $warn.remove(), 15000);
+      }
     },
 
     updateAnalyzing(progress) {
@@ -3390,7 +3400,7 @@
         nonce: this.config.nonce_preview_bultos,
         getDraft: () => this.previewPayload(),
         hint: () => (this.currentMode() === this.MODE_MULTIBULTO && this.packageMode() !== 'juego' ? AndreaniBoxPreview.ignoredHint(this.collectBultos()) : ''),
-        blocked: () => (this.currentMode() === this.MODE_MULTIBULTO && this.packageMode() !== 'juego' ? AndreaniBoxPreview.incompleteText(this.collectBultos()) : ''),
+        blocked: () => (this.currentMode() === this.MODE_APILADO && !this.collectApilado() ? (this.strings().stack_incomplete || '') : (this.currentMode() === this.MODE_MULTIBULTO && this.packageMode() !== 'juego' ? AndreaniBoxPreview.incompleteText(this.collectBultos()) : '')),
         onResult: (bigger) => AndreaniBoxPreview.applyBadge($('#andreani-edit-bigger-status'), { missing: false, reason: bigger }, {
           ok: this.strings().box_status_ok,
           bigger: this.strings().box_status_bigger,
@@ -3402,6 +3412,7 @@
         scope: this.$panel,
         getMode: () => this.currentMode(),
         getManual: () => this.manualPackage(),
+        getSize: () => ({ length: parseFloat($('#andreani-edit-length').val()), width: parseFloat($('#andreani-edit-width').val()), height: parseFloat($('#andreani-edit-height').val()) }),
         onChange: () => {
           if (this.currentMode() === this.MODE_MULTIBULTO && !this.packageMode() && !$('#andreani-bultos-cards .andreani-bulto-card').length) this.addCard();
           this.afterChange();
@@ -3409,6 +3420,7 @@
       });
       this.bindEvents();
       this.$panel.on('input change', '#andreani-edit-units, input[name="andreani_edit_overflow"]', () => this.afterChange());
+      this.$panel.on('input change', '#andreani-edit-length, #andreani-edit-width, #andreani-edit-height', () => this.picker.checkFit());
     },
 
     packageMode() {
@@ -4023,7 +4035,7 @@
       const $btn = $('#andreani-edit-quote-submit');
       const $results = $('#andreani-edit-quote-results').removeClass('is-stale');
 
-      if (!AndreaniQuoteCp.require($('#andreani-edit-quote-cp'))) return;
+      if (!AndreaniQuoteCp.require($('#andreani-edit-quote-cp'), $results)) return;
 
       AndreaniQuote.loading($results);
       $btn.prop('disabled', true);
@@ -4296,7 +4308,7 @@
         return;
       }
 
-      if (!AndreaniQuoteCp.require($('#andreani-sim-cp'))) return;
+      if (!AndreaniQuoteCp.require($('#andreani-sim-cp'), $results)) return;
 
       AndreaniQuote.loading($results);
       $btn.prop('disabled', true);
@@ -4373,11 +4385,12 @@
       $inputs.removeClass('is-invalid').removeAttr('aria-invalid').siblings('.andr-quote-field__error').remove();
     },
 
-    require($input) {
+    require($input, $results) {
       this.clearError($input);
 
       if (($input.val() || '').trim()) return true;
 
+      if ($results) $results.empty().removeClass('is-stale');
       const text = ((window.andreani_admin || {}).i18n || {}).quote_cp_required || '';
       $input.addClass('is-invalid').attr('aria-invalid', 'true').after('<span class="andr-quote-field__error" role="alert">' + escapeHtml(text) + '</span>').trigger('focus');
       return false;

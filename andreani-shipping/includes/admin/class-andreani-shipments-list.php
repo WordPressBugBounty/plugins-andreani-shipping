@@ -601,6 +601,37 @@ class Andreani_Shipments_List extends WP_List_Table {
 		) );
 	}
 
+	/**
+	 * Rango inclusivo por día completo para wc_get_orders: date_after/date_before con una
+	 * fecha sin hora son exclusivos y dejan afuera el propio día.
+	 *
+	 * @param string $from Día inicial (Y-m-d), vacío si no hay.
+	 * @param string $to   Día final (Y-m-d), vacío si no hay.
+	 * @return string Valor de date_created, o vacío si no hay un día válido.
+	 */
+	public static function date_created_arg( $from, $to ) {
+		$from = self::valid_day( $from );
+		$to   = self::valid_day( $to );
+
+		if ( '' !== $from && '' !== $to ) {
+			return $from . ' 00:00:00...' . $to . ' 23:59:59';
+		}
+
+		if ( '' !== $from ) {
+			return '>=' . $from . ' 00:00:00';
+		}
+
+		return '' !== $to ? '<=' . $to . ' 23:59:59' : '';
+	}
+
+	private static function valid_day( $value ) {
+		if ( ! preg_match( '/^(\d{4})-(\d{2})-(\d{2})/', trim( (string) $value ), $m ) || ! checkdate( (int) $m[2], (int) $m[3], (int) $m[1] ) ) {
+			return '';
+		}
+
+		return $m[1] . '-' . $m[2] . '-' . $m[3];
+	}
+
 	private function build_query_args( $current_page, $per_page ) {
 		$args = array(
 			'limit'   => $per_page,
@@ -657,27 +688,81 @@ class Andreani_Shipments_List extends WP_List_Table {
 		$t    = self::order_tables();
 		$keys = self::search_meta_keys();
 		$in   = implode( ', ', array_fill( 0, count( $keys ), '%s' ) );
+		$like = '%' . $wpdb->esc_like( $search ) . '%';
 
-		$ids = $wpdb->get_col(
-			$wpdb->prepare(
-				"SELECT DISTINCT {$t['fk_col']} FROM {$t['meta']} WHERE meta_key IN ({$in}) AND meta_value LIKE %s ORDER BY {$t['fk_col']} DESC LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-				array_merge( $keys, array( '%' . $wpdb->esc_like( $search ) . '%', self::SEARCH_LIMIT ) )
-			)
+		$selects = array(
+			array(
+				"SELECT {$t['fk_col']} AS oid FROM {$t['meta']} WHERE meta_key IN ({$in}) AND meta_value LIKE %s",
+				array_merge( $keys, array( $like ) ),
+			),
 		);
 
 		if ( $include_customer ) {
-			$customer_ids = wc_get_orders(
-				array(
-					'type'   => 'shop_order',
-					's'      => $search,
-					'limit'  => self::SEARCH_LIMIT,
-					'return' => 'ids',
-				)
-			);
-			$ids = array_merge( $ids, is_array( $customer_ids ) ? $customer_ids : array() );
+			$selects = array_merge( $selects, self::customer_search_selects( $search, self::uses_hpos() ) );
 		}
 
-		return array_slice( array_values( array_unique( array_map( 'absint', $ids ) ) ), 0, self::SEARCH_LIMIT );
+		$sql  = array();
+		$args = array();
+		foreach ( $selects as $select ) {
+			$sql[]  = $select[0];
+			$args[] = $select[1];
+		}
+
+		$flat   = array_merge( array(), ...$args );
+		$flat[] = self::SEARCH_LIMIT;
+
+		$ids = $wpdb->get_col(
+			$wpdb->prepare(
+				'SELECT oid FROM ( ' . implode( ' UNION ', $sql ) . ' ) found ORDER BY oid DESC LIMIT %d', // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$flat
+			)
+		);
+
+		return array_slice( array_values( array_unique( array_map( 'absint', is_array( $ids ) ? $ids : array() ) ) ), 0, self::SEARCH_LIMIT );
+	}
+
+	/**
+	 * @param string $search Texto buscado.
+	 * @param bool   $hpos   Si los pedidos viven en las tablas de HPOS.
+	 * @return array<int,array{0:string,1:array}> SELECT oid (con sus argumentos) por nombre, apellido, nombre completo o email de facturación y envío.
+	 */
+	public static function customer_search_selects( $search, $hpos ) {
+		global $wpdb;
+
+		$like = '%' . $wpdb->esc_like( $search ) . '%';
+
+		if ( $hpos ) {
+			$addresses = "{$wpdb->prefix}wc_order_addresses";
+
+			return array(
+				array(
+					"SELECT order_id AS oid FROM {$addresses} WHERE first_name LIKE %s OR last_name LIKE %s OR email LIKE %s OR CONCAT_WS(' ', first_name, last_name) LIKE %s",
+					array( $like, $like, $like, $like ),
+				),
+				array( "SELECT id AS oid FROM {$wpdb->prefix}wc_orders WHERE billing_email LIKE %s", array( $like ) ),
+			);
+		}
+
+		$selects = array(
+			array(
+				"SELECT post_id AS oid FROM {$wpdb->postmeta} WHERE meta_key IN ('_billing_first_name', '_billing_last_name', '_billing_email', '_shipping_first_name', '_shipping_last_name') AND meta_value LIKE %s",
+				array( $like ),
+			),
+		);
+
+		foreach ( array( 'billing', 'shipping' ) as $type ) {
+			$selects[] = array(
+				"SELECT f.post_id AS oid FROM {$wpdb->postmeta} f INNER JOIN {$wpdb->postmeta} l ON l.post_id = f.post_id AND l.meta_key = '_{$type}_last_name' WHERE f.meta_key = '_{$type}_first_name' AND CONCAT_WS(' ', f.meta_value, l.meta_value) LIKE %s",
+				array( $like ),
+			);
+		}
+
+		return $selects;
+	}
+
+	private static function uses_hpos() {
+		return class_exists( 'Automattic\WooCommerce\Utilities\OrderUtil' )
+			&& Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled();
 	}
 
 	private static function order_tables() {
@@ -1005,13 +1090,9 @@ class Andreani_Shipments_List extends WP_List_Table {
 			$orders_args['andreani_filter'] = $scope;
 		}
 
-		// Filtros de fecha (quick chips Hoy / Esta semana / Últimos 15 días). Formato
-		// Y-m-d H:i:s (UTC ya normalizado en el JS). wc_get_orders acepta date_after / date_before.
-		if ( ! empty( $args['date_from'] ) ) {
-			$orders_args['date_after'] = $args['date_from'];
-		}
-		if ( ! empty( $args['date_to'] ) ) {
-			$orders_args['date_before'] = $args['date_to'];
+		$date_created = self::date_created_arg( isset( $args['date_from'] ) ? $args['date_from'] : '', isset( $args['date_to'] ) ? $args['date_to'] : '' );
+		if ( '' !== $date_created ) {
+			$orders_args['date_created'] = $date_created;
 		}
 
 		$db_sortable_fields = array(

@@ -74,7 +74,7 @@ class Andreani_Cache_Service {
 			return null;
 		}
 
-		$cache_key     = self::PREFIX_SUCURSALES . $postal_code;
+		$cache_key     = self::PREFIX_SUCURSALES . Andreani_Postcode::normalize( $postal_code );
 		$cached_result = get_transient( $cache_key );
 
 		return $cached_result !== false ? $cached_result : null;
@@ -92,7 +92,7 @@ class Andreani_Cache_Service {
 			return false;
 		}
 
-		$cache_key = self::PREFIX_SUCURSALES . $postal_code;
+		$cache_key = self::PREFIX_SUCURSALES . Andreani_Postcode::normalize( $postal_code );
 		return set_transient( $cache_key, $sucursales, self::TTL_SUCURSALES );
 	}
 
@@ -203,7 +203,7 @@ class Andreani_Cache_Service {
 		switch ( $method ) {
 			case 'get_sucursales':
 				if ( ! empty( $args[0] ) ) {
-					return self::PREFIX_SUCURSALES . $args[0];
+					return self::PREFIX_SUCURSALES . Andreani_Postcode::normalize( $args[0] );
 				}
 				break;
 
@@ -267,7 +267,7 @@ class Andreani_Cache_Service {
 		$key_data['pin_origen']  = class_exists( 'Andreani_Origen' ) ? Andreani_Origen::get_pin() : '';
 
 		if ( isset( $package['destination']['postcode'] ) ) {
-			$key_data['postcode'] = $package['destination']['postcode'];
+			$key_data['postcode'] = Andreani_Postcode::normalize( $package['destination']['postcode'] );
 		}
 
 		if ( isset( $package['contents'] ) ) {

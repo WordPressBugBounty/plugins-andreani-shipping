@@ -296,6 +296,12 @@
 	border: 1px solid var(--andr-color-info);
 }
 
+.andreani-products-inline-msg--warning {
+	background: var(--andr-color-warning-subtle);
+	color: var(--andr-color-warning-strong);
+	border: 1px solid var(--andr-color-warning);
+}
+
 .andreani-products-inline-msg--error {
 	background: var(--andr-color-error-subtle);
 	color: var(--andr-color-error-strong);

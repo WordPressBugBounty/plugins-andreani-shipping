@@ -17,7 +17,9 @@
 	}
 
 	function esc(value) {
-		return $('<div>').text(value == null ? '' : value).html();
+		return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) {
+			return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+		});
 	}
 
 	function num(value) {
@@ -90,6 +92,28 @@
 		}
 
 		return p.type === 'bolsa' ? '' : 'caja:' + sides(p);
+	}
+
+	function descending(list) {
+		return list.map(num).sort(function (a, b) { return b - a; });
+	}
+
+	function misfitText(p, size) {
+		var need = descending([size.length, size.width, size.height]);
+
+		if (need.some(function (n) { return !(n > 0); })) {
+			return '';
+		}
+
+		var have = descending([p.length, p.width, p.height]);
+
+		if (need.every(function (n, i) { return n <= have[i]; })) {
+			return '';
+		}
+
+		return text('pkg_nofit')
+			.replace('%1$s', need.map(fmt).join('×') + ' ' + unit())
+			.replace('%2$s', p.name);
 	}
 
 	var modal = null;
@@ -203,7 +227,8 @@
 		var $save = $root.find('[data-pkg-save]');
 		var $boxes = $root.find('[data-pkg-boxes]');
 		var $thumb = $root.find('[data-pkg-thumb]');
-		var state = { value: $root.attr('data-value') || '', deleted: '' };
+		var $nofit = $root.find('[data-pkg-nofit]');
+		var state = { value: $root.attr('data-value') || '', deleted: '', kind: null, stash: {} };
 
 		function mode() {
 			return opts.getMode();
@@ -223,6 +248,14 @@
 			var p = find(state.value);
 
 			return p && (p.type === SET) === isSetMode() ? p : null;
+		}
+
+		function updateFit() {
+			var p = current();
+			var size = p && p.type !== SET && opts.getSize ? opts.getSize() : null;
+			var msg = size ? misfitText(p, size) : '';
+
+			$nofit.text(msg).prop('hidden', !msg);
 		}
 
 		function optionLabel(p) {
@@ -258,7 +291,22 @@
 				.html(esc(text('pkg_suggest').replace('%s', match.name)) + ' <button type="button" data-pkg-use="' + esc(match.id) + '">' + esc(text('pkg_suggest_use')) + '</button>');
 		}
 
+		function syncKind() {
+			var kind = isSetMode() ? 'set' : 'box';
+
+			if (state.kind === null) {
+				state.kind = kind;
+			} else if (state.kind !== kind) {
+				state.stash[state.kind] = state.value;
+				state.value = state.stash[kind] || '';
+				state.deleted = '';
+				state.kind = kind;
+			}
+		}
+
 		function render() {
+			syncKind();
+
 			var p = current();
 
 			if (!p && state.value && !find(state.value)) {
@@ -293,6 +341,7 @@
 			}
 
 			renderSuggest();
+			updateFit();
 			$(opts.scope).attr('data-pkg', p ? (p.type === SET ? 'juego' : 'caja') : 'none');
 		}
 
@@ -333,6 +382,7 @@
 			set: function (id) {
 				state.value = id || '';
 				state.deleted = '';
+				state.stash = {};
 				render();
 			},
 			effective: function () {
@@ -342,6 +392,7 @@
 				return current() ? 'ok' : (state.deleted ? 'deleted' : 'none');
 			},
 			refresh: render,
+			checkFit: updateFit,
 			markDeleted: function (ref) {
 				state.deleted = ref || '';
 				render();
@@ -349,5 +400,5 @@
 		};
 	}
 
-	window.AndreaniPackagePicker = { create: create, find: find, dimsText: dimsText, thumbPackages: thumbPackages, drawStage: drawStage };
+	window.AndreaniPackagePicker = { create: create, find: find, dimsText: dimsText, thumbPackages: thumbPackages, drawStage: drawStage, misfitText: misfitText };
 })(window, window.jQuery);

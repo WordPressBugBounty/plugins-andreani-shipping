@@ -5,7 +5,7 @@ Copyright: 2025 Andreani.com
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.8.3
+Stable tag: 1.8.5
 Contributors: integracionandreani
 Donate link:
 Tags: woocommerce, shipping, andreani, envio, etiquetas
@@ -360,6 +360,17 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 
 == Changelog ==
 
+= 1.8.5 =
+* Corregido: el Simulador de carrito y "Cómo armarlo" muestran la cantidad real de etiquetas y nombran tu paquete guardado solo para los productos que van adentro
+
+= 1.8.4 =
+* Corregido: al borrar un paquete guardado, los productos que lo usaban quedan limpios; si era un juego de cajas, el producto avisa que faltan cajas en lugar de cotizarse como una sola
+* Corregido: "Ver mis envíos" ahora incluye los envíos del día elegido al filtrar solo por "Desde" o "Hasta", y "Hoy" muestra los de hoy
+* Corregido: la clasificación de "Mis productos" se completa sola y se actualiza al cambiar un paquete
+* Corregido: al volver a "En una caja" en el editor de un producto se conserva el paquete asignado
+* Corregido: el cotizador de la ficha del producto se ve bien en más temas y celulares, y ya no tapa el contenido de abajo
+* Corregido: el DNI ya no se pide en pedidos que no llevan envío, y la exportación a CSV es más segura y liviana
+
 = 1.8.3 =
 * Corregido: un producto con un paquete guardado asignado se cotizaba con una caja más grande que la suya
 
@@ -565,6 +576,12 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * Versión inicial publicada en el repositorio de WordPress
 
 == Upgrade Notice ==
+
+= 1.8.5 =
+Corrige la cantidad de etiquetas y el paquete sugerido en el Simulador de carrito y en Cómo armarlo.
+
+= 1.8.4 =
+Corrige paquetes guardados borrados, filtros de fecha en Ver mis envíos, el cotizador de la ficha y el DNI en pedidos sin envío.
 
 = 1.8.3 =
 Corrige que un producto con un paquete guardado asignado se cotizaba con una caja más grande que la suya.

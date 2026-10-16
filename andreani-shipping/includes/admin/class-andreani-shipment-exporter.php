@@ -17,6 +17,7 @@ class Andreani_Shipment_Exporter {
 	use Andreani_Ajax_Helpers_Trait;
 
 	const QUERY_LIMIT = 5000;
+	const CHUNK_SIZE  = 500;
 
 	private static $instance = null;
 
@@ -40,20 +41,20 @@ class Andreani_Shipment_Exporter {
 			), 403 );
 		}
 
-		$orders = $this->query_orders( $this->parse_filters() );
+		$order_ids = $this->query_order_ids( $this->parse_filters() );
 
-		if ( empty( $orders ) ) {
+		if ( empty( $order_ids ) ) {
 			wp_send_json_error( array(
 				'message' => __( 'No hay envíos para exportar.', 'andreani-shipping' ),
 			), 400 );
 		}
 
-		$csv = $this->build_csv( $orders );
+		$csv = $this->build_csv( $order_ids );
 
 		wp_send_json_success( array(
 			'csv'      => $csv,
 			'filename' => 'andreani-envios-' . gmdate( 'Y-m-d' ) . '.csv',
-			'count'    => count( $orders ),
+			'count'    => count( $order_ids ),
 		) );
 	}
 
@@ -67,20 +68,19 @@ class Andreani_Shipment_Exporter {
 		);
 	}
 
-	private function query_orders( $filters ) {
+	private function query_order_ids( $filters ) {
 		$args = array(
 			'type'          => 'shop_order',
+			'return'        => 'ids',
 			'limit'         => self::QUERY_LIMIT,
 			'orderby'       => 'date',
 			'order'         => 'DESC',
 			'andreani_only' => true,
 		);
 
-		if ( '' !== $filters['date_from'] ) {
-			$args['date_after'] = $filters['date_from'];
-		}
-		if ( '' !== $filters['date_to'] ) {
-			$args['date_before'] = $filters['date_to'];
+		$date_created = Andreani_Shipments_List::date_created_arg( $filters['date_from'], $filters['date_to'] );
+		if ( '' !== $date_created ) {
+			$args['date_created'] = $date_created;
 		}
 
 		if ( '' !== $filters['search'] ) {
@@ -319,7 +319,33 @@ class Andreani_Shipment_Exporter {
 		);
 	}
 
-	private function build_csv( $orders ) {
+	/**
+	 * Neutraliza una celda que Excel o Sheets interpretarían como fórmula; un teléfono o un número con signo no se toca.
+	 *
+	 * @param mixed $value Valor de la celda.
+	 * @return string
+	 */
+	public static function safe_cell( $value ) {
+		$value = (string) $value;
+
+		if ( '' === $value ) {
+			return $value;
+		}
+
+		$first = $value[0];
+
+		if ( in_array( $first, array( '=', '@', "\t", "\r" ), true ) ) {
+			return "'" . $value;
+		}
+
+		if ( ( '+' === $first || '-' === $first ) && ! preg_match( '/^[+-][\d\s().,-]+$/', $value ) ) {
+			return "'" . $value;
+		}
+
+		return $value;
+	}
+
+	private function build_csv( array $order_ids ) {
 		$columns = $this->get_columns();
 		$output  = fopen( 'php://temp', 'r+' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_fopen
 
@@ -328,13 +354,26 @@ class Andreani_Shipment_Exporter {
 
 		fputcsv( $output, array_column( $columns, 'label' ), ';' );
 
-		foreach ( $orders as $order ) {
-			$data = Andreani_Shipments_List::get_order_shipment_data( $order );
-			$row  = array();
-			foreach ( $columns as $col ) {
-				$row[] = $col['extract']( $order, $data );
+		foreach ( array_chunk( $order_ids, self::CHUNK_SIZE ) as $chunk ) {
+			$orders = wc_get_orders( array(
+				'type'    => 'shop_order',
+				'post__in' => $chunk,
+				'limit'   => count( $chunk ),
+			) );
+
+			$position = array_flip( $chunk );
+			usort( $orders, function ( $a, $b ) use ( $position ) {
+				return $position[ $a->get_id() ] - $position[ $b->get_id() ];
+			} );
+
+			foreach ( $orders as $order ) {
+				$data = Andreani_Shipments_List::get_order_shipment_data( $order );
+				$row  = array();
+				foreach ( $columns as $col ) {
+					$row[] = self::safe_cell( $col['extract']( $order, $data ) );
+				}
+				fputcsv( $output, $row, ';' );
 			}
-			fputcsv( $output, $row, ';' );
 		}
 
 		rewind( $output );

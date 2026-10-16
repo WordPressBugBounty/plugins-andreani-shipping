@@ -120,6 +120,12 @@ class Andreani_Boxes_Page {
 			wp_send_json_error( array( 'message' => __( 'No pudimos guardar las cajas. Probá de nuevo.', 'andreani-shipping' ) ), 400 );
 		}
 
+		$error = Andreani_Store_Boxes::validation_error( $json );
+
+		if ( $error ) {
+			wp_send_json_error( array( 'message' => self::validation_message( $error ) ), 422 );
+		}
+
 		$duplicate = Andreani_Store_Boxes::duplicate_name( $json );
 
 		if ( '' !== $duplicate ) {
@@ -127,13 +133,33 @@ class Andreani_Boxes_Page {
 			wp_send_json_error( array( 'message' => sprintf( __( 'Ya tenés «%s» con estas medidas.', 'andreani-shipping' ), $duplicate ) ), 409 );
 		}
 
+		$before = Andreani_Store_Boxes::all();
+
 		if ( Andreani_Store_Boxes::save_from_json( $json ) ) {
+			$released = self::release_products( Andreani_Store_Boxes::removed( $before, Andreani_Store_Boxes::all() ) );
+
 			Andreani_Cache_Service::clear_cotizaciones();
 			self::forget_fit();
-			do_action( 'andreani_store_boxes_changed' );
+			do_action( 'andreani_store_boxes_changed', $released );
 		}
 
 		wp_send_json_success( array( 'boxes' => Andreani_Store_Boxes::for_display() ) );
+	}
+
+	/**
+	 * @param array $error Resultado de Andreani_Store_Boxes::validation_error.
+	 * @return string
+	 */
+	public static function validation_message( array $error ) {
+		switch ( $error['code'] ) {
+			case 'name_required':
+				return __( 'Poné un nombre.', 'andreani-shipping' );
+			case 'name_duplicate':
+				return __( 'Ya tenés un paquete con ese nombre.', 'andreani-shipping' );
+			default:
+				/* translators: %s: medida máxima con su unidad */
+				return sprintf( __( 'Ninguna medida puede superar %s.', 'andreani-shipping' ), $error['max'] . ' ' . get_option( 'woocommerce_dimension_unit', 'cm' ) );
+		}
 	}
 
 	public function handle_add() {
@@ -145,6 +171,10 @@ class Andreani_Boxes_Page {
 
 		$json   = isset( $_POST['package'] ) ? wp_unslash( $_POST['package'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$result = Andreani_Store_Boxes::add_from_json( $json );
+
+		if ( in_array( $result['status'], array( 'name_required', 'name_duplicate', 'side_max' ), true ) ) {
+			wp_send_json_error( array( 'message' => self::validation_message( array( 'code' => $result['status'], 'max' => isset( $result['max'] ) ? $result['max'] : 0 ) ) ), 422 );
+		}
 
 		if ( 'ok' !== $result['status'] ) {
 			$messages = array(
@@ -175,6 +205,35 @@ class Andreani_Boxes_Page {
 		}
 
 		wp_send_json_success( array_merge( self::fit_summary(), array( 'assigned' => self::assigned_counts() ) ) );
+	}
+
+	/**
+	 * Suelta de sus productos los paquetes borrados: una caja o bolsa vuelve a las
+	 * medidas de WooCommerce; un juego deja al producto sin medidas hasta que se elija otro.
+	 *
+	 * @param array<string,bool> $removed Id de cada paquete borrado, con si era un juego.
+	 * @return int[] Productos liberados.
+	 */
+	private static function release_products( array $removed ) {
+		global $wpdb;
+
+		$released = array();
+
+		foreach ( $removed as $package_id => $was_set ) {
+			$ids = $wpdb->get_col( $wpdb->prepare( "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value = %s", Andreani_Product_Bultos::BOX_REF_META, (string) $package_id ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+			foreach ( array_map( 'intval', $ids ) as $product_id ) {
+				delete_post_meta( $product_id, Andreani_Product_Bultos::BOX_REF_META );
+
+				if ( $was_set ) {
+					update_post_meta( $product_id, Andreani_Product_Bultos::BOX_LOST_META, 'yes' );
+				}
+
+				$released[] = $product_id;
+			}
+		}
+
+		return $released;
 	}
 
 	/**
@@ -233,6 +292,7 @@ class Andreani_Boxes_Page {
 				'fit_action' => self::ACTION_FIT,
 				'max'        => Andreani_Store_Boxes::MAX_BOXES,
 				'max_set'    => Andreani_Store_Boxes::SET_MAX_BOXES,
+				'side_max'   => round( (float) Andreani_Order_Mapper::convert_cm_to_dimension_unit( Andreani_Store_Boxes::SIDE_MAX_CM ), 2 ),
 				'unit'       => get_option( 'woocommerce_dimension_unit', 'cm' ),
 				'cm_factor'  => (float) Andreani_Order_Mapper::convert_cm_to_dimension_unit( 1 ),
 				'boxes'      => Andreani_Store_Boxes::for_display(),
@@ -299,6 +359,10 @@ class Andreani_Boxes_Page {
 			'quick_medium'  => __( 'Caja mediana', 'andreani-shipping' ),
 			'quick_bag'     => __( 'Sobre o bolsa', 'andreani-shipping' ),
 			'invalid'       => __( 'Completá el largo, el ancho y el alto.', 'andreani-shipping' ),
+			'name_required' => __( 'Poné un nombre.', 'andreani-shipping' ),
+			'name_duplicate' => __( 'Ya tenés un paquete con ese nombre.', 'andreani-shipping' ),
+			/* translators: %s: medida máxima con su unidad */
+			'side_max'      => __( 'Ninguna medida puede superar %s.', 'andreani-shipping' ),
 			/* translators: %s: máximo de cajas */
 			'max'           => __( 'Llegaste al máximo de %s cajas.', 'andreani-shipping' ),
 			'save_error'    => __( 'No pudimos guardar las cajas. Probá de nuevo.', 'andreani-shipping' ),

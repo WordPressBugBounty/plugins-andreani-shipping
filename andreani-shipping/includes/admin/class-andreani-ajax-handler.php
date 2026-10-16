@@ -761,20 +761,31 @@ class Andreani_Ajax_Handler {
 			) );
 		}
 
-		$updated = 0;
+		$updated  = 0;
+		$warnings = array();
 
 		foreach ( array_keys( $apply + $convert_ids ) as $target ) {
 			Andreani_Product_Bultos::assign_package( $target, $package );
 			++$updated;
+
+			$target_product = wc_get_product( $target );
+			$misfit         = $target_product ? Andreani_Store_Boxes::product_misfit( $package, $target_product ) : '';
+
+			if ( '' !== $misfit ) {
+				/* translators: 1: nombre del producto, 2: medidas del producto, 3: nombre del paquete */
+				$warnings[] = sprintf( __( '«%1$s» mide %2$s y no entra en «%3$s».', 'andreani-shipping' ), $target_product->get_name(), $misfit, $package['name'] );
+			}
 		}
 
 		Andreani_Products_Stats::flush_pending();
 
 		wp_send_json_success( array(
 			/* translators: 1: cantidad de productos actualizados, 2: nombre del paquete */
-			'message' => sprintf( __( 'Se asignó «%2$s» a %1$d productos.', 'andreani-shipping' ), $updated, $package['name'] ),
-			'updated' => $updated,
-			'skipped' => $skipped,
+			'message'  => sprintf( __( 'Se asignó «%2$s» a %1$d productos.', 'andreani-shipping' ), $updated, $package['name'] ),
+			'updated'  => $updated,
+			'skipped'  => $skipped,
+			'warnings' => array_slice( $warnings, 0, 5 ),
+			'misfits'  => count( $warnings ),
 		) );
 	}
 

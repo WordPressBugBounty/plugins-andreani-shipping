@@ -22,6 +22,7 @@ class Andreani_Product_Bultos {
 
 	const BOX_REF_META  = '_andreani_box_ref';
 	const BOX_REF_FIELD = 'andreani_box_ref';
+	const BOX_LOST_META = '_andreani_box_lost';
 	const NONCE_KEY = 'andreani_bultos_nonce';
 
 	const MODE_FIELD      = 'andreani_dispatch_mode';
@@ -407,6 +408,8 @@ class Andreani_Product_Bultos {
 	 * @param string $ref        Id del paquete ya saneado.
 	 */
 	public static function save_box_ref( $product_id, $ref ) {
+		delete_post_meta( $product_id, self::BOX_LOST_META );
+
 		if ( '' === $ref ) {
 			delete_post_meta( $product_id, self::BOX_REF_META );
 		} else {
@@ -562,6 +565,7 @@ class Andreani_Product_Bultos {
 			'apilado_invalid'          => class_exists( 'Andreani_Product_Apilado' )
 				? Andreani_Product_Apilado::invalid_message()
 				: '',
+			'stack_incomplete'         => __( 'Completá hasta cuántas se apilan y cuánto suma cada una.', 'andreani-shipping' ),
 			'bultos_invalid'           => self::bultos_invalid_message(),
 			'piece_incomplete'         => __( 'Completá el peso y las tres medidas de esta caja, o quitala.', 'andreani-shipping' ),
 			/* translators: %s: número de caja */
@@ -606,12 +610,16 @@ class Andreani_Product_Bultos {
 			'size_side'                => __( 'Por tamaño: lado %s cm', 'andreani-shipping' ),
 			/* translators: 1: nombre de la caja de la tienda, 2: medidas en cm */
 			'box_use'                  => __( 'Usá tu «%1$s» (%2$s cm)', 'andreani-shipping' ),
+			/* translators: 1: productos que van adentro, 2: nombre de la caja de la tienda, 3: medidas en cm */
+			'box_use_for'              => __( '%1$s: usá tu «%2$s» (%3$s cm)', 'andreani-shipping' ),
 			/* translators: 1: largo, 2: ancho, 3: alto de la caja aproximada, en cm */
 			'box_suggested'            => __( 'Caja sugerida ~%1$s × %2$s × %3$s cm', 'andreani-shipping' ),
 			'box_no_fit'               => __( 'No entra en ninguna de tus cajas', 'andreani-shipping' ),
 			'box_load'                 => __( 'Guardá tus paquetes para que te digamos cuál usar', 'andreani-shipping' ),
 			'cart_big_mixed'           => __( 'Todo el pedido pasa a Bigger: también los productos chicos viajan como cajas propias.', 'andreani-shipping' ),
 			'labels_one_pack'          => __( '1 etiqueta · Paquetería', 'andreani-shipping' ),
+			/* translators: %s: cantidad de etiquetas */
+			'labels_many_pack'         => __( '%s etiquetas · Paquetería', 'andreani-shipping' ),
 			'labels_one_big'           => __( '1 etiqueta · Bigger', 'andreani-shipping' ),
 			/* translators: %s: cantidad de etiquetas */
 			'labels_many_big'          => __( '%s etiquetas · Bigger', 'andreani-shipping' ),
@@ -682,7 +690,9 @@ class Andreani_Product_Bultos {
 			/* translators: %s: nombre del paquete guardado */
 			'pkg_suggest'              => __( 'Coincide con «%s»:', 'andreani-shipping' ),
 			'pkg_suggest_use'          => __( 'usarlo', 'andreani-shipping' ),
-			'pkg_deleted'              => __( 'Paquete eliminado: elegí otro.', 'andreani-shipping' ),
+			/* translators: 1: medidas del producto, 2: nombre del paquete */
+			'pkg_nofit'                => __( 'El producto mide %1$s y no entra en «%2$s».', 'andreani-shipping' ),
+			'pkg_deleted'              =>__( 'Paquete eliminado: elegí otro.', 'andreani-shipping' ),
 			'pkg_modal_title'          => __( 'Guardar como paquete', 'andreani-shipping' ),
 			'pkg_modal_title_set'      => __( 'Guardar como juego de cajas', 'andreani-shipping' ),
 			'pkg_name'                 => __( 'Nombre', 'andreani-shipping' ),

@@ -493,6 +493,12 @@
 	}
 
 	function boxesOf(p, x, y, theme, label) {
+		var bag = p.storeBox || p.store_box;
+
+		if (label && bag && bag.type === 'bolsa') {
+			return boxPiece(bag).map(function (b) { return Object.assign({}, b, { x: x, y: y }); });
+		}
+
 		if (!stacked(p)) {
 			return [{ x: x, y: y, z: 0, w: p.w, d: p.d, h: p.h, t: theme, tape: true, label: label }];
 		}
@@ -1010,6 +1016,15 @@
 		options = options || {};
 
 		var s = cfg.i18n;
+
+		if (pk.some(function (p) { return p.fixed; })) {
+			var holder = pk.filter(function (p) { return p.storeBox; })[0];
+
+			return holder
+				? { box: holder.storeBox, html: '<span class="andr-dispatch__note andr-dispatch__note--box">' + escapeHtml(fill(s.box_use_for, holder.storeFor || holder.name, holder.storeBox.name, boxDims(holder.storeBox))) + '</span>' }
+				: { box: null, html: '' };
+		}
+
 		var box = options.storeBox || null;
 
 		if (!box && options.forceBigger) {
@@ -1274,6 +1289,8 @@
 			name: p.name ? String(p.name) : '',
 			ref: p.ref ? String(p.ref) : '',
 			fixed: !!p.fixed,
+			storeBox: p.store_box || null,
+			storeFor: p.store_for ? String(p.store_for) : '',
 			line: p.line === undefined || p.line === null ? null : String(p.line),
 			lineQty: parseInt(p.line_qty, 10) || 0,
 			assigned: p.assigned && p.assigned.name ? p.assigned : null
@@ -1432,8 +1449,10 @@
 			: { type: 'size_sum', value: info.w + info.d + info.h, limit: cfg.limits.sum_sides };
 	}
 
-	function packResult(pack, stageSvg, resultEl) {
-		var html = '<span class="andr-dispatch__result-title">' + serviceIcon('paqueteria') + '<span>' + escapeHtml(cfg.i18n.labels_one_pack) + '</span></span>'
+	function packResult(pk, pack, stageSvg, resultEl) {
+		var count = pk.some(function (p) { return p.fixed; }) ? Math.max(1, totalCount(pk)) : 1;
+		var title = count === 1 ? cfg.i18n.labels_one_pack : fill(cfg.i18n.labels_many_pack, fmt(count));
+		var html = '<span class="andr-dispatch__result-title">' + serviceIcon('paqueteria') + '<span>' + escapeHtml(title) + '</span></span>'
 			+ '<span class="andr-dispatch__note">' + escapeHtml(cfg.i18n.pack_home_or_branch) + '</span>';
 
 		render(stageSvg, pack.boxes, STAGE);
@@ -1514,7 +1533,7 @@
 		if (reason) {
 			biggerResult(pk, reason, options.mode, options.svg, options.result, options.cart, options.mixed, options.list, options.forceNote, pack);
 		} else {
-			packResult(pack, options.svg, options.result);
+			packResult(pk, pack, options.svg, options.result);
 		}
 
 		var advice = options.advice && (!reason || (pack && pack.info)) ? boxAdvice(pk, options).html : '';
