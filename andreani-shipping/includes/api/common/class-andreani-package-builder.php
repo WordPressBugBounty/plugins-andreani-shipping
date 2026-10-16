@@ -514,7 +514,7 @@ class Andreani_Package_Builder {
 				$kg += $group['kg'] * $group['count'];
 
 				for ( $i = 0; $i < $group['count']; $i++ ) {
-					$pieces[] = array( 'w' => $group['w'], 'd' => $group['d'], 'h' => $group['h'], 'stacked' => $group['units'] > 1 && $group['inc'] > 0 );
+					$pieces[] = array( 'w' => $group['w'], 'd' => $group['d'], 'h' => $group['h'], 'stacked' => $group['units'] > 1 && $group['inc'] > 0, 'boxed' => ! empty( $group['boxed'] ) );
 				}
 			}
 		}
@@ -990,7 +990,7 @@ class Andreani_Package_Builder {
 			'depth'  => $measures['depth'],
 		);
 
-		return self::draw_package_groups(
+		$groups = self::draw_package_groups(
 			$base,
 			$measures['weight_kg'],
 			self::resolve_apilado( $product ),
@@ -999,6 +999,14 @@ class Andreani_Package_Builder {
 			self::resolve_main_ref( $product ),
 			self::resolve_units_per_box( $product )
 		);
+
+		if ( self::active_package( $product ) ) {
+			foreach ( $groups as $index => $group ) {
+				$groups[ $index ]['boxed'] = true;
+			}
+		}
+
+		return $groups;
 	}
 
 	private static function piece_ref( array $pieza ) {

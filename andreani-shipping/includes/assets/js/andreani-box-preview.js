@@ -975,7 +975,8 @@
 		}
 
 		var sides = [pack.W, pack.D, pack.H].sort(function (a, b) { return b - a; });
-		var need = sides.map(function (side) { return side + BOX_FIT_MARGIN; });
+		var margin = pieces.every(function (p) { return p.boxed || p.assigned; }) ? 0 : BOX_FIT_MARGIN;
+		var need = sides.map(function (side) { return side + margin; });
 		var volume = pieces.reduce(function (acc, p) { return acc + p.w * p.d * p.h; }, 0);
 
 		return boxes.filter(function (box) {

@@ -478,7 +478,8 @@ class Andreani_Store_Boxes {
 
 		rsort( $sides );
 
-		$need = array( $sides[0] + self::FIT_MARGIN_CM, $sides[1] + self::FIT_MARGIN_CM, $sides[2] + self::FIT_MARGIN_CM );
+		$margin = self::all_boxed( $pieces ) ? 0 : self::FIT_MARGIN_CM;
+		$need   = array( $sides[0] + $margin, $sides[1] + $margin, $sides[2] + $margin );
 
 		$fitting = array();
 
@@ -504,11 +505,23 @@ class Andreani_Store_Boxes {
 			return null;
 		}
 
+		$boxed = self::all_boxed( $pieces );
+
 		return array(
-			'w' => (int) ceil( $pack['W'] + self::MARGIN_SIDE_CM ),
-			'd' => (int) ceil( $pack['D'] + self::MARGIN_SIDE_CM ),
-			'h' => (int) ceil( $pack['H'] + self::MARGIN_HEIGHT_CM ),
+			'w' => (int) ceil( $pack['W'] + ( $boxed ? 0 : self::MARGIN_SIDE_CM ) ),
+			'd' => (int) ceil( $pack['D'] + ( $boxed ? 0 : self::MARGIN_SIDE_CM ) ),
+			'h' => (int) ceil( $pack['H'] + ( $boxed ? 0 : self::MARGIN_HEIGHT_CM ) ),
 		);
+	}
+
+	private static function all_boxed( array $pieces ) {
+		foreach ( $pieces as $piece ) {
+			if ( empty( $piece['boxed'] ) ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**

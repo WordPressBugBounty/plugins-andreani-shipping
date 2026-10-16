@@ -5,7 +5,7 @@ Copyright: 2025 Andreani.com
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.8.2
+Stable tag: 1.8.3
 Contributors: integracionandreani
 Donate link:
 Tags: woocommerce, shipping, andreani, envio, etiquetas
@@ -201,19 +201,16 @@ Sí. El plugin es compatible con el almacenamiento de pedidos de alto rendimient
 
 == Screenshots ==
 
-1. Ver mis productos: cómo viaja cada producto, con su servicio y su caja.
-2. Producto abierto en la grilla: cargá las cajas, mirá cómo se arma el envío y el resultado.
-3. Probar cotización: probá las tarifas de un producto con tu CP y la cantidad que quieras.
-4. Simulador de carrito: armá un pedido con varios productos y mirá cómo viajan juntos y cuánto sale.
-5. Ver mis envíos: gestioná todos tus envíos de Andreani desde un solo lugar, con estado logístico, pago y descarga de etiquetas.
-6. Cómo armarlo: la caja sugerida para preparar cada pedido, según las medidas de tus productos.
-7. Ficha de producto de WooCommerce: elegí cómo se despacha (en su caja, apilado o en varias cajas) desde la pestaña Envío.
-8. Configuración de la cuenta Andreani con tu Credencial ID.
-9. Selección de sucursal Andreani durante el checkout.
-10. Cotizador de envío en la página de producto.
-11. Formato de impresión de etiquetas (A4 o térmica Zebra), con vista previa de cómo salen.
-12. Resumen del envío: origen y destino, destinatario, contenido y datos de Andreani en la misma fila.
-13. Seguimiento del envío: número de seguimiento y cada paso, de pendiente de ingreso a entregado.
+1. Mis productos: cómo viaja cada producto, con su servicio, su paquete y su forma de despacho.
+2. Decidí cómo viaja cada producto: cuántos entran en una caja y si lo que no entra va todo junto o cada caja con su etiqueta.
+3. Cómo armar cada pedido: el paquete de tu tienda que corresponde, con el dibujo del armado.
+4. Simulador de carrito: cuántas cajas y etiquetas genera una compra y cuánto sale el envío.
+5. Paquetes guardados: tus cajas, sobres, bolsas y juegos de cajas.
+6. Probar cotización: cotizá un producto a cualquier código postal antes de vender.
+7. Ver mis envíos: todos tus envíos de Andreani en un solo lugar, con su estado.
+8. Retiro en sucursal: tus clientes eligen la sucursal Andreani en el checkout.
+9. Cotizador en la página de producto: tus clientes calculan el envío antes de comprar.
+10. Configuración en pestañas: cuenta, origen, modos de entrega, tu tienda, etiquetas y avanzado.
 
 == External services ==
 
@@ -362,6 +359,9 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * El checkbox *Forzar carga de assets*: **sigue funcionando** pero casi nunca es necesario. Úsalo solo como último recurso.
 
 == Changelog ==
+
+= 1.8.3 =
+* Corregido: un producto con un paquete guardado asignado se cotizaba con una caja más grande que la suya
 
 = 1.8.2 =
 * Nuevo: Unidades por caja en cada producto y elección "Todo junto" o "Cada caja con su etiqueta" (Bigger)
@@ -565,6 +565,9 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * Versión inicial publicada en el repositorio de WordPress
 
 == Upgrade Notice ==
+
+= 1.8.3 =
+Corrige que un producto con un paquete guardado asignado se cotizaba con una caja más grande que la suya.
 
 = 1.8.2 =
 Nuevos paquetes guardados y unidades por caja. Atención: los productos que vienen en varias cajas ahora viajan siempre como Bigger (una etiqueta por caja, solo a domicilio), por lo que su cotización puede cambiar.
