@@ -563,9 +563,6 @@
           const modo = $card.data('modo');
           config[modo] = {
             enabled: $card.find('.andreani-modo-enabled').is(':checked'),
-            costo_adicional_enabled: $card.find('.andreani-modo-costo-enabled').is(':checked'),
-            costo_adicional: parseFloat($card.find('.andreani-modo-costo').val()) || 0,
-            motivo: $card.find('.andreani-modo-motivo').val() || '',
             envio_gratis: $card.find('.andreani-modo-gratis').is(':checked'),
             envio_gratis_monto: parseFloat($card.find('.andreani-modo-monto').val()) || 0
           };
@@ -597,15 +594,11 @@
           updateStats($card.closest('.andreani-modos-panel'));
           syncConfig();
         })
-        .on('change', '.andreani-modo-costo-enabled', (e) => {
-          $(e.target).closest('.andreani-modo-card').find('.andreani-modo-card__field--costo').toggleClass('andreani-hidden', !e.target.checked);
-          syncConfig();
-        })
         .on('change', '.andreani-modo-gratis', (e) => {
           $(e.target).closest('.andreani-modo-card').find('.andreani-modo-card__field--monto').toggleClass('andreani-hidden', !e.target.checked);
           syncConfig();
         })
-        .on('input change', '.andreani-modo-costo, .andreani-modo-monto, .andreani-modo-motivo', syncConfig);
+        .on('input change', '.andreani-modo-monto', syncConfig);
 
       // Sync inicial: el hidden arranca con lo que PHP renderizó, pero forzamos una
       // pasada para garantizar que refleje el estado actual de las cards ante cualquier
@@ -2217,7 +2210,7 @@
 
       const weight = preview.weightText;
       const totalKg = packages.reduce((acc, p) => acc + p.kg * (p.count || 1), 0);
-      const totalBoxes = data.total || packages.length;
+      const labels = data.labels || data.total || packages.length;
       const items = data.items || [];
       const same = items.length === 1;
       const chip = (icon, label) => '<span class="andr-packing__chip">' + icon + escapeHtml(label) + '</span>';
@@ -2240,9 +2233,10 @@
       let text;
       let stack = false;
 
-      const pack = data.bigger ? null : preview.packed(packages);
+      const pack = data.bigger ? null : preview.packed(packages, true);
       const info = pack ? pack.info : null;
-      const advice = pack && !packages.some((p) => p.fixed) ? preview.boxAdvice(packages, { storeBox: data.store_box }) : null;
+      const own = packages.some((p) => p.fixed);
+      const advice = pack ? (own ? null : preview.boxAdvice(packages, { storeBox: data.store_box })) : null;
 
       if (advice && advice.box) {
         const bag = advice.box.type === 'bolsa';
@@ -2251,19 +2245,20 @@
           + pkgRow(preview.useBoxText(advice.box.name), bag, preview.boxDims(advice.box) + ' cm') + contents()
           + '<div class="andr-packing__chips">' + countChip + weightChip + service('paqueteria') + '</div>';
       } else if (info) {
-        boxes = info.ok ? [{ x: 0, y: 0, z: 0, w: info.w, d: info.d, h: info.h, tape: true, label: true, t: 'kraft' }] : pack.boxes;
-        text = '<p class="andr-packing__title">' + escapeHtml(this.text(info.ok ? 'packing_title_one' : 'packing_title_big_one')) + '</p>'
+        const fits = info.ok || own;
+        boxes = fits ? [{ x: 0, y: 0, z: 0, w: info.w, d: info.d, h: info.h, tape: true, label: true, t: 'kraft' }] : pack.boxes;
+        text = '<p class="andr-packing__title">' + escapeHtml(this.text(fits ? 'packing_title_one' : 'packing_title_big_one')) + '</p>'
           + pkgRow(preview.fill(this.text('packing_pkg_suggested'), info.w, info.d, info.h)) + contents()
-          + '<div class="andr-packing__chips">' + countChip + weightChip + service(info.ok ? 'paqueteria' : 'bigger') + '</div>';
+          + '<div class="andr-packing__chips">' + countChip + weightChip + service(fits ? 'paqueteria' : 'bigger') + '</div>';
       } else {
         stack = true;
         boxes = data.bigger ? preview.separate(preview.sample(packages), 'kraft') : pack.boxes;
         const cards = preview.cards(packages).map((card) => '<li class="andr-packing__card"' + (card.title ? ' title="' + escapeAttr(card.title) + '"' : '') + '><strong>'
-          + escapeHtml(card.head) + '</strong><span>' + escapeHtml(card.detail) + '</span></li>');
+          + escapeHtml(card.head) + '</strong><span>' + [card.detail].concat(card.rows || []).filter(Boolean).map(escapeHtml).join('<br>') + '</span></li>');
         const kind = data.bigger ? 'bigger' : 'paqueteria';
-        const title = totalBoxes === 1
+        const title = !data.bigger || labels === 1
           ? this.text(data.bigger ? 'packing_title_big_one' : 'packing_title_one')
-          : preview.fill(this.text(data.bigger ? 'packing_title_big' : 'packing_title_pack'), preview.fmt(totalBoxes));
+          : preview.fill(this.text('packing_title_big'), preview.fmt(labels));
         text = '<p class="andr-packing__title">' + escapeHtml(title) + '</p>'
           + '<ul class="andr-packing__cards">' + cards.join('') + '</ul>'
           + '<div class="andr-packing__chips">' + countChip + weightChip + service(kind) + '</div>';
@@ -4284,12 +4279,17 @@
           document.getElementById('andreani-sim-result').insertAdjacentHTML('beforeend', '<span class="andr-dispatch__note">' + $('<div>').text(forceNote).html() + '</span>');
         }
         const labels = {};
-        packages.forEach((p) => { labels[p.product_id] = (labels[p.product_id] || 0) + AndreaniBoxPreview.countOf(p); });
+        const placed = {};
+        packages.forEach((p) => {
+          labels[p.product_id] = (labels[p.product_id] || 0) + AndreaniBoxPreview.countOf(p);
+          placed[p.product_id] = placed[p.product_id] || (p.assigned && p.assigned.name ? AndreaniBoxPreview.fill(strings.pkg_in_box, p.assigned.name) : (p.fixed ? strings.chip_own_box : ''));
+        });
         self.lines.forEach((l) => {
           const count = labels[l.id] || 1;
+          const text = bigger ? (count === 1 ? strings.chip_boxes_one : AndreaniBoxPreview.fill(strings.chip_boxes_many, count)) : (placed[l.id] || strings.chip_in_pack);
           $('[data-line-chip="' + l.id + '"]')
-            .text(count === 1 ? strings.chip_boxes_one : AndreaniBoxPreview.fill(strings.chip_boxes_many, count))
-            .toggleClass('is-many', count > 1);
+            .text(text)
+            .toggleClass('is-many', bigger && count > 1);
         });
         $skipped.text(names.length ? self.t('sim_skipped') + ' ' + names.join(', ') : '').prop('hidden', !names.length);
       }).fail(() => {

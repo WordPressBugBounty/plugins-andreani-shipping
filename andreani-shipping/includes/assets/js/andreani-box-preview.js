@@ -861,8 +861,8 @@
 		return best;
 	}
 
-	function packed(pk) {
-		if (pk.some(function (p) { return p.fixed; })) {
+	function packed(pk, join) {
+		if (!join && pk.some(function (p) { return p.fixed; })) {
 			return { boxes: separate(sample(pk), 'kraft'), info: null };
 		}
 
@@ -1302,7 +1302,7 @@
 	}
 
 	function weightText(kg) {
-		return kg < 1 ? fmt(kg * 1000) + ' g' : fmt(kg, 1) + ' kg';
+		return kg < 1 ? fmt(kg * 1000) + ' g' : fmt(kg, 1) + ' kg';
 	}
 
 	function heterogeneous(pk) {
@@ -1315,7 +1315,7 @@
 	}
 
 	function measureText(p) {
-		return (p.ref ? p.ref + ': ' : '') + dims(p) + ' cm · ' + weightText(p.kg);
+		return (p.ref ? p.ref + ' · ' : '') + dims(p) + ' cm · ' + weightText(p.kg);
 	}
 
 	function assignedText(a, labels) {
@@ -1324,8 +1324,36 @@
 			: fill(labels.inBox, a.name);
 	}
 
+	function boxesLabel(first, n, labels) {
+		if (n === 1) {
+			return labels.box + ' ' + first;
+		}
+
+		return n === 2
+			? fill(labels.boxesTwo, first, first + 1)
+			: fill(labels.boxesRange, first, first + n - 1);
+	}
+
+	function assignedMeasures(packages, start, labels) {
+		if (packages.length === 1) {
+			return [countOf(packages[0]) > 1 ? fill(labels.each, measureText(packages[0])) : measureText(packages[0])];
+		}
+
+		var at = start;
+
+		return packages.map(function (p) {
+			var n = countOf(p);
+			var text = n > 1 ? fill(labels.eachAfter, measureText(p)) : measureText(p);
+			var label = start ? boxesLabel(at, n, labels) : '';
+
+			at += n;
+
+			return label ? fill(labels.measureAt, label, text) : text;
+		});
+	}
+
 	function cards(pk, labels) {
-		var offset = 0;
+		var numbered = totalCount(pk) > 1;
 		var byLine = {};
 		var out = [];
 
@@ -1336,57 +1364,81 @@
 			if (key !== null && byLine[key]) {
 				byLine[key].packages.push(p);
 				byLine[key].title += '\n' + measureText(p);
-				offset += count;
+				byLine[key].count += count;
 
 				return;
 			}
+
+			var card = key !== null
+				? { assigned: true, line: p, title: measureText(p) }
+				: { assigned: false, line: p, title: '' };
+
+			card.count = count;
+			card.packages = [p];
 
 			if (key !== null) {
-				var a = p.assigned;
-				var card = {
-					head: fmt(p.lineQty || count) + ' × ' + (p.name || labels.box),
-					detail: assignedText(a, labels),
-					title: measureText(p),
-					assigned: true,
-					packages: [p]
-				};
-
 				byLine[key] = card;
-				out.push(card);
-				offset += count;
-
-				return;
 			}
 
-			var head = count > 1
-				? [fmt(count) + ' × ' + (p.name || labels.box), p.ref]
-				: [labels.box + ' ' + (offset + 1), p.name, p.ref];
-
-			out.push({
-				head: head.filter(Boolean).join(' · '),
-				detail: [
-					p.units >= (labels.minUnits || 1) ? fill(p.units === 1 && labels.unit ? labels.unit : labels.units, p.units) : '',
-					dims(p) + ' cm',
-					weightText(p.kg)
-				].filter(Boolean).join(' · '),
-				title: '',
-				assigned: false,
-				packages: [p]
-			});
-
-			offset += count;
+			out.push(card);
 		});
 
-		return out;
+		var offset = 0;
+
+		return out.map(function (card) {
+			var p = card.line;
+			var range = numbered ? boxesLabel(offset + 1, card.count, labels) : '';
+
+			offset += card.count;
+
+			if (card.assigned) {
+				var a = p.assigned;
+				var isSet = a.type === 'juego' && a.parts && a.parts.length;
+				var parts = isSet ? ' (' + a.parts.join(' + ') + ')' : '';
+				var qty = p.lineQty || card.count;
+				var perUnit = qty === card.count;
+				var what = (perUnit && (!numbered || qty > 1) ? fmt(qty) + ' × ' : '') + (p.name || labels.box) + parts;
+				var lines = assignedMeasures(card.packages, numbered ? offset - card.count + 1 : 0, labels);
+				var stacked = lines.length > 1;
+				var named = isSet ? (a.name !== p.name ? fill(labels.useSetName, a.name) : '') : fill(labels.inBox, a.name);
+
+				return {
+					head: [range, what].filter(Boolean).join(' · '),
+					detail: [
+						qty > 1 && !perUnit ? fill(labels.units, fmt(qty)) : '',
+						named,
+						stacked ? '' : lines[0]
+					].filter(Boolean).join(' · '),
+					rows: stacked ? lines : [],
+					title: card.title,
+					assigned: true,
+					packages: card.packages
+				};
+			}
+
+			var units = p.units >= (labels.minUnits || 1) ? fill(p.units === 1 && labels.unit ? labels.unit : labels.units, p.units) : '';
+			var single = card.count === 1;
+			var measures = dims(p) + ' cm · ' + weightText(p.kg);
+
+			return {
+				head: [range, p.name || (numbered ? '' : labels.box), p.ref, single ? units : ''].filter(Boolean).join(' · '),
+				detail: single ? measures : fill(labels.each, [units, measures].filter(Boolean).join(' · ')),
+				rows: [],
+				title: '',
+				assigned: false,
+				packages: card.packages
+			};
+		});
 	}
 
 	function boxList(ul, pk, labels) {
 		var list = cards(pk, labels);
 
 		ul.innerHTML = list.map(function (card) {
-			var text = card.assigned
-				? '<span>' + escapeHtml(card.head) + '<small class="andr-boxlist__sub">' + escapeHtml(card.detail) + '</small></span>'
-				: '<span>' + escapeHtml([card.head, card.detail].filter(Boolean).join(' · ')) + '</span>';
+			var text = '<span>' + escapeHtml(card.head) + (card.detail ? '<small class="andr-boxlist__sub">' + escapeHtml(card.detail) + '</small>' : '')
+				+ card.rows.map(function (row) {
+					return '<small class="andr-boxlist__sub">' + escapeHtml(row) + '</small>';
+				}).join('') + '</span>';
 
 			return '<li class="andr-boxlist__item"' + (card.title ? ' title="' + escapeHtml(card.title) + '"' : '') + '><svg class="andr-boxlist__thumb" role="img" aria-hidden="true"></svg>'
 				+ text + '</li>';
@@ -1402,10 +1454,16 @@
 	function cardLabels() {
 		return {
 			box: cfg.i18n.box_word,
+			boxesTwo: cfg.i18n.boxes_two,
+			each: cfg.i18n.box_each,
+			boxesRange: cfg.i18n.boxes_range,
 			units: cfg.i18n.box_units,
 			unit: cfg.i18n.box_unit,
 			useSet: cfg.i18n.pkg_use_set,
-			inBox: cfg.i18n.pkg_in_box
+			inBox: cfg.i18n.pkg_in_box,
+			useSetName: cfg.i18n.pkg_use_set_name,
+			eachAfter: cfg.i18n.box_each_after,
+			measureAt: cfg.i18n.box_measure_at
 		};
 	}
 
@@ -1449,13 +1507,36 @@
 			: { type: 'size_sum', value: info.w + info.d + info.h, limit: cfg.limits.sum_sides };
 	}
 
-	function packResult(pk, pack, stageSvg, resultEl) {
-		var count = pk.some(function (p) { return p.fixed; }) ? Math.max(1, totalCount(pk)) : 1;
-		var title = count === 1 ? cfg.i18n.labels_one_pack : fill(cfg.i18n.labels_many_pack, fmt(count));
-		var html = '<span class="andr-dispatch__result-title">' + serviceIcon('paqueteria') + '<span>' + escapeHtml(title) + '</span></span>'
-			+ '<span class="andr-dispatch__note">' + escapeHtml(cfg.i18n.pack_home_or_branch) + '</span>';
+	function contentsText(pk) {
+		var seen = {};
+		var parts = [];
 
-		render(stageSvg, pack.boxes, STAGE);
+		pk.forEach(function (p) {
+			if (p.line === null) {
+				if (p.name) {
+					parts.push(p.name);
+				}
+
+				return;
+			}
+
+			if (!seen[p.line]) {
+				seen[p.line] = true;
+				parts.push(fmt(p.lineQty || countOf(p)) + ' × ' + (p.name || cfg.i18n.box_word));
+			}
+		});
+
+		return parts.join(', ');
+	}
+
+	function packResult(pk, pack, stageSvg, resultEl) {
+		var own = pk.some(function (p) { return p.fixed; });
+		var inside = own ? contentsText(pk) : '';
+		var html = '<span class="andr-dispatch__result-title">' + serviceIcon('paqueteria') + '<span>' + escapeHtml(cfg.i18n.labels_one_pack) + '</span></span>'
+			+ '<span class="andr-dispatch__note">' + escapeHtml(cfg.i18n.pack_home_or_branch) + '</span>'
+			+ (inside ? '<span class="andr-dispatch__note">' + escapeHtml(fill(cfg.i18n.pack_inside, inside)) + '</span>' : '');
+
+		render(stageSvg, own ? packed(pk, true).boxes : pack.boxes, STAGE);
 
 		resultEl.className = resultClasses('ok');
 		resultEl.innerHTML = html;
@@ -1861,6 +1942,7 @@
 		},
 		weightText: weightText,
 		packed: packed,
+		contentsText: contentsText,
 		why: why,
 		reasonText: reasonText,
 		summary: summary,

@@ -205,6 +205,7 @@
 	--andr-z-modal-backdrop: 100;
 	--andr-z-modal:          200;
 	--andr-z-toast:          300;
+	--andr-z-modal-fullscreen: 100000; /* sobre la admin bar (99999) y el menú de WP: modal a pantalla completa */
 
 	--andr-transition-fast: 120ms ease;
 	--andr-transition-base: 200ms ease;

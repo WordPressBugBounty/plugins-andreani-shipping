@@ -994,7 +994,7 @@ class Andreani_Shipping extends WC_Shipping_Method {
 			</button>
 			<?php endif; ?>
 		</h3>
-		<p class="andreani-section-description"><?php esc_html_e( 'Habilitá los servicios de Andreani que querés ofrecer y configurá costos adicionales o envío gratis por modo.', 'andreani-shipping' ); ?></p>
+		<p class="andreani-section-description"><?php esc_html_e( 'Habilitá los servicios de Andreani que querés ofrecer y configurá el envío gratis por modo. Los descuentos y recargos se arman en Promociones de envío.', 'andreani-shipping' ); ?></p>
 		<div class="andreani-modos-panel andreani-modos-panel--contratos andreani-modos-panel--seamless" data-card="<?php echo esc_attr( $panel_data_card ); ?>">
 			<div class="andreani-modos-panel__body">
 				<div class="andreani-modos-list">
@@ -1186,9 +1186,6 @@ class Andreani_Shipping extends WC_Shipping_Method {
 		$modo_key                = Andreani_Api_Response::normalize_modo_key( $modo_id );
 		$modo_config             = $this->get_modo_config( $config_por_modo, $modo_id );
 		$is_enabled              = isset( $modo_config['enabled'] ) ? $modo_config['enabled'] : true;
-		$costo_adicional_enabled = isset( $modo_config['costo_adicional_enabled'] ) ? $modo_config['costo_adicional_enabled'] : false;
-		$costo_adicional         = isset( $modo_config['costo_adicional'] ) ? $modo_config['costo_adicional'] : '';
-		$motivo                  = isset( $modo_config['motivo'] ) ? $modo_config['motivo'] : '';
 		$envio_gratis            = isset( $modo_config['envio_gratis'] ) ? $modo_config['envio_gratis'] : false;
 		$envio_gratis_monto      = isset( $modo_config['envio_gratis_monto'] ) ? $modo_config['envio_gratis_monto'] : '0';
 		?>
@@ -1214,22 +1211,6 @@ class Andreani_Shipping extends WC_Shipping_Method {
 			</div>
 			<div class="andreani-modo-card__body">
 				<div class="andreani-modo-card__form">
-					<div class="andreani-modo-card__field andreani-modo-card__field--checkbox">
-						<label>
-							<input type="checkbox" class="andreani-modo-costo-enabled" <?php checked( $costo_adicional_enabled ); ?> />
-							<?php esc_html_e( 'Agregar costo adicional', 'andreani-shipping' ); ?>
-						</label>
-					</div>
-					<div class="andreani-modo-card__field andreani-modo-card__field--costo <?php echo ! $costo_adicional_enabled ? 'andreani-hidden' : ''; ?>">
-						<label><?php esc_html_e( 'Costo adicional', 'andreani-shipping' ); ?> <span class="andreani-modo-card__label-hint">(<?php esc_html_e( 'Motivo', 'andreani-shipping' ); ?>)</span></label>
-						<div class="andreani-modo-card__inputs-row">
-							<div class="andreani-input-prefix">
-								<span>$</span>
-								<input type="number" class="andreani-modo-costo" value="<?php echo esc_attr( $costo_adicional ); ?>" min="0" step="1" placeholder="0" />
-							</div>
-							<input type="text" class="andreani-modo-motivo" value="<?php echo esc_attr( $motivo ); ?>" placeholder="<?php esc_attr_e( 'Ej: Embalaje especial', 'andreani-shipping' ); ?>" />
-						</div>
-					</div>
 					<div class="andreani-modo-card__field andreani-modo-card__field--checkbox">
 						<label>
 							<input type="checkbox" class="andreani-modo-gratis" <?php checked( $envio_gratis ); ?> />
@@ -1400,7 +1381,7 @@ class Andreani_Shipping extends WC_Shipping_Method {
 		}
 
 		$sanitized = array();
-		$allowed_keys = array( 'enabled', 'costo_adicional_enabled', 'costo_adicional', 'motivo', 'envio_gratis', 'envio_gratis_monto' );
+		$allowed_keys = array( 'enabled', 'envio_gratis', 'envio_gratis_monto' );
 
 		foreach ( $config as $modo => $modo_config ) {
 			$modo_key = Andreani_Api_Response::normalize_modo_key( $modo );
@@ -1416,18 +1397,12 @@ class Andreani_Shipping extends WC_Shipping_Method {
 
 				switch ( $key ) {
 					case 'enabled':
-					case 'costo_adicional_enabled':
 					case 'envio_gratis':
 						$entry[ $key ] = (bool) $modo_config[ $key ];
 						break;
 
-					case 'costo_adicional':
 					case 'envio_gratis_monto':
 						$entry[ $key ] = max( 0, floatval( $modo_config[ $key ] ) );
-						break;
-
-					case 'motivo':
-						$entry[ $key ] = sanitize_text_field( $modo_config[ $key ] );
 						break;
 				}
 			}
@@ -1617,7 +1592,9 @@ class Andreani_Shipping extends WC_Shipping_Method {
 			return;
 		}
 
-		foreach ( $result['rates'] as $rate ) {
+		$state = isset( $package['destination']['state'] ) ? $package['destination']['state'] : '';
+
+		foreach ( Andreani_Shipping_Promotions::apply_to_rates( $result['rates'], $state ) as $rate ) {
 			$this->add_rate( $rate );
 		}
 

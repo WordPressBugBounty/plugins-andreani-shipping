@@ -3820,6 +3820,10 @@ input[type="text"].andreani-search-input {
 	font-weight: var(--andr-fw-semibold);
 }
 
+.andreani-shipments-wrap .andreani-detail__info-promo {
+	overflow-wrap: anywhere;
+}
+
 .andreani-shipments-wrap .andreani-detail__info-copy {
 	font-family: var(--andr-font-mono);
 	font-size: var(--andr-text-sm);
@@ -4118,6 +4122,14 @@ input[type="text"].andreani-search-input {
 .andreani-shipments-wrap .andreani-order-number {
 	flex: none;
 	white-space: nowrap;
+}
+
+.andreani-shipments-wrap .andreani-order-promo {
+	margin-top: var(--andr-sp-1);
+	color: var(--andr-color-text-meta);
+	font-size: var(--andr-text-sm);
+	line-height: 1.3;
+	overflow-wrap: anywhere;
 }
 
 .andreani-shipments-wrap .andreani-order-number__type {

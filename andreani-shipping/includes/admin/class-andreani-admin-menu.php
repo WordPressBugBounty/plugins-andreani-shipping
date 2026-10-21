@@ -14,6 +14,7 @@ class Andreani_Admin_Menu {
 	const MENU_SLUG = 'andreani-shipping';
 	const CAPABILITY = 'manage_woocommerce';
 	const BOXES_SLUG = 'andreani-boxes';
+	const PROMOTIONS_SLUG = 'andreani-promotions';
 
 	public static function boxes_url() {
 		return admin_url( 'admin.php?page=' . self::BOXES_SLUG );
@@ -116,6 +117,15 @@ class Andreani_Admin_Menu {
 
 		add_submenu_page(
 			self::MENU_SLUG,
+			__( 'Promociones de envío', 'andreani-shipping' ),
+			__( 'Promociones de envío', 'andreani-shipping' ),
+			self::CAPABILITY,
+			self::PROMOTIONS_SLUG,
+			array( $this, 'render_promotions_page' )
+		);
+
+		add_submenu_page(
+			self::MENU_SLUG,
 			__( 'Configuración', 'andreani-shipping' ),
 			__( 'Configuración', 'andreani-shipping' ),
 			self::CAPABILITY,
@@ -201,5 +211,13 @@ class Andreani_Admin_Menu {
 		}
 
 		include ANDREANI_PLUGIN_DIR . 'includes/admin/views/boxes-page.php';
+	}
+
+	public function render_promotions_page() {
+		if ( ! current_user_can( self::CAPABILITY ) ) {
+			wp_die( esc_html__( 'No tenes permisos para acceder a esta pagina.', 'andreani-shipping' ) );
+		}
+
+		include ANDREANI_PLUGIN_DIR . 'includes/admin/views/promotions-page.php';
 	}
 }

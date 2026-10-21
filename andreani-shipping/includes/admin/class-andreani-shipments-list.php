@@ -165,11 +165,16 @@ class Andreani_Shipments_List extends WP_List_Table {
 			)
 			: '';
 
+		$promotion = ! empty( $item['promotion'] )
+			? '<div class="andreani-order-promo">' . esc_html( Andreani_Shipping_Promotions::summary_line( $item['promotion'] ) ) . '</div>'
+			: '';
+
 		return sprintf(
-			'<div class="andreani-order-number-wrap"><a href="%1$s" target="_blank" rel="noopener" class="andreani-order-number"><span class="andreani-order-number__hash">#</span><span class="andreani-order-number__num">%2$s</span></a>%3$s</div>',
+			'<div class="andreani-order-number-wrap"><a href="%1$s" target="_blank" rel="noopener" class="andreani-order-number"><span class="andreani-order-number__hash">#</span><span class="andreani-order-number__num">%2$s</span></a>%3$s</div>%4$s',
 			esc_url( $order_url ),
 			esc_html( $item['order_number'] ),
-			$type_caption
+			$type_caption,
+			$promotion // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escapado arriba.
 		);
 	}
 
@@ -1444,6 +1449,7 @@ class Andreani_Shipments_List extends WP_List_Table {
 			'can_retry'           => ! $data['created'],
 			'last_error'          => $order->get_meta( '_andreani_last_error', true ),
 			'last_error_body'     => $order->get_meta( '_andreani_last_error_body', true ),
+			'promotion'           => Andreani_Shipping_Promotions::order_summary( $order ),
 		) );
 	}
 

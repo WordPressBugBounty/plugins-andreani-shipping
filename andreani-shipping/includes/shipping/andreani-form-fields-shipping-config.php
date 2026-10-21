@@ -112,7 +112,7 @@ return array(
 	),
 
 	// Config unificada por modo/contrato (JSON)
-	// Estructura: {"modo": {"enabled": true, "costo_adicional": 0, "motivo": "", "envio_gratis": false, "envio_gratis_monto": 0}}
+	// Estructura: {"modo": {"enabled": true, "envio_gratis": false, "envio_gratis_monto": 0}}
 	'config_por_modo' => array(
 		'type'    => 'hidden',
 		'default' => '{}',

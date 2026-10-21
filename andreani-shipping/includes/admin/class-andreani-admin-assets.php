@@ -292,8 +292,6 @@ class Andreani_Admin_Assets {
 				'packing_title_big_one'    => __( '1 caja · 1 etiqueta · Bigger', 'andreani-shipping' ),
 				/* translators: %s: cantidad de cajas */
 				'packing_title_big'        => __( '%1$s cajas · %1$s etiquetas · Bigger', 'andreani-shipping' ),
-				/* translators: %s: cantidad de cajas */
-				'packing_title_pack'       => __( '%1$s cajas · %1$s etiquetas · Paquetería', 'andreani-shipping' ),
 				/* translators: 1: largo, 2: ancho, 3: alto, en cm */
 				'packing_pkg_suggested'    => __( 'Caja sugerida · ~%1$s×%2$s×%3$s cm', 'andreani-shipping' ),
 				/* translators: %s: peso total */

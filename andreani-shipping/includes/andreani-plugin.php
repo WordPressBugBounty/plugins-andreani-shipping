@@ -31,6 +31,7 @@ class Andreani_Plugin {
             'includes/class-andreani-upgrader.php',
             'includes/services/andreani-settings-service.php',
             'includes/services/andreani-cache-service.php',
+            'includes/services/class-andreani-shipping-promotions.php',
             'includes/shipping/class-andreani-settings-layout.php',
             'includes/api/andreani-api-manager.php',
             'includes/api/backend/andreani-shipments-api.php',
@@ -70,6 +71,7 @@ class Andreani_Plugin {
                 'includes/admin/class-andreani-ajax-handler.php',
                 'includes/admin/class-andreani-origen-ajax.php',
                 'includes/admin/class-andreani-boxes-page.php',
+                'includes/admin/class-andreani-promotions-page.php',
                 'includes/admin/class-andreani-admin-loader.php',
                 'includes/admin/class-andreani-admin-assets.php',
             );
@@ -239,6 +241,10 @@ class Andreani_Plugin {
 
         if ( class_exists( 'Andreani_Boxes_Page' ) ) {
             Andreani_Boxes_Page::get_instance();
+        }
+
+        if ( class_exists( 'Andreani_Promotions_Page' ) ) {
+            Andreani_Promotions_Page::get_instance();
         }
 
         if ( class_exists( 'Andreani_Admin_Assets' ) ) {

@@ -553,6 +553,18 @@ class Andreani_Package_Builder {
 	}
 
 	/**
+	 * Etiquetas con las que sale el envío: Paquetería declara un solo bulto aunque
+	 * los productos traigan cajas propias; Bigger lleva una por caja.
+	 *
+	 * @param bool  $bigger   Si el envío viaja como Bigger.
+	 * @param array $packages Paquetes armados, con su count.
+	 * @return int
+	 */
+	public static function label_count( $bigger, array $packages ) {
+		return $bigger ? max( 1, (int) array_sum( array_column( $packages, 'count' ) ) ) : 1;
+	}
+
+	/**
 	 * Caja de la tienda donde entran $quantity unidades de un producto y, si no
 	 * entra en ninguna, la caja aproximada que las contendría.
 	 *
@@ -649,7 +661,7 @@ class Andreani_Package_Builder {
 
 			$package          = self::drawn_package( $bundle['width'], $bundle['depth'], $bundle['height'], $bundle['weight_kg'], $bundle['units'], $bundle['height'], 0.0, '' );
 			$package['count'] = 1;
-			$package['name']  = sprintf( __( '%s (todo junto)', 'andreani-shipping' ), implode( ', ', $names ) );
+			$package['name']  = sprintf( __( '%s (todo junto)', 'andreani-shipping' ), self::join_names( $names ) );
 
 			if ( ! empty( $bundle['store_box'] ) ) {
 				$package['ref']       = $bundle['store_box']['name'];
@@ -661,6 +673,17 @@ class Andreani_Package_Builder {
 		}
 
 		return $packages;
+	}
+
+	/**
+	 * @param string[] $names Nombres de producto.
+	 * @return string "A", "A y B" o "A, B y C".
+	 */
+	public static function join_names( array $names ) {
+		$names = array_values( $names );
+		$last  = array_pop( $names );
+
+		return $names ? implode( ', ', $names ) . ' ' . __( 'y', 'andreani-shipping' ) . ' ' . $last : (string) $last;
 	}
 
 	/**

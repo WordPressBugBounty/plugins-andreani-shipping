@@ -40,6 +40,32 @@ class Andreani_Novedades {
 	public static function items() {
 		return array(
 			array(
+				'id'      => 'promociones-envio',
+				'version' => '1.8.6',
+				'titulo'  => __( 'Nuevo: promociones de envío', 'andreani-shipping' ),
+				'texto'   => __( 'Armá descuentos o recargos sobre el envío, por servicio, provincia y fechas. Te lleva 1 minuto.', 'andreani-shipping' ),
+				'accion'  => __( 'Crear una promoción', 'andreani-shipping' ),
+				'page'    => 'andreani-promotions',
+				'extras'  => array(
+					array(
+						'titulo' => __( 'Descuento o recargo', 'andreani-shipping' ),
+						'texto'  => __( 'En porcentaje o en monto fijo, para el servicio y las provincias que elijas.', 'andreani-shipping' ),
+					),
+					array(
+						'titulo' => __( 'Con fechas', 'andreani-shipping' ),
+						'texto'  => __( 'Definí desde y hasta cuándo vale, para Hot Sale, Black Friday o cualquier fecha.', 'andreani-shipping' ),
+					),
+					array(
+						'titulo' => __( 'El costo adicional ahora es una promoción', 'andreani-shipping' ),
+						'texto'  => __( 'El que tenías en cada modo de entrega se pasó solo a una promoción de recargo llamada "Costo adicional".', 'andreani-shipping' ),
+					),
+					array(
+						'titulo' => __( 'No cambia lo que factura Andreani', 'andreani-shipping' ),
+						'texto'  => __( 'Las promociones ajustan solo lo que paga tu cliente.', 'andreani-shipping' ),
+					),
+				),
+			),
+			array(
 				'id'      => 'cajas-bigger',
 				'version' => '1.8.2',
 				'titulo'  => __( 'Nuevo: elegí cómo viajan tus pedidos grandes', 'andreani-shipping' ),
@@ -70,9 +96,11 @@ class Andreani_Novedades {
 	 * @return string
 	 */
 	public static function url_for( array $item ) {
-		$base = admin_url( 'admin.php?page=andreani-products' );
+		if ( ! empty( $item['page'] ) ) {
+			return admin_url( 'admin.php?page=' . $item['page'] );
+		}
 
-		return $base;
+		return admin_url( 'admin.php?page=andreani-products' );
 	}
 
 	/**

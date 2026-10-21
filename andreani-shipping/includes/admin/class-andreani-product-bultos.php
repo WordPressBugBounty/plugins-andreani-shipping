@@ -618,8 +618,8 @@ class Andreani_Product_Bultos {
 			'box_load'                 => __( 'Guardá tus paquetes para que te digamos cuál usar', 'andreani-shipping' ),
 			'cart_big_mixed'           => __( 'Todo el pedido pasa a Bigger: también los productos chicos viajan como cajas propias.', 'andreani-shipping' ),
 			'labels_one_pack'          => __( '1 etiqueta · Paquetería', 'andreani-shipping' ),
-			/* translators: %s: cantidad de etiquetas */
-			'labels_many_pack'         => __( '%s etiquetas · Paquetería', 'andreani-shipping' ),
+			/* translators: %s: productos que van adentro del paquete */
+			'pack_inside'              => __( 'Adentro va todo el pedido: %s', 'andreani-shipping' ),
 			'labels_one_big'           => __( '1 etiqueta · Bigger', 'andreani-shipping' ),
 			/* translators: %s: cantidad de etiquetas */
 			'labels_many_big'          => __( '%s etiquetas · Bigger', 'andreani-shipping' ),
@@ -627,6 +627,8 @@ class Andreani_Product_Bultos {
 			'chip_boxes_one'           => __( '1 caja', 'andreani-shipping' ),
 			/* translators: %s: cantidad de cajas */
 			'chip_boxes_many'          => __( '%s cajas', 'andreani-shipping' ),
+			'chip_own_box'             => __( 'En su caja', 'andreani-shipping' ),
+			'chip_in_pack'             => __( 'En el paquete', 'andreani-shipping' ),
 			'chip_labels_one'          => __( '1 etiqueta', 'andreani-shipping' ),
 			/* translators: %s: cantidad de etiquetas */
 			'chip_labels_many'         => __( '%s etiquetas', 'andreani-shipping' ),
@@ -636,9 +638,21 @@ class Andreani_Product_Bultos {
 			'cart_forced_separate'     => __( 'Bigger porque «%s» lleva cada caja con su etiqueta.', 'andreani-shipping' ),
 			'cart_rest_together'       => __( 'Lo demás va junto en una caja.', 'andreani-shipping' ),
 			'box_word'                 => __( 'Caja', 'andreani-shipping' ),
+			/* translators: 1: número de la primera caja, 2: número de la segunda */
+			'boxes_two'                => __( 'Cajas %1$s y %2$s', 'andreani-shipping' ),
+			/* translators: 1: número de la primera caja, 2: número de la última */
+			'boxes_range'              => __( 'Cajas %1$s a %2$s', 'andreani-shipping' ),
+			/* translators: %s: medidas de cada caja */
+			'box_each'                 => __( 'Cada una: %s', 'andreani-shipping' ),
 			/* translators: %s: unidades de la pila */
 			'box_units'                => __( '%s unidades', 'andreani-shipping' ),
 			'box_unit'                 => __( '1 unidad', 'andreani-shipping' ),
+			/* translators: %s: medidas de una caja */
+			'box_each_after'           => __( '%s (cada una)', 'andreani-shipping' ),
+			/* translators: 1: caja o cajas, 2: medidas */
+			'box_measure_at'           => __( '%1$s · %2$s', 'andreani-shipping' ),
+			/* translators: %s: nombre del juego guardado */
+			'pkg_use_set_name'         => __( 'Usá tu juego «%s»', 'andreani-shipping' ),
 			/* translators: 1: nombre del juego guardado, 2: referencias de sus cajas */
 			'pkg_use_set'              => __( 'Usá tu juego «%1$s» · %2$s', 'andreani-shipping' ),
 			/* translators: %s: nombre de la caja o bolsa guardada */

@@ -18,6 +18,12 @@ class Andreani_Upgrader {
 	 */
 	const UPGRADE_LOCK_KEY = 'andreani_upgrade_lock';
 
+	/**
+	 * Migraciones cuya falla no puede dar la versión por aplicada: dejarían a la tienda
+	 * sin el costo adicional y sin forma de reintentar.
+	 */
+	const RETRY_ON_FAILURE = array( '1.8.6' );
+
 	private static $upgrades = array(
 		'1.4.0' => 'upgrade_1_4_0',
 		'1.4.5' => 'upgrade_1_4_5',
@@ -25,6 +31,7 @@ class Andreani_Upgrader {
 		'1.5.2' => 'upgrade_1_5_2',
 		'1.6.4' => 'upgrade_1_6_4',
 		'1.6.8' => 'upgrade_1_6_8',
+		'1.8.6' => 'upgrade_1_8_6',
 	);
 
 	public static function maybe_upgrade() {
@@ -41,17 +48,24 @@ class Andreani_Upgrader {
 		set_transient( self::UPGRADE_LOCK_KEY, 1, 5 * MINUTE_IN_SECONDS );
 
 		try {
-			self::run_pending_upgrades( $db_version );
-			update_option( self::DB_VERSION_OPTION, ANDREANI_PLUGIN_VERSION, false );
+			if ( self::run_pending_upgrades( $db_version ) ) {
+				update_option( self::DB_VERSION_OPTION, ANDREANI_PLUGIN_VERSION, false );
+			}
 		} finally {
 			delete_transient( self::UPGRADE_LOCK_KEY );
 		}
 	}
 
+	/**
+	 * @return bool False si falló una migración que hay que reintentar: la versión no
+	 *              avanza y vuelve a correr en el próximo admin_init.
+	 */
 	private static function run_pending_upgrades( $from_version ) {
 		if ( '0' === $from_version ) {
-			return;
+			return true;
 		}
+
+		$ok = true;
 
 		foreach ( self::$upgrades as $version => $method ) {
 			if ( version_compare( $from_version, $version, '<' ) && method_exists( __CLASS__, $method ) ) {
@@ -62,9 +76,15 @@ class Andreani_Upgrader {
 					Andreani_Utils::andreani_log( "[UPGRADE] Migración a v{$version} completada", 'info' );
 				} catch ( \Throwable $e ) {
 					Andreani_Utils::andreani_log( "[UPGRADE] Error en migración a v{$version}: " . $e->getMessage(), 'error' );
+
+					if ( in_array( $version, self::RETRY_ON_FAILURE, true ) ) {
+						$ok = false;
+					}
 				}
 			}
 		}
+
+		return $ok;
 	}
 
 	private static function upgrade_1_4_0() {
@@ -743,6 +763,181 @@ class Andreani_Upgrader {
 		}
 
 		Andreani_Utils::andreani_log( "[UPGRADE 1.6.8] {$migrados} producto(s) con apilado migrados a los nombres del maestro", 'info' );
+	}
+
+	/**
+	 * Pasa el costo adicional de cada modo de entrega a una promoción de recargo y lo
+	 * saca de la configuración de modos. Se puede correr las veces que haga falta.
+	 */
+	private static function upgrade_1_8_6() {
+		global $wpdb;
+
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT option_name, option_value
+				FROM {$wpdb->options}
+				WHERE option_name LIKE %s
+				AND option_name LIKE %s
+				ORDER BY option_id",
+				'woocommerce_andreani_%',
+				'%_settings'
+			)
+		);
+
+		if ( null === $rows || '' !== (string) $wpdb->last_error ) {
+			throw new \RuntimeException( 'No se pudieron leer los settings de las instancias: ' . $wpdb->last_error );
+		}
+
+		$result = self::migrate_instances_to_promotions( $rows );
+
+		foreach ( $result['notices'] as $notice ) {
+			Andreani_Utils::andreani_log( "[UPGRADE 1.8.6] {$notice}", 'error' );
+		}
+
+		Andreani_Cache_Service::clear_cotizaciones();
+		Andreani_Utils::andreani_log( "[UPGRADE 1.8.6] {$result['migrated']} instancia(s) con costo adicional pasadas a promociones", 'info' );
+	}
+
+	/**
+	 * Calcula todo primero y persiste después: las promociones se guardan antes de sacar
+	 * el costo adicional de los settings, así una falla a mitad de camino nunca deja una
+	 * instancia sin costo adicional y sin promoción.
+	 *
+	 * @param object[] $rows Filas option_name / option_value de los settings por instancia.
+	 * @return array{migrated:int,notices:string[]}
+	 */
+	public static function migrate_instances_to_promotions( array $rows ) {
+		$promotions = Andreani_Shipping_Promotions::all();
+		$updates    = array();
+		$notices    = array();
+
+		$active_found = false;
+
+		foreach ( $rows as $row ) {
+			$settings = maybe_unserialize( $row->option_value );
+
+			if ( ! is_array( $settings ) || empty( $settings['config_por_modo'] ) || ! is_string( $settings['config_por_modo'] ) ) {
+				continue;
+			}
+
+			// En 1.8.5 el costo adicional solo lo leía la instancia activa (la primera con
+			// credenciales y origen, igual que Andreani_Settings_Service): migrar otra
+			// cambiaría lo que paga el comprador.
+			$is_active = ! $active_found
+				&& ! empty( $settings['hash_andreani'] )
+				&& ! empty( $settings['cp_origen'] )
+				&& 1 === preg_match( '/_\d+_settings$/', $row->option_name );
+
+			if ( ! $is_active ) {
+				if ( false !== strpos( $settings['config_por_modo'], 'costo_adicional' ) ) {
+					$notices[] = sprintf( 'La instancia "%s" tiene costo adicional pero no es la activa: se dejó sin migrar.', $row->option_name );
+				}
+
+				continue;
+			}
+
+			$active_found = true;
+
+			$result = self::migrate_additional_costs_to_promotions( json_decode( $settings['config_por_modo'], true ), $promotions );
+
+			if ( null === $result ) {
+				continue;
+			}
+
+			$settings['config_por_modo']  = wp_json_encode( $result['config'] );
+			$promotions                   = $result['promotions'];
+			$notices                      = array_merge( $notices, $result['notices'] );
+			$updates[ $row->option_name ] = $settings;
+		}
+
+		if ( ! empty( $updates ) ) {
+			Andreani_Shipping_Promotions::replace_all( $promotions );
+
+			foreach ( $updates as $option_name => $settings ) {
+				update_option( $option_name, $settings, false );
+			}
+		}
+
+		return array( 'migrated' => count( $updates ), 'notices' => $notices );
+	}
+
+	/**
+	 * @param mixed   $config     config_por_modo decodificado.
+	 * @param array[] $promotions Promociones que ya existen.
+	 * @return array{config:array,promotions:array[],notices:string[]}|null Null si no había costo adicional que migrar.
+	 */
+	public static function migrate_additional_costs_to_promotions( $config, array $promotions ) {
+		if ( ! is_array( $config ) ) {
+			return null;
+		}
+
+		$changed = false;
+		$notices = array();
+
+		foreach ( $config as $modo => $modo_config ) {
+			if ( ! is_array( $modo_config ) ) {
+				continue;
+			}
+
+			$had_keys = array_intersect_key( $modo_config, array_flip( array( 'costo_adicional_enabled', 'costo_adicional', 'motivo' ) ) );
+
+			if ( empty( $had_keys ) ) {
+				continue;
+			}
+
+			$service = Andreani_Shipping_Promotions::service_key( $modo );
+			$active  = ! empty( $modo_config['costo_adicional_enabled'] ) && (float) ( isset( $modo_config['costo_adicional'] ) ? $modo_config['costo_adicional'] : 0 ) > 0;
+
+			if ( '' === $service ) {
+				if ( $active ) {
+					$notices[] = sprintf( 'El costo adicional del modo "%s" no se pudo pasar a una promoción: no se reconoce el servicio.', $modo );
+				}
+
+				continue;
+			}
+
+			$changed = true;
+			$amount  = isset( $modo_config['costo_adicional'] ) ? (float) $modo_config['costo_adicional'] : 0.0;
+			$id      = 'costo-adicional-' . $service;
+			$exists  = false;
+			$motive  = mb_substr( trim( sanitize_text_field( isset( $modo_config['motivo'] ) ? (string) $modo_config['motivo'] : '' ) ), 0, Andreani_Shipping_Promotions::NAME_MAX_LENGTH, 'UTF-8' );
+
+			foreach ( $promotions as $promotion ) {
+				if ( $promotion['id'] === $id ) {
+					$exists = true;
+
+					if ( $active && (float) $promotion['valor'] !== $amount ) {
+						$notices[] = sprintf( 'El costo adicional de %s ($%s) no se pasó a una promoción: ya había otro de $%s para ese servicio.', $service, $amount, $promotion['valor'] );
+					}
+				}
+			}
+
+			if ( $active && ! $exists ) {
+				$candidate = array(
+					'id'         => $id,
+					'nombre'     => '' !== $motive ? $motive : Andreani_Shipping_Promotions::COST_PROMOTION_NAME,
+					'tipo'       => Andreani_Shipping_Promotions::TYPE_SURCHARGE,
+					'forma'      => Andreani_Shipping_Promotions::FORM_FIXED,
+					'valor'      => $amount,
+					'servicios'  => array( $service ),
+					'provincias' => array(),
+					'desde'      => null,
+					'hasta'      => null,
+					'activa'     => true,
+				);
+
+				$candidate['activa'] = null === Andreani_Shipping_Promotions::overlap_error( $candidate, $promotions );
+				$promotions[]        = $candidate;
+
+				if ( ! $candidate['activa'] ) {
+					$notices[] = sprintf( 'La promoción "%s" quedó pausada porque se superpone con otra promoción activa.', $candidate['nombre'] );
+				}
+			}
+
+			unset( $config[ $modo ]['costo_adicional_enabled'], $config[ $modo ]['costo_adicional'], $config[ $modo ]['motivo'] );
+		}
+
+		return $changed ? array( 'config' => $config, 'promotions' => $promotions, 'notices' => $notices ) : null;
 	}
 
 	/**

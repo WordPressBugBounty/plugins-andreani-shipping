@@ -14,7 +14,7 @@ class Andreani_Order_Packing {
 	/**
 	 * @param array  $lines         Líneas del pedido: product, product_id, name, quantity y url de edición.
 	 * @param string $delivery_mode Modo de entrega con el que quedó el envío; vacío si todavía no se definió.
-	 * @return array{packages:array,units:int,items:array,total:int,missing:array,bigger:bool,store_box:?array}
+	 * @return array{packages:array,units:int,items:array,total:int,labels:int,missing:array,bigger:bool,store_box:?array}
 	 */
 	public static function build( array $lines, $delivery_mode = '' ) {
 		$groups  = array();
@@ -63,14 +63,16 @@ class Andreani_Order_Packing {
 		$decision = Andreani_Package_Builder::cart_decision( $counted );
 		$packages = Andreani_Package_Builder::with_bundle( $groups, $names, $decision );
 		$total    = array_sum( array_column( $packages, 'count' ) );
+		$bigger   = self::is_bigger( $packages, $delivery_mode, $decision['force_bigger'] );
 
 		return array(
 			'packages' => $packages,
 			'units'    => $units,
 			'items'    => $items,
 			'total'    => $total,
+			'labels'   => Andreani_Package_Builder::label_count( $bigger, $packages ),
 			'missing'  => $missing,
-			'bigger'   => self::is_bigger( $packages, $delivery_mode, $decision['force_bigger'] ),
+			'bigger'   => $bigger,
 			'store_box' => Andreani_Package_Builder::store_box_of( $decision ),
 		);
 	}

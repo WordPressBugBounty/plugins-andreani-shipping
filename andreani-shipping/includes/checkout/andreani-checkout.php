@@ -24,7 +24,6 @@ class Andreani_Checkout {
         add_action( 'woocommerce_after_calculate_totals', array( $this, 'process_after_shipping_calculator' ), 10 );
         add_action( 'woocommerce_checkout_update_order_review', array( $this, 'capture_postcode_from_checkout_update' ), 5 );
         add_action( 'woocommerce_checkout_process', array( $this, 'validate_sucursal_field' ) );
-        add_action( 'woocommerce_cart_calculate_fees', array( $this, 'agregar_costo_adicional' ) );
 
         // En modo automático (default) los hooks de WooCommerce inyectan el selector de
         // sucursales y los campos de DNI directamente en el checkout clásico.
@@ -671,72 +670,4 @@ class Andreani_Checkout {
         }
     }
 
-    public function agregar_costo_adicional() {
-        if ( is_admin() && ! defined( 'DOING_AJAX' ) ) {
-            return;
-        }
-
-        $chosen_methods = WC()->session->get( 'chosen_shipping_methods' );
-        if ( empty( $chosen_methods ) ) {
-            return;
-        }
-
-        $method = $chosen_methods[0];
-        if ( strpos( $method, 'andreani' ) === false ) {
-            return;
-        }
-
-        $modo = $this->extraer_modo_de_metodo( $method );
-        if ( ! $modo ) {
-            return;
-        }
-
-        $config_json = Andreani_Settings_Service::get( 'config_por_modo', '{}' );
-        $config_por_modo = json_decode( $config_json, true );
-        if ( ! is_array( $config_por_modo ) ) {
-            $config_por_modo = array();
-        }
-
-        // Buscar primero por slug normalizado (1.5.0+), fallback a key cruda para config vieja.
-        $modo_key = Andreani_Api_Response::normalize_modo_key( $modo );
-        if ( '' !== $modo_key && isset( $config_por_modo[ $modo_key ] ) ) {
-            $modo_config = $config_por_modo[ $modo_key ];
-        } elseif ( isset( $config_por_modo[ $modo ] ) ) {
-            $modo_config = $config_por_modo[ $modo ];
-        } else {
-            $modo_config = array();
-        }
-        $costo_adicional_enabled = isset( $modo_config['costo_adicional_enabled'] ) ? $modo_config['costo_adicional_enabled'] : false;
-
-        if ( ! $costo_adicional_enabled ) {
-            return;
-        }
-
-        $costo = isset( $modo_config['costo_adicional'] ) ? floatval( $modo_config['costo_adicional'] ) : 0;
-
-        if ( $costo <= 0 ) {
-            return;
-        }
-
-        $motivo = isset( $modo_config['motivo'] ) && ! empty( $modo_config['motivo'] )
-            ? sanitize_text_field( $modo_config['motivo'] )
-            : '';
-
-        $fee_label = __( 'Costos adicionales', 'andreani-shipping' );
-        if ( ! empty( $motivo ) ) {
-            $fee_label .= ' (' . $motivo . ')';
-        }
-
-        WC()->cart->add_fee( $fee_label, $costo );
-    }
-
-    private function extraer_modo_de_metodo( $method ) {
-        foreach ( Andreani_Client_Type::all_prefixes() as $prefix ) {
-            if ( strpos( $method, $prefix ) === 0 ) {
-                return str_replace( $prefix, '', $method );
-            }
-        }
-        Andreani_Utils::andreani_log( "[CHECKOUT] No se pudo extraer modo de entrega del método: {$method}", 'warning' );
-        return null;
-    }
 }

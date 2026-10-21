@@ -520,6 +520,13 @@ class Andreani_Shipment_Detail_View {
 		$html .=     '<div><dt>' . esc_html__( 'Costo envío', 'andreani-shipping' ) . '</dt>';
 		$html .=     '<dd class="andreani-detail__info-price">$ ' . esc_html( $shipping_total_formatted ) . '</dd></div>';
 
+		$promotion = Andreani_Shipping_Promotions::order_summary( $order );
+
+		if ( $promotion ) {
+			$html .=   '<div><dt>' . esc_html__( 'Promoción', 'andreani-shipping' ) . '</dt>';
+			$html .=   '<dd class="andreani-detail__info-promo">' . esc_html( Andreani_Shipping_Promotions::summary_line( $promotion ) ) . '</dd></div>';
+		}
+
 		$copy_title = esc_attr__( 'Click para copiar', 'andreani-shipping' );
 
 		if ( ! empty( $data['payment_status'] ) ) {

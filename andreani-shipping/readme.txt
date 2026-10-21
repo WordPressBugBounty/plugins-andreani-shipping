@@ -5,7 +5,7 @@ Copyright: 2025 Andreani.com
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.8.5
+Stable tag: 1.8.6
 Contributors: integracionandreani
 Donate link:
 Tags: woocommerce, shipping, andreani, envio, etiquetas
@@ -18,16 +18,15 @@ Plugin **oficial de Andreani** para WooCommerce. Tus clientes cotizan y eligen A
 
 **Para tiendas con envíos en Argentina.** Funciona para clientes **PyME, Corporativos y Middle Market**.
 
-= Novedades de la versión 1.8.2 =
+= Novedades de la versión 1.8.6 =
 
-* **Cuántos productos entran en una caja** — cargás las unidades por caja y elegís si viajan "Todo junto" o "Cada caja con su etiqueta" (Bigger).
-* **Paquetes guardados** — guardá tus cajas, sobres, bolsas y juegos de cajas, asignalos a tus productos y elegilos para declarar el envío.
-* **Mis productos rediseñado** — ves cómo viaja cada producto y probás un carrito en el simulador.
-* **Cómo armarlo con el paquete** — en cada pedido, el armado indica el paquete de tu tienda que corresponde.
-* **Menú y Configuración reordenados** — Modos de entrega, En tu tienda y Etiquetas.
-* **Estados unificados** — "Ver mis envíos" y el pedido usan los mismos seis estados, y el pedido tiene su metabox de Andreani.
-* **Novedades** — una sección para enterarte de lo nuevo sin salir del panel.
-* **Los productos que vienen en varias cajas ahora viajan siempre como Bigger** (una etiqueta por caja, solo a domicilio).
+* **Promociones de envío** — armá descuentos o recargos sobre el precio del envío, en porcentaje o monto fijo.
+* **Por servicio y por provincia** — elegís a qué servicio de Andreani aplica y en qué provincias, con un mapa para marcarlas.
+* **Con fechas** — definís desde y hasta cuándo vale, para Hot Sale, Black Friday o cualquier fecha.
+* **Tus clientes ven el precio final** — el checkout muestra el nombre de la promoción junto al envío, y el pedido guarda cuánto se ajustó.
+* **El costo adicional ahora es una promoción** — el que tenías cargado en cada modo de entrega se pasa solo a una promoción de recargo llamada "Costo adicional".
+* **No cambia lo que factura Andreani** — las promociones ajustan solo lo que paga tu cliente; Andreani te factura la tarifa de siempre.
+* **Envío gratis primero** — si un modo de entrega tiene envío gratis, no se suma la promoción ni el costo adicional.
 
 = Paquetería o Bigger: el plugin lo resuelve =
 
@@ -210,7 +209,8 @@ Sí. El plugin es compatible con el almacenamiento de pedidos de alto rendimient
 7. Ver mis envíos: todos tus envíos de Andreani en un solo lugar, con su estado.
 8. Retiro en sucursal: tus clientes eligen la sucursal Andreani en el checkout.
 9. Cotizador en la página de producto: tus clientes calculan el envío antes de comprar.
-10. Configuración en pestañas: cuenta, origen, modos de entrega, tu tienda, etiquetas y avanzado.
+10. Configurá todo en un solo lugar: tu cuenta, el origen, los modos de entrega, tu tienda, las etiquetas y las opciones avanzadas.
+11. Promociones de envío: descuentos o recargos en porcentaje o monto fijo, por servicio, provincia y fechas. No cambia lo que factura Andreani.
 
 == External services ==
 
@@ -359,6 +359,13 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * El checkbox *Forzar carga de assets*: **sigue funcionando** pero casi nunca es necesario. Úsalo solo como último recurso.
 
 == Changelog ==
+
+= 1.8.6 =
+* Nuevo: Promociones de envío, con descuento o recargo en porcentaje o monto fijo, por servicio, por provincia y con fechas de vigencia
+* Nuevo: el costo adicional de cada modo de entrega pasa a ser una promoción de recargo llamada "Costo adicional"
+* Nuevo: el pedido muestra la promoción aplicada y no cambia lo que factura Andreani
+* Mejorado: el pedido ya no muestra datos internos del envío
+* Corregido: el simulador de carrito muestra una sola etiqueta en Paquetería, como sale el envío
 
 = 1.8.5 =
 * Corregido: el Simulador de carrito y "Cómo armarlo" muestran la cantidad real de etiquetas y nombran tu paquete guardado solo para los productos que van adentro
@@ -576,6 +583,9 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * Versión inicial publicada en el repositorio de WordPress
 
 == Upgrade Notice ==
+
+= 1.8.6 =
+Nuevas promociones de envío. El costo adicional de cada modo de entrega se pasa solo a una promoción de recargo; no cambia lo que factura Andreani.
 
 = 1.8.5 =
 Corrige la cantidad de etiquetas y el paquete sugerido en el Simulador de carrito y en Cómo armarlo.

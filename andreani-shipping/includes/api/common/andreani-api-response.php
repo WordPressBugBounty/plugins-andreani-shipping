@@ -282,6 +282,11 @@ class Andreani_Api_Response {
 				'cost'     => $cost,
 				'calc_tax' => 'per_item',
 				'sort'     => 0,
+				'meta_data' => array(
+					Andreani_Shipping_Promotions::META_SERVICE => Andreani_Shipping_Promotions::service_key( $code ),
+					Andreani_Shipping_Promotions::META_PRICE   => (float) $rate['total'],
+					Andreani_Shipping_Promotions::META_FREE    => $aplicar_gratis ? 'yes' : 'no',
+				),
 			);
 			$codes_used[] = $code;
 		}

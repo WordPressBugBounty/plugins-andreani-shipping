@@ -1100,7 +1100,7 @@ class Andreani_Ajax_Handler {
 			) );
 		}
 
-		$rates = isset( $result['rates'] ) ? $result['rates'] : array();
+		$rates = isset( $result['rates'] ) ? Andreani_Shipping_Promotions::apply_to_rates( $result['rates'], '' ) : array();
 
 		if ( empty( $rates ) ) {
 			wp_send_json_error( array(
