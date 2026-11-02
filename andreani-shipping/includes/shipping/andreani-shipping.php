@@ -3,6 +3,7 @@ defined( 'ABSPATH' ) || exit;
 
 class Andreani_Shipping extends WC_Shipping_Method {
 	const TRACKING_SYNC_FIELD = 'tracking_sync_enabled';
+	const TRACKING_EMAIL_FIELD = 'tracking_email_enabled';
 
 	public $init_form_fields = array();
 	public $instance_form_fields = array();
@@ -44,6 +45,10 @@ class Andreani_Shipping extends WC_Shipping_Method {
 	public function get_option( $key, $empty_value = null ) {
 		if ( self::TRACKING_SYNC_FIELD === $key ) {
 			return Andreani_Tracking_Sync::is_enabled() ? 'yes' : 'no';
+		}
+
+		if ( self::TRACKING_EMAIL_FIELD === $key ) {
+			return Andreani_Tracking_Notifier::is_enabled() ? 'yes' : 'no';
 		}
 
 		return parent::get_option( $key, $empty_value );
@@ -1067,6 +1072,29 @@ class Andreani_Shipping extends WC_Shipping_Method {
 				</table>
 			</div>
 
+			<div class="andreani-section">
+				<h3 class="andreani-section-heading andreani-section-heading--with-icon">
+					<span class="andreani-section-heading__icon" aria-hidden="true">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg>
+					</span>
+					<span class="andreani-section-heading__title"><?php esc_html_e( 'Notificaciones al comprador', 'andreani-shipping' ); ?></span>
+				</h3>
+				<p class="andreani-section-description"><?php esc_html_e( 'Si tu tienda no manda un mail propio con el número de seguimiento, Andreani se lo avisa a tu cliente por mail apenas lo tiene.', 'andreani-shipping' ); ?></p>
+				<table class="form-table">
+					<?php
+					echo $this->generate_checkbox_html( self::TRACKING_EMAIL_FIELD, array( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+						'title'       => __( 'Aviso de envío', 'andreani-shipping' ),
+						'label'       => __( 'Avisar al comprador cuando su envío tenga número de seguimiento', 'andreani-shipping' ),
+						'description' => __( 'Se envía una sola vez por pedido, solo a los pedidos que entran desde que lo activás.', 'andreani-shipping' ),
+					) );
+					?>
+				</table>
+				<input type="hidden" name="<?php echo esc_attr( $this->get_field_key( self::TRACKING_EMAIL_FIELD ) ); ?>_present" value="1">
+				<p class="andreani-section-description">
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wc-settings&tab=email&section=' . strtolower( Andreani_Tracking_Notifier::EMAIL_CLASS ) ) ); ?>"><?php esc_html_e( 'Personalizar el mail', 'andreani-shipping' ); ?></a>
+				</p>
+			</div>
+
 		</div>
 		<?php
 	}
@@ -1268,6 +1296,12 @@ class Andreani_Shipping extends WC_Shipping_Method {
 
 		if ( isset( $post_data[ $sync_key . '_present' ] ) ) {
 			Andreani_Tracking_Sync::set_enabled( isset( $post_data[ $sync_key ] ) );
+		}
+
+		$email_key = $prefix . self::TRACKING_EMAIL_FIELD;
+
+		if ( isset( $post_data[ $email_key . '_present' ] ) ) {
+			Andreani_Tracking_Notifier::set_enabled( isset( $post_data[ $email_key ] ) );
 		}
 
 		$hash_andreani = $this->get_post_field( $post_data, $prefix . 'hash_andreani' );

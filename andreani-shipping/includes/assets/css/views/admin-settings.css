@@ -414,14 +414,14 @@
  * Aplica a las filas check dentro de los paneles "Checkout" y "Avanzado".
  * WC genera: <td><fieldset><legend>...</legend><label><input type="checkbox">texto</label><p class="description"></p></fieldset></td>.
  * Mantenemos el input nativo y solo lo restilamos con appearance:none. */
-.andr-tabs__panel[data-panel="checkout"] .form-table fieldset,
+.andr-tabs__panel[data-panel="tienda"] .form-table fieldset,
 .andr-tabs__panel[data-panel="avanzado"] .form-table fieldset {
 	border: none;
 	margin: 0;
 	padding: 0;
 }
 
-.andr-tabs__panel[data-panel="checkout"] .form-table fieldset > label,
+.andr-tabs__panel[data-panel="tienda"] .form-table fieldset > label,
 .andr-tabs__panel[data-panel="avanzado"] .form-table fieldset > label {
 	display: inline-flex;
 	align-items: center;
@@ -436,7 +436,7 @@
 /* Toggle: background-image (SVG) en lugar de ::before porque los <input>
  * son replaced elements y sus pseudo-elementos no son confiables cross-browser.
  * accent-color: transparent evita que el browser pinte el check default sobre el SVG. */
-.andr-tabs__panel[data-panel="checkout"] .form-table fieldset input[type="checkbox"],
+.andr-tabs__panel[data-panel="tienda"] .form-table fieldset input[type="checkbox"],
 .andr-tabs__panel[data-panel="avanzado"] .form-table fieldset input[type="checkbox"] {
 	appearance: none !important;
 	-webkit-appearance: none !important;
@@ -460,7 +460,7 @@
 	box-shadow: inset 0 1px 2px rgba(29, 32, 35, 0.08);
 }
 
-.andr-tabs__panel[data-panel="checkout"] .form-table fieldset input[type="checkbox"]:checked,
+.andr-tabs__panel[data-panel="tienda"] .form-table fieldset input[type="checkbox"]:checked,
 .andr-tabs__panel[data-panel="avanzado"] .form-table fieldset input[type="checkbox"]:checked {
 	background-color: var(--andr-color-brand);
 	background-position: calc(100% - 3px) center;
@@ -468,15 +468,15 @@
 
 /* WordPress nativo agrega un ::before con un check SVG sobre los checkbox.
  * Anularlo para que no aparezca encima del toggle. */
-.andr-tabs__panel[data-panel="checkout"] .form-table fieldset input[type="checkbox"]::before,
+.andr-tabs__panel[data-panel="tienda"] .form-table fieldset input[type="checkbox"]::before,
 .andr-tabs__panel[data-panel="avanzado"] .form-table fieldset input[type="checkbox"]::before,
-.andr-tabs__panel[data-panel="checkout"] .form-table fieldset input[type="checkbox"]::after,
+.andr-tabs__panel[data-panel="tienda"] .form-table fieldset input[type="checkbox"]::after,
 .andr-tabs__panel[data-panel="avanzado"] .form-table fieldset input[type="checkbox"]::after {
 	content: none !important;
 	display: none !important;
 }
 
-.andr-tabs__panel[data-panel="checkout"] .form-table fieldset input[type="checkbox"]:focus-visible,
+.andr-tabs__panel[data-panel="tienda"] .form-table fieldset input[type="checkbox"]:focus-visible,
 .andr-tabs__panel[data-panel="avanzado"] .form-table fieldset input[type="checkbox"]:focus-visible {
 	box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.25);
 	outline: none;
@@ -2392,7 +2392,7 @@
 /* Cuando hay dos o más secciones apiladas en el mismo panel (ej: tab "Visualización"
  * con Checkout + Cotizador), separarlas con un divider sutil para que se lean como
  * bloques distintos en lugar de un único muro de texto. */
-.andr-tabs__panel[data-panel="checkout"] .andreani-section + .andreani-section,
+.andr-tabs__panel[data-panel="tienda"] .andreani-section + .andreani-section,
 .andr-tabs__panel[data-panel="origen"] .andreani-section + .andreani-section {
 	margin-top: var(--andr-sp-6);
 	padding-top: var(--andr-sp-5);

@@ -306,6 +306,10 @@ class Andreani_Tracking_Sync {
 		}
 
 		$order->save();
+
+		if ( '' === $prev_track && '' !== $track ) {
+			do_action( 'andreani_tracking_assigned', $order, $track );
+		}
 	}
 
 	/**

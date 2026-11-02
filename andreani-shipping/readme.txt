@@ -5,7 +5,7 @@ Copyright: 2025 Andreani.com
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.8.6
+Stable tag: 1.8.8
 Contributors: integracionandreani
 Donate link:
 Tags: woocommerce, shipping, andreani, envio, etiquetas
@@ -17,6 +17,14 @@ Cotizá tarifas, generá envíos, imprimí etiquetas y seguí tus pedidos con An
 Plugin **oficial de Andreani** para WooCommerce. Tus clientes cotizan y eligen Andreani en el checkout, y vos generás los envíos, imprimís las etiquetas y seguís cada pedido sin salir de tu panel. Y antes de vender, ves cómo viaja cada producto: con qué servicio, en cuántas cajas y cuánto cuesta.
 
 **Para tiendas con envíos en Argentina.** Funciona para clientes **PyME, Corporativos y Middle Market**.
+
+= Novedades de la versión 1.8.7 =
+
+* **Aviso de seguimiento al comprador** — Andreani le manda un mail a tu cliente con su número de seguimiento apenas lo tiene, y un botón para seguir el envío.
+* **Se activa con un clic** — lo prendés desde la configuración del plugin, en la pestaña En tu tienda.
+* **Con el estilo de tu tienda** — sale desde tu tienda, con los colores de tus mails de WooCommerce y el logo de Andreani; el asunto y los textos los cambiás en WooCommerce > Ajustes > Correos electrónicos.
+* **Una sola vez por pedido** — el mail sale cuando el envío recibe su número y no se repite.
+* **Apagado si ya tenías el plugin** — así no se duplica con el mail que tu tienda ya manda.
 
 = Novedades de la versión 1.8.6 =
 
@@ -360,6 +368,13 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 
 == Changelog ==
 
+= 1.8.8 =
+* Corregido: el aviso de seguimiento al comprador sale solo para los pedidos que entran desde que se activa, y nunca para compras anteriores
+
+= 1.8.7 =
+* Nuevo: aviso por mail al comprador con el número de seguimiento de Andreani, una sola vez por pedido; se activa desde la pestaña "En tu tienda" y el mail se personaliza en WooCommerce > Ajustes > Emails
+* El aviso viene apagado en las tiendas que actualizan y prendido en las instalaciones nuevas
+
 = 1.8.6 =
 * Nuevo: Promociones de envío, con descuento o recargo en porcentaje o monto fijo, por servicio, por provincia y con fechas de vigencia
 * Nuevo: el costo adicional de cada modo de entrega pasa a ser una promoción de recargo llamada "Costo adicional"
@@ -583,6 +598,12 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * Versión inicial publicada en el repositorio de WordPress
 
 == Upgrade Notice ==
+
+= 1.8.8 =
+El aviso de seguimiento al comprador ya no se manda a compras anteriores a su activación.
+
+= 1.8.7 =
+Nuevo aviso por mail al comprador con el número de seguimiento. Viene apagado en las tiendas que actualizan; se activa en la configuración del método.
 
 = 1.8.6 =
 Nuevas promociones de envío. El costo adicional de cada modo de entrega se pasa solo a una promoción de recargo; no cambia lo que factura Andreani.

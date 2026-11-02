@@ -39,6 +39,7 @@ class Andreani_Plugin {
             'includes/checkout/andreani-checkout.php',
             'includes/checkout/class-andreani-sucursales-ajax.php',
             'includes/blocks/class-andreani-blocks.php',
+            'includes/notifications/class-andreani-tracking-notifier.php',
             'includes/order/andreani-order.php',
             'includes/order/class-andreani-tracking-poll.php',
             'includes/order/class-andreani-tracking-sync.php',
@@ -158,6 +159,8 @@ class Andreani_Plugin {
 
         add_filter( 'plugin_action_links_' . plugin_basename( ANDREANI_PLUGIN_FILE ), array( $this, 'andreani_plugin_actions_links' ) );
         add_filter( 'woocommerce_shipping_methods', array( $this, 'add_andreani_shipping_method' ) );
+
+        Andreani_Tracking_Notifier::register();
         add_action( 'woocommerce_shipping_init', array( $this, 'init_andreani_shipping_method' ) );
         add_action( 'wp_ajax_andreani_refresh_contratos', array( $this, 'ajax_refresh_contratos' ) );
 

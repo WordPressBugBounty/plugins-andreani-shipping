@@ -40,6 +40,28 @@ class Andreani_Novedades {
 	public static function items() {
 		return array(
 			array(
+				'id'      => 'aviso-seguimiento',
+				'version' => '1.8.7',
+				'titulo'  => __( 'Nuevo: aviso de seguimiento al comprador', 'andreani-shipping' ),
+				'texto'   => __( 'Andreani le manda un mail a tu cliente con el número de seguimiento apenas lo tiene. Lo activás con un clic.', 'andreani-shipping' ),
+				'accion'  => __( 'Ver el mail', 'andreani-shipping' ),
+				'page'    => 'wc-settings&tab=email&section=andreani_email_tracking',
+				'extras'  => array(
+					array(
+						'titulo' => __( 'Una sola vez por pedido', 'andreani-shipping' ),
+						'texto'  => __( 'El mail sale cuando el envío recibe su número de seguimiento y no se repite.', 'andreani-shipping' ),
+					),
+					array(
+						'titulo' => __( 'Con el estilo de tu tienda', 'andreani-shipping' ),
+						'texto'  => __( 'Usa los colores de tus mails de WooCommerce y podés cambiar el asunto y los textos.', 'andreani-shipping' ),
+					),
+					array(
+						'titulo' => __( 'Apagado si ya tenías el plugin', 'andreani-shipping' ),
+						'texto'  => __( 'Lo prendés desde la configuración del método, en la pestaña En tu tienda.', 'andreani-shipping' ),
+					),
+				),
+			),
+			array(
 				'id'      => 'promociones-envio',
 				'version' => '1.8.6',
 				'titulo'  => __( 'Nuevo: promociones de envío', 'andreani-shipping' ),

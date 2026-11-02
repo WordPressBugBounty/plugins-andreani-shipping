@@ -34,7 +34,7 @@ class Andreani_Order {
 
         add_action( 'woocommerce_order_details_after_customer_details', array( $this, 'display_sucursal_info' ) );
 
-        add_action( 'woocommerce_email_order_meta', array( $this, 'display_sucursal_in_email' ), 20, 3 );
+        add_action( 'woocommerce_email_order_meta', array( $this, 'display_sucursal_in_email' ), 20, 4 );
 
         add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_front_assets' ) );
     }
@@ -112,7 +112,7 @@ class Andreani_Order {
      * @param WC_Order $order
      * @return array|null Datos del envío o null si no hay info Andreani
      */
-    private function get_shipping_data( $order ) {
+    public static function get_shipping_data( $order ) {
         $type_info          = Andreani_Client_Type::from_order( $order );
         $order_created      = (bool) $order->get_meta( '_order_andreani_created', true );
         $sucursal_nombre    = $order->get_meta( '_andreani_sucursal_nombre', true );
@@ -122,7 +122,7 @@ class Andreani_Order {
         $has_sucursal       = ! empty( $sucursal_nombre );
 
         if ( ! $type_info ) {
-            return $has_sucursal ? $this->build_minimal_sucursal_data( $sucursal_nombre, $sucursal_direccion ) : null;
+            return $has_sucursal ? self::build_minimal_sucursal_data( $sucursal_nombre, $sucursal_direccion ) : null;
         }
 
         $type_shipped = (bool) $order->get_meta( $type_info->shipped_meta_key(), true );
@@ -170,7 +170,7 @@ class Andreani_Order {
         );
     }
 
-    private function build_minimal_sucursal_data( $nombre, $direccion ) {
+    private static function build_minimal_sucursal_data( $nombre, $direccion ) {
         return array(
             'title'              => __( 'Envío Andreani', 'andreani-shipping' ),
             'is_pyme'            => false,
@@ -275,7 +275,11 @@ class Andreani_Order {
         ) );
     }
 
-    public function display_sucursal_in_email( $order, $sent_to_admin, $plain_text ) {
+    public function display_sucursal_in_email( $order, $sent_to_admin, $plain_text, $email = null ) {
+        if ( $email && Andreani_Tracking_Notifier::EMAIL_ID === $email->id ) {
+            return;
+        }
+
         $data = $this->get_shipping_data( $order );
         if ( ! $data ) {
             return;

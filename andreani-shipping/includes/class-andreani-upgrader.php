@@ -32,6 +32,8 @@ class Andreani_Upgrader {
 		'1.6.4' => 'upgrade_1_6_4',
 		'1.6.8' => 'upgrade_1_6_8',
 		'1.8.6' => 'upgrade_1_8_6',
+		'1.8.7' => 'upgrade_1_8_7',
+		'1.8.8' => 'upgrade_1_8_8',
 	);
 
 	public static function maybe_upgrade() {
@@ -62,6 +64,7 @@ class Andreani_Upgrader {
 	 */
 	private static function run_pending_upgrades( $from_version ) {
 		if ( '0' === $from_version ) {
+			self::seed_tracking_email_default( true );
 			return true;
 		}
 
@@ -763,6 +766,22 @@ class Andreani_Upgrader {
 		}
 
 		Andreani_Utils::andreani_log( "[UPGRADE 1.6.8] {$migrados} producto(s) con apilado migrados a los nombres del maestro", 'info' );
+	}
+
+	private static function upgrade_1_8_7() {
+		self::seed_tracking_email_default( false );
+	}
+
+	private static function upgrade_1_8_8() {
+		Andreani_Tracking_Notifier::backfill_enabled_at();
+	}
+
+	public static function seed_tracking_email_default( $is_new_install ) {
+		if ( null !== get_option( Andreani_Tracking_Notifier::settings_key(), null ) ) {
+			return;
+		}
+
+		Andreani_Tracking_Notifier::set_enabled( (bool) $is_new_install );
 	}
 
 	/**

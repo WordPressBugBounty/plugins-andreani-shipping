@@ -218,8 +218,12 @@ class Andreani_Shipments_Hydrator {
 			return;
 		}
 
-		$changed = false;
+		$changed        = false;
+		$tracking_nuevo = '';
 		if ( ! empty( $api['trackingNumber'] ) && (string) $order->get_meta( '_order_andreani_tracking_number', true ) !== (string) $api['trackingNumber'] ) {
+			if ( '' === (string) $order->get_meta( '_order_andreani_tracking_number', true ) ) {
+				$tracking_nuevo = (string) $api['trackingNumber'];
+			}
 			$order->update_meta_data( '_order_andreani_tracking_number', (string) $api['trackingNumber'] );
 			$changed = true;
 		}
@@ -230,6 +234,10 @@ class Andreani_Shipments_Hydrator {
 
 		if ( $changed ) {
 			$order->save();
+		}
+
+		if ( '' !== $tracking_nuevo ) {
+			do_action( 'andreani_tracking_assigned', $order, $tracking_nuevo );
 		}
 	}
 }

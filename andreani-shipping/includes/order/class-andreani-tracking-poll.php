@@ -104,6 +104,8 @@ class Andreani_Tracking_Poll {
 
 		Andreani_Utils::andreani_log( "[ORDEN #{$order->get_id()}] Tracking asociado via heartbeat: {$tracking}", 'info' );
 
+		do_action( 'andreani_tracking_assigned', $order, $tracking );
+
 		return $this->build_payload( $order, $tracking, $status );
 	}
 
