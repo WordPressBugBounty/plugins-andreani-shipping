@@ -5,7 +5,7 @@ Copyright: 2025 Andreani.com
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.8.8
+Stable tag: 1.8.9
 Contributors: integracionandreani
 Donate link:
 Tags: woocommerce, shipping, andreani, envio, etiquetas
@@ -20,11 +20,11 @@ Plugin **oficial de Andreani** para WooCommerce. Tus clientes cotizan y eligen A
 
 = Novedades de la versión 1.8.7 =
 
-* **Aviso de seguimiento al comprador** — Andreani le manda un mail a tu cliente con su número de seguimiento apenas lo tiene, y un botón para seguir el envío.
+* **Aviso de seguimiento al comprador** — tu tienda le manda un mail a tu cliente con su número de seguimiento cuando el envío sale en camino, y un botón para seguir el envío.
 * **Se activa con un clic** — lo prendés desde la configuración del plugin, en la pestaña En tu tienda.
 * **Con el estilo de tu tienda** — sale desde tu tienda, con los colores de tus mails de WooCommerce y el logo de Andreani; el asunto y los textos los cambiás en WooCommerce > Ajustes > Correos electrónicos.
-* **Una sola vez por pedido** — el mail sale cuando el envío recibe su número y no se repite.
-* **Apagado si ya tenías el plugin** — así no se duplica con el mail que tu tienda ya manda.
+* **Una sola vez por pedido** — el mail sale cuando el envío sale en camino y no se repite.
+* **Viene apagado** — lo activás solo si tu tienda no manda ya su propio mail de seguimiento.
 
 = Novedades de la versión 1.8.6 =
 
@@ -367,6 +367,10 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * El checkbox *Forzar carga de assets*: **sigue funcionando** pero casi nunca es necesario. Úsalo solo como último recurso.
 
 == Changelog ==
+
+= 1.8.9 =
+* Fix: el aviso de seguimiento al comprador sale cuando el envío está en camino
+* Fix: el piso y departamento de la dirección de envío se informan correctamente en el envío
 
 = 1.8.8 =
 * Corregido: el aviso de seguimiento al comprador sale solo para los pedidos que entran desde que se activa, y nunca para compras anteriores

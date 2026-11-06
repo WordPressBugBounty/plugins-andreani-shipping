@@ -1079,12 +1079,12 @@ class Andreani_Shipping extends WC_Shipping_Method {
 					</span>
 					<span class="andreani-section-heading__title"><?php esc_html_e( 'Notificaciones al comprador', 'andreani-shipping' ); ?></span>
 				</h3>
-				<p class="andreani-section-description"><?php esc_html_e( 'Si tu tienda no manda un mail propio con el número de seguimiento, Andreani se lo avisa a tu cliente por mail apenas lo tiene.', 'andreani-shipping' ); ?></p>
+				<p class="andreani-section-description"><?php esc_html_e( 'Si tu tienda no manda un mail propio con el número de seguimiento, activá este aviso y WooCommerce se lo envía a tu cliente cuando el envío sale en camino.', 'andreani-shipping' ); ?></p>
 				<table class="form-table">
 					<?php
 					echo $this->generate_checkbox_html( self::TRACKING_EMAIL_FIELD, array( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 						'title'       => __( 'Aviso de envío', 'andreani-shipping' ),
-						'label'       => __( 'Avisar al comprador cuando su envío tenga número de seguimiento', 'andreani-shipping' ),
+						'label'       => __( 'Avisar al comprador cuando su envío esté en camino', 'andreani-shipping' ),
 						'description' => __( 'Se envía una sola vez por pedido, solo a los pedidos que entran desde que lo activás.', 'andreani-shipping' ),
 					) );
 					?>

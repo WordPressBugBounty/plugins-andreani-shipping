@@ -307,8 +307,9 @@ class Andreani_Tracking_Sync {
 
 		$order->save();
 
-		if ( '' === $prev_track && '' !== $track ) {
-			do_action( 'andreani_tracking_assigned', $order, $track );
+		$current_track = '' !== $track ? $track : $prev_track;
+		if ( $changed && '' !== $current_track ) {
+			do_action( 'andreani_tracking_updated', $order, $current_track, '' !== $state ? $state : $prev_state );
 		}
 	}
 

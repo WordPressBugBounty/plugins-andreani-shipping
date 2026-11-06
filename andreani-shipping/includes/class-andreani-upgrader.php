@@ -64,7 +64,7 @@ class Andreani_Upgrader {
 	 */
 	private static function run_pending_upgrades( $from_version ) {
 		if ( '0' === $from_version ) {
-			self::seed_tracking_email_default( true );
+			self::seed_tracking_email_default( false );
 			return true;
 		}
 

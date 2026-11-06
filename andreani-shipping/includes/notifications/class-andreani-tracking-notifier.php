@@ -9,16 +9,17 @@ class Andreani_Tracking_Notifier {
 
 	const EMAIL_ID    = 'andreani_customer_tracking';
 	const EMAIL_CLASS = 'Andreani_Email_Tracking';
-	const ACTION      = 'andreani_tracking_assigned';
+	const ACTION      = 'andreani_tracking_updated';
 	const SENT_META   = '_andreani_tracking_email_sent';
 	const LOCK_PREFIX = 'andreani_tracking_email_lock_';
 	const LOCK_TTL    = 300;
 	const PREVIEW_TRACKING = '360000000000001';
 	const ENABLED_AT_OPTION = 'andreani_tracking_email_enabled_at';
+	const DISPATCHED_STATUSES = array( 'en camino', 'listo para retirar' );
 
 	public static function register() {
 		add_filter( 'woocommerce_email_classes', array( __CLASS__, 'register_email' ) );
-		add_action( self::ACTION, array( __CLASS__, 'notify' ), 10, 2 );
+		add_action( self::ACTION, array( __CLASS__, 'notify' ), 10, 3 );
 		add_filter( 'woocommerce_prepare_email_for_preview', array( __CLASS__, 'prepare_preview' ) );
 		add_action( 'add_option_' . self::settings_key(), array( __CLASS__, 'on_settings_added' ), 10, 2 );
 		add_action( 'update_option_' . self::settings_key(), array( __CLASS__, 'stamp_if_turned_on' ), 10, 2 );
@@ -82,17 +83,22 @@ class Andreani_Tracking_Notifier {
 	}
 
 	/**
-	 * Solo avisa en la transicion vacio -> valor que informan los escritores del tracking:
-	 * al activar la opcion, los pedidos que ya tenian numero no reciben nada.
+	 * El tracking existe desde el alta, antes de que la tienda entregue el paquete: avisar ahi
+	 * le muestra al comprador un seguimiento que todavia no se mueve. Sale recien con el envio despachado.
 	 *
 	 * @param WC_Order $order
 	 * @param string   $tracking
+	 * @param string   $status TrackingStatus de la API de envios.
 	 * @return bool True si el mail salio.
 	 */
-	public static function notify( $order, $tracking ) {
+	public static function notify( $order, $tracking, $status = '' ) {
 		$tracking = trim( (string) $tracking );
 
 		if ( '' === $tracking || ! is_object( $order ) || ! self::is_enabled() || self::already_sent( $order ) ) {
+			return false;
+		}
+
+		if ( ! self::is_dispatched( $status ) ) {
 			return false;
 		}
 
@@ -168,6 +174,10 @@ class Andreani_Tracking_Notifier {
 		$created = $order->get_date_created();
 
 		return $created && $created->getTimestamp() >= $since;
+	}
+
+	public static function is_dispatched( $status ) {
+		return in_array( strtolower( trim( (string) $status ) ), self::DISPATCHED_STATUSES, true );
 	}
 
 	private static function already_sent( $order ) {

@@ -7,13 +7,18 @@ defined( 'ABSPATH' ) || exit;
 
 class Andreani_Order_Mapper {
 
+	public static function uses_shipping_address( $order ) {
+		return ! empty( $order->get_shipping_address_1() ) && (
+			$order->get_shipping_address_1() !== $order->get_billing_address_1() ||
+			$order->get_shipping_postcode() !== $order->get_billing_postcode() ||
+			( '' !== trim( (string) $order->get_shipping_address_2() ) && $order->get_shipping_address_2() !== $order->get_billing_address_2() )
+		);
+	}
+
 	public static function get_destination_data( $order ) {
 		$order_id = $order->get_id();
 
-		$use_shipping = ! empty( $order->get_shipping_address_1() ) && (
-			$order->get_shipping_address_1() !== $order->get_billing_address_1() ||
-			$order->get_shipping_postcode() !== $order->get_billing_postcode()
-		);
+		$use_shipping = self::uses_shipping_address( $order );
 
 		$destination_address    = $use_shipping ? $order->get_shipping_address_1() : $order->get_billing_address_1();
 		$destination_address_2  = $use_shipping ? $order->get_shipping_address_2() : $order->get_billing_address_2();

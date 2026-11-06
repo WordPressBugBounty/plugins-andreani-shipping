@@ -13,7 +13,7 @@ class Andreani_Email_Tracking extends WC_Email {
 		$this->id             = Andreani_Tracking_Notifier::EMAIL_ID;
 		$this->customer_email = true;
 		$this->title          = __( 'Andreani: tu envío está en camino', 'andreani-shipping' );
-		$this->description    = __( 'Le avisa al comprador, una sola vez, cuando su envío de Andreani tiene número de seguimiento.', 'andreani-shipping' );
+		$this->description    = __( 'Le avisa al comprador, una sola vez, cuando su envío de Andreani sale en camino.', 'andreani-shipping' );
 		$this->template_html  = 'emails/customer-andreani-tracking.php';
 		$this->template_plain = 'emails/plain/customer-andreani-tracking.php';
 		$this->template_base  = ANDREANI_PLUGIN_DIR . 'templates/';
