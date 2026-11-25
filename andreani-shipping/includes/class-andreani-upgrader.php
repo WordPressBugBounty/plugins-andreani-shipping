@@ -34,6 +34,7 @@ class Andreani_Upgrader {
 		'1.8.6' => 'upgrade_1_8_6',
 		'1.8.7' => 'upgrade_1_8_7',
 		'1.8.8' => 'upgrade_1_8_8',
+		'1.8.12' => 'upgrade_1_8_12',
 	);
 
 	public static function maybe_upgrade() {
@@ -65,6 +66,7 @@ class Andreani_Upgrader {
 	private static function run_pending_upgrades( $from_version ) {
 		if ( '0' === $from_version ) {
 			self::seed_tracking_email_default( false );
+			self::seed_ready_pickup_email_default( false );
 			return true;
 		}
 
@@ -776,12 +778,24 @@ class Andreani_Upgrader {
 		Andreani_Tracking_Notifier::backfill_enabled_at();
 	}
 
+	private static function upgrade_1_8_12() {
+		self::seed_ready_pickup_email_default( false );
+	}
+
 	public static function seed_tracking_email_default( $is_new_install ) {
-		if ( null !== get_option( Andreani_Tracking_Notifier::settings_key(), null ) ) {
+		self::seed_email_default( Andreani_Tracking_Notifier::EMAIL_ID, $is_new_install );
+	}
+
+	public static function seed_ready_pickup_email_default( $is_new_install ) {
+		self::seed_email_default( Andreani_Tracking_Notifier::PICKUP_EMAIL_ID, $is_new_install );
+	}
+
+	private static function seed_email_default( $email_id, $is_new_install ) {
+		if ( null !== get_option( Andreani_Tracking_Notifier::settings_key( $email_id ), null ) ) {
 			return;
 		}
 
-		Andreani_Tracking_Notifier::set_enabled( (bool) $is_new_install );
+		Andreani_Tracking_Notifier::set_enabled( (bool) $is_new_install, $email_id );
 	}
 
 	/**

@@ -5,7 +5,7 @@ Copyright: 2025 Andreani.com
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.8.10
+Stable tag: 1.8.12
 Contributors: integracionandreani
 Donate link:
 Tags: woocommerce, shipping, andreani, envio, etiquetas
@@ -21,7 +21,8 @@ Plugin **oficial de Andreani** para WooCommerce. Tus clientes cotizan y eligen A
 = Novedades de la versión 1.8.7 =
 
 * **Aviso de seguimiento al comprador** — tu tienda le manda un mail a tu cliente con su número de seguimiento cuando el envío sale en camino, y un botón para seguir el envío.
-* **Se activa con un clic** — lo prendés desde la configuración del plugin, en la pestaña En tu tienda.
+* **Se activa con un clic** — lo prendés desde la configuración del plugin, en la pestaña Notificaciones.
+* **Aviso de listo para retirar** — para envíos a sucursal o punto HOP, tu cliente recibe otro mail cuando su pedido ya puede retirarse.
 * **Con el estilo de tu tienda** — sale desde tu tienda, con los colores de tus mails de WooCommerce y el logo de Andreani; el asunto y los textos los cambiás en WooCommerce > Ajustes > Correos electrónicos.
 * **Una sola vez por pedido** — el mail sale cuando el envío sale en camino y no se repite.
 * **Viene apagado** — lo activás solo si tu tienda no manda ya su propio mail de seguimiento.
@@ -368,6 +369,14 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 
 == Changelog ==
 
+= 1.8.12 =
+* Agregado: pestaña Notificaciones en la configuración, con un panel por mail para activarlo, ver su asunto y editarlo
+* Agregado: mail "Tu pedido está listo para retirar" para envíos a sucursal o punto HOP. Viene apagado
+* Mejora: los mails al comprador se envían en segundo plano y ya no demoran la pantalla de envíos de tu tienda
+
+= 1.8.11 =
+* Mejora: en los envíos corporativos la etiqueta muestra el SKU de los productos del pedido (en Bigger, el de cada caja)
+
 = 1.8.10 =
 * Mejora: en el checkout los servicios se muestran como "Andreani envío a domicilio", "Andreani retiro en sucursal", "Andreani Bigger envío a domicilio" y "Andreani Llega hoy"
 * Mejora: los nombres de los servicios se pueden actualizar desde Andreani sin actualizar el plugin
@@ -606,6 +615,9 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * Versión inicial publicada en el repositorio de WordPress
 
 == Upgrade Notice ==
+
+= 1.8.12 =
+Nueva pestaña Notificaciones en la configuración y nuevo mail de listo para retirar (viene apagado). Los mails al comprador se envían en segundo plano.
 
 = 1.8.8 =
 El aviso de seguimiento al comprador ya no se manda a compras anteriores a su activación.

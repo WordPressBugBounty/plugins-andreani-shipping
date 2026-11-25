@@ -132,6 +132,10 @@ class Andreani_Corpo_Api extends Andreani_Base_Api {
 			$body['sender'] = array( 'name' => $remitente );
 		}
 
+		if ( ! empty( $context['contenido'] ) ) {
+			$body['contenido'] = $context['contenido'];
+		}
+
 		return $body;
 	}
 

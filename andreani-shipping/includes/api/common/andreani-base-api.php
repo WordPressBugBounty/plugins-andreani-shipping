@@ -761,9 +761,9 @@ abstract class Andreani_Base_Api implements Andreani_API_Interface {
 			return $recipient_error;
 		}
 
-		$products = Andreani_Order_Mapper::prepare_products_for_orden( $order, $this->mostrar_sin_decimales );
-		if ( is_wp_error( $products ) ) {
-			return $products;
+		$lines = Andreani_Order_Mapper::prepare_order_lines( $order, $this->mostrar_sin_decimales );
+		if ( is_wp_error( $lines ) ) {
+			return $lines;
 		}
 
 		$code_branch = '';
@@ -788,7 +788,8 @@ abstract class Andreani_Base_Api implements Andreani_API_Interface {
 		return array(
 			'destination'    => $destination,
 			'recipient'      => $recipient,
-			'products'       => $products,
+			'products'       => $lines['products'],
+			'contenido'      => $lines['contenido'],
 			'force_bigger'   => Andreani_Package_Builder::force_bigger_for_order( $order ),
 			'code_branch'    => $code_branch,
 			'shipping_total' => floatval( $order->get_shipping_total() ),

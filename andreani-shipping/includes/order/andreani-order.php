@@ -276,7 +276,7 @@ class Andreani_Order {
     }
 
     public function display_sucursal_in_email( $order, $sent_to_admin, $plain_text, $email = null ) {
-        if ( $email && Andreani_Tracking_Notifier::EMAIL_ID === $email->id ) {
+        if ( $email && Andreani_Tracking_Notifier::is_own_email_id( $email->id ) ) {
             return;
         }
 

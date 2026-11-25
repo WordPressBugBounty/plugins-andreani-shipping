@@ -4,6 +4,7 @@ defined( 'ABSPATH' ) || exit;
 class Andreani_Shipping extends WC_Shipping_Method {
 	const TRACKING_SYNC_FIELD = 'tracking_sync_enabled';
 	const TRACKING_EMAIL_FIELD = 'tracking_email_enabled';
+	const READY_PICKUP_EMAIL_FIELD = 'ready_pickup_email_enabled';
 
 	public $init_form_fields = array();
 	public $instance_form_fields = array();
@@ -49,6 +50,10 @@ class Andreani_Shipping extends WC_Shipping_Method {
 
 		if ( self::TRACKING_EMAIL_FIELD === $key ) {
 			return Andreani_Tracking_Notifier::is_enabled() ? 'yes' : 'no';
+		}
+
+		if ( self::READY_PICKUP_EMAIL_FIELD === $key ) {
+			return Andreani_Tracking_Notifier::is_enabled( Andreani_Tracking_Notifier::PICKUP_EMAIL_ID ) ? 'yes' : 'no';
 		}
 
 		return parent::get_option( $key, $empty_value );
@@ -344,6 +349,7 @@ class Andreani_Shipping extends WC_Shipping_Method {
 				<?php $this->render_panel_origen( $ctx ); ?>
 				<?php $this->render_panel_modos( $ctx ); ?>
 				<?php $this->render_panel_tienda( $ctx['checkout_fields'], $ctx['cotizador_fields'] ); ?>
+				<?php $this->render_panel_notificaciones(); ?>
 				<?php $this->render_panel_etiquetas( $ctx ); ?>
 				<?php $this->render_panel_avanzado( $ctx['avanzado_fields'] ); ?>
 			</div>
@@ -430,6 +436,10 @@ class Andreani_Shipping extends WC_Shipping_Method {
 			<button type="button" class="andr-tabs__item" data-tab="tienda" role="tab" aria-controls="andr-panel-tienda" aria-selected="false">
 				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
 				<span><?php esc_html_e( 'En tu tienda', 'andreani-shipping' ); ?></span>
+			</button>
+			<button type="button" class="andr-tabs__item" data-tab="notificaciones" role="tab" aria-controls="andr-panel-notificaciones" aria-selected="false">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+				<span><?php esc_html_e( 'Notificaciones', 'andreani-shipping' ); ?></span>
 			</button>
 			<button type="button" class="andr-tabs__item" data-tab="etiquetas" role="tab" aria-controls="andr-panel-etiquetas" aria-selected="false">
 				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
@@ -1072,6 +1082,45 @@ class Andreani_Shipping extends WC_Shipping_Method {
 				</table>
 			</div>
 
+		</div>
+		<?php
+	}
+
+	private function notification_cards() {
+		return array(
+			self::TRACKING_EMAIL_FIELD     => array(
+				'email_id' => Andreani_Tracking_Notifier::EMAIL_ID,
+				'title'    => __( 'Tu envío está en camino', 'andreani-shipping' ),
+				'when'     => __( 'Sale una vez, cuando el paquete sale en camino.', 'andreani-shipping' ),
+			),
+			self::READY_PICKUP_EMAIL_FIELD => array(
+				'email_id' => Andreani_Tracking_Notifier::PICKUP_EMAIL_ID,
+				'title'    => __( 'Tu pedido está listo para retirar', 'andreani-shipping' ),
+				'when'     => __( 'Solo envíos a sucursal o punto HOP. Sale cuando el paquete llega y está listo para retirar.', 'andreani-shipping' ),
+			),
+		);
+	}
+
+	private function email_preview_url( $email_id ) {
+		if ( ! class_exists( 'Automattic\WooCommerce\Internal\Admin\EmailPreview\EmailPreview' ) ) {
+			return '';
+		}
+
+		return wp_nonce_url(
+			add_query_arg(
+				array(
+					'preview_woocommerce_mail' => 'true',
+					'type'                     => Andreani_Tracking_Notifier::email_class( $email_id ),
+				),
+				admin_url( '/' )
+			),
+			'preview-mail'
+		);
+	}
+
+	private function render_panel_notificaciones() {
+		?>
+		<div class="andr-tabs__panel" data-panel="notificaciones" role="tabpanel" id="andr-panel-notificaciones">
 			<div class="andreani-section">
 				<h3 class="andreani-section-heading andreani-section-heading--with-icon">
 					<span class="andreani-section-heading__icon" aria-hidden="true">
@@ -1079,22 +1128,46 @@ class Andreani_Shipping extends WC_Shipping_Method {
 					</span>
 					<span class="andreani-section-heading__title"><?php esc_html_e( 'Notificaciones al comprador', 'andreani-shipping' ); ?></span>
 				</h3>
-				<p class="andreani-section-description"><?php esc_html_e( 'Si tu tienda no manda un mail propio con el número de seguimiento, activá este aviso y WooCommerce se lo envía a tu cliente cuando el envío sale en camino.', 'andreani-shipping' ); ?></p>
-				<table class="form-table">
-					<?php
-					echo $this->generate_checkbox_html( self::TRACKING_EMAIL_FIELD, array( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-						'title'       => __( 'Aviso de envío', 'andreani-shipping' ),
-						'label'       => __( 'Avisar al comprador cuando su envío esté en camino', 'andreani-shipping' ),
-						'description' => __( 'Se envía una sola vez por pedido, solo a los pedidos que entran desde que lo activás.', 'andreani-shipping' ),
-					) );
-					?>
-				</table>
-				<input type="hidden" name="<?php echo esc_attr( $this->get_field_key( self::TRACKING_EMAIL_FIELD ) ); ?>_present" value="1">
-				<p class="andreani-section-description">
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wc-settings&tab=email&section=' . strtolower( Andreani_Tracking_Notifier::EMAIL_CLASS ) ) ); ?>"><?php esc_html_e( 'Personalizar el mail', 'andreani-shipping' ); ?></a>
-				</p>
-			</div>
+				<p class="andreani-section-description"><?php esc_html_e( 'Los mails los envía tu tienda desde WooCommerce. Activá los que quieras y editalos como cualquier otro mail de tu tienda.', 'andreani-shipping' ); ?></p>
 
+				<div class="andreani-notif-list">
+					<?php foreach ( $this->notification_cards() as $field => $card ) : ?>
+						<?php
+						$edit_url    = admin_url( 'admin.php?page=wc-settings&tab=email&section=' . strtolower( Andreani_Tracking_Notifier::email_class( $card['email_id'] ) ) );
+						$preview_url = $this->email_preview_url( $card['email_id'] );
+						?>
+						<div class="andr-card andreani-notif-card">
+							<div class="andreani-notif-card__head">
+							<div class="andreani-notif-card__info">
+								<h4 class="andreani-notif-card__title"><?php echo esc_html( $card['title'] ); ?></h4>
+								<p class="andreani-notif-card__when"><?php echo esc_html( $card['when'] ); ?></p>
+								<p class="andreani-notif-card__subject">
+									<span class="andreani-notif-card__subject-label"><?php esc_html_e( 'Asunto:', 'andreani-shipping' ); ?></span>
+									<?php echo esc_html( Andreani_Tracking_Notifier::current_subject( $card['email_id'] ) ); ?>
+								</p>
+							</div>
+							<div class="andreani-notif-card__toggle">
+								<table class="form-table andreani-notif-card__switch">
+									<?php
+									echo $this->generate_checkbox_html( $field, array( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+										'title' => '',
+										'label' => __( 'Activar', 'andreani-shipping' ),
+									) );
+									?>
+								</table>
+								<input type="hidden" name="<?php echo esc_attr( $this->get_field_key( $field ) ); ?>_present" value="1">
+							</div>
+							</div>
+							<div class="andreani-notif-card__actions">
+								<a class="andr-btn andr-btn--secondary andr-btn--sm" href="<?php echo esc_url( $edit_url ); ?>"><?php esc_html_e( 'Editar mail', 'andreani-shipping' ); ?></a>
+								<?php if ( '' !== $preview_url ) : ?>
+									<a class="andr-btn andr-btn--ghost andr-btn--sm" href="<?php echo esc_url( $preview_url ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Vista previa', 'andreani-shipping' ); ?></a>
+								<?php endif; ?>
+							</div>
+						</div>
+					<?php endforeach; ?>
+				</div>
+			</div>
 		</div>
 		<?php
 	}
@@ -1298,10 +1371,12 @@ class Andreani_Shipping extends WC_Shipping_Method {
 			Andreani_Tracking_Sync::set_enabled( isset( $post_data[ $sync_key ] ) );
 		}
 
-		$email_key = $prefix . self::TRACKING_EMAIL_FIELD;
+		foreach ( $this->notification_cards() as $field => $card ) {
+			$email_key = $prefix . $field;
 
-		if ( isset( $post_data[ $email_key . '_present' ] ) ) {
-			Andreani_Tracking_Notifier::set_enabled( isset( $post_data[ $email_key ] ) );
+			if ( isset( $post_data[ $email_key . '_present' ] ) ) {
+				Andreani_Tracking_Notifier::set_enabled( isset( $post_data[ $email_key ] ), $card['email_id'] );
+			}
 		}
 
 		$hash_andreani = $this->get_post_field( $post_data, $prefix . 'hash_andreani' );

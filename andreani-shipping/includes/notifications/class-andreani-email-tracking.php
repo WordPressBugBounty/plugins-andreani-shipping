@@ -10,12 +10,13 @@ class Andreani_Email_Tracking extends WC_Email {
 	public $tracking_number = '';
 
 	public function __construct() {
-		$this->id             = Andreani_Tracking_Notifier::EMAIL_ID;
+		$meta                 = $this->email_meta();
+		$this->id             = $meta['id'];
 		$this->customer_email = true;
-		$this->title          = __( 'Andreani: tu envío está en camino', 'andreani-shipping' );
-		$this->description    = __( 'Le avisa al comprador, una sola vez, cuando su envío de Andreani sale en camino.', 'andreani-shipping' );
-		$this->template_html  = 'emails/customer-andreani-tracking.php';
-		$this->template_plain = 'emails/plain/customer-andreani-tracking.php';
+		$this->title          = $meta['title'];
+		$this->description    = $meta['description'];
+		$this->template_html  = 'emails/' . $meta['template'];
+		$this->template_plain = 'emails/plain/' . $meta['template'];
 		$this->template_base  = ANDREANI_PLUGIN_DIR . 'templates/';
 		$this->placeholders   = array(
 			'{order_date}'      => '',
@@ -24,6 +25,15 @@ class Andreani_Email_Tracking extends WC_Email {
 		);
 
 		parent::__construct();
+	}
+
+	protected function email_meta() {
+		return array(
+			'id'          => Andreani_Tracking_Notifier::EMAIL_ID,
+			'title'       => __( 'Andreani: tu envío está en camino', 'andreani-shipping' ),
+			'description' => __( 'Le avisa al comprador, una sola vez, cuando su envío de Andreani sale en camino.', 'andreani-shipping' ),
+			'template'    => 'customer-andreani-tracking.php',
+		);
 	}
 
 	public function get_default_subject() {
@@ -74,7 +84,7 @@ class Andreani_Email_Tracking extends WC_Email {
 		return wc_get_template_html( $this->template_plain, $this->template_args( true ), '', $this->template_base );
 	}
 
-	private function template_args( $plain_text ) {
+	protected function template_args( $plain_text ) {
 		$data = Andreani_Order::get_shipping_data( $this->object );
 
 		return array(

@@ -136,7 +136,14 @@ class Andreani_Order_Mapper {
 	}
 
 	public static function prepare_products_for_orden( $order, $mostrar_sin_decimales = false ) {
+		$lines = self::prepare_order_lines( $order, $mostrar_sin_decimales );
+
+		return $lines instanceof WP_Error ? $lines : $lines['products'];
+	}
+
+	public static function prepare_order_lines( $order, $mostrar_sin_decimales = false ) {
 		$products           = array();
+		$content            = array();
 		$skipped            = array();
 		$missing_dimensions = array();
 		$decision           = Andreani_Package_Builder::decision_for_order( $order );
@@ -184,14 +191,21 @@ class Andreani_Order_Mapper {
 				);
 			}
 
+			$bultos_adicionales = Andreani_Package_Builder::resolve_bultos( $product );
+			$total_bultos       = 1 + count( $bultos_adicionales );
+
+			$sku       = self::label_sku( $product );
+			$content[] = array(
+				'sku'             => $sku,
+				'cantidad'        => intval( $quantity ),
+				'bultosPorUnidad' => $total_bultos,
+			);
+
 			if ( in_array( $item_id, $decision['bundled'], true ) ) {
 				$bundle_value += floatval( $price ) * intval( $quantity );
 				continue;
 			}
 
-			$bultos_adicionales = Andreani_Package_Builder::resolve_bultos( $product );
-
-			$total_bultos    = 1 + count( $bultos_adicionales );
 			$price_per_bulto = floatval( $price ) / $total_bultos;
 
 			foreach ( Andreani_Package_Builder::lines( $product, $quantity ) as $line ) {
@@ -202,6 +216,7 @@ class Andreani_Order_Mapper {
 					'width'    => floatval( $line['width'] ),
 					'depth'    => floatval( $line['depth'] ),
 					'height'   => floatval( $line['height'] ),
+					'sku'      => $sku,
 				);
 			}
 
@@ -218,6 +233,7 @@ class Andreani_Order_Mapper {
 					'width'    => $b_width,
 					'depth'    => $b_depth,
 					'height'   => $b_height,
+					'sku'      => $sku,
 				);
 			}
 		}
@@ -230,6 +246,7 @@ class Andreani_Order_Mapper {
 				'width'    => floatval( $decision['bundle']['width'] ),
 				'depth'    => floatval( $decision['bundle']['depth'] ),
 				'height'   => floatval( $decision['bundle']['height'] ),
+				'sku'      => '',
 			);
 		}
 
@@ -249,7 +266,24 @@ class Andreani_Order_Mapper {
 			);
 		}
 
-		return $products;
+		$has_sku = false;
+		foreach ( $content as $line ) {
+			if ( '' !== $line['sku'] ) {
+				$has_sku = true;
+				break;
+			}
+		}
+
+		return array(
+			'products'  => $products,
+			'contenido' => $has_sku ? $content : array(),
+		);
+	}
+
+	private static function label_sku( $product ) {
+		$sku = trim( Andreani_Product_Bultos::get_effective_sku( $product ) );
+
+		return '' !== $sku ? $sku : trim( (string) $product->get_sku( 'view' ) );
 	}
 
 	public static function resolve_unit_price( $line_price, $catalog_price, $mostrar_sin_decimales = false ) {
