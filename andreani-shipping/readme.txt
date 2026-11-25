@@ -5,7 +5,7 @@ Copyright: 2025 Andreani.com
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.8.9
+Stable tag: 1.8.10
 Contributors: integracionandreani
 Donate link:
 Tags: woocommerce, shipping, andreani, envio, etiquetas
@@ -367,6 +367,10 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * El checkbox *Forzar carga de assets*: **sigue funcionando** pero casi nunca es necesario. Úsalo solo como último recurso.
 
 == Changelog ==
+
+= 1.8.10 =
+* Mejora: en el checkout los servicios se muestran como "Andreani envío a domicilio", "Andreani retiro en sucursal", "Andreani Bigger envío a domicilio" y "Andreani Llega hoy"
+* Mejora: los nombres de los servicios se pueden actualizar desde Andreani sin actualizar el plugin
 
 = 1.8.9 =
 * Fix: el aviso de seguimiento al comprador sale cuando el envío está en camino

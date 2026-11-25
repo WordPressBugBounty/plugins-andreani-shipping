@@ -270,7 +270,7 @@ class Andreani_Api_Response {
 
 			$cost = $aplicar_gratis ? 0 : $rate['total'];
 
-			$label = 'Andreani (' . $rate['code'] . ')';
+			$label = self::resolve_rate_label( $rate );
 
 			if ( $aplicar_gratis ) {
 				$label .= ' - ¡Envío gratis!';
@@ -292,6 +292,32 @@ class Andreani_Api_Response {
 		}
 
 		return $shipping_rates;
+	}
+
+	public static function resolve_rate_label( array $rate ) {
+		if ( isset( $rate['name'] ) && is_string( $rate['name'] ) ) {
+			$name = sanitize_text_field( trim( $rate['name'] ) );
+			if ( '' !== $name ) {
+				return $name;
+			}
+		}
+		return self::rate_label( isset( $rate['code'] ) ? $rate['code'] : '' );
+	}
+
+	public static function rate_label( $code ) {
+		if ( in_array( $code, array( 'estándar', 'estandar' ), true ) ) {
+			return __( 'Andreani envío a domicilio', 'andreani-shipping' );
+		}
+		if ( 'sucursal' === $code ) {
+			return __( 'Andreani retiro en sucursal', 'andreani-shipping' );
+		}
+		if ( 'bigger' === $code ) {
+			return __( 'Andreani Bigger envío a domicilio', 'andreani-shipping' );
+		}
+		if ( 'llega hoy' === $code ) {
+			return __( 'Andreani Llega hoy', 'andreani-shipping' );
+		}
+		return 'Andreani (' . $code . ')';
 	}
 
 	public static function normalize_modo_key( $modo_nombre ) {
