@@ -70,7 +70,7 @@
 			$widget.addClass('andreani-calc-widget--expanded');
 
 			setTimeout(function() {
-				$widget.find('.andreani-calc-postcode').focus();
+				$widget.find('.andreani-calc-postcode').trigger('focus');
 			}, 350);
 		},
 

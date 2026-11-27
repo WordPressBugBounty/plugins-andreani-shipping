@@ -3,7 +3,7 @@
  * Plugin Name: Andreani WooCommerce
  * Plugin URI: https://wordpress.org/plugins/andreani-shipping
  * Description: Plugin oficial de Andreani. Simplifica la gestión de tus envíos con Andreani.
- * Version: 1.8.12
+ * Version: 1.8.13
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * WC requires at least: 7.1
@@ -13,7 +13,6 @@
  * License: GPLv2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: andreani-shipping
- * Domain Path: /languages
  *
  * @package AndreaniPlugin
  */
@@ -33,7 +32,7 @@ if ( ! defined( 'ANDREANI_PLUGIN_URL' ) ) {
 }
 
 if ( ! defined( 'ANDREANI_PLUGIN_VERSION' ) ) {
-	define( 'ANDREANI_PLUGIN_VERSION', '1.8.12' );
+	define( 'ANDREANI_PLUGIN_VERSION', '1.8.13' );
 }
 
 if ( ! defined( 'ANDREANI_SHIPPING_METHOD_ID' ) ) {

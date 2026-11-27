@@ -718,7 +718,7 @@ class Andreani_Shipments_List extends WP_List_Table {
 
 		$ids = $wpdb->get_col(
 			$wpdb->prepare(
-				'SELECT oid FROM ( ' . implode( ' UNION ', $sql ) . ' ) found ORDER BY oid DESC LIMIT %d', // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				'SELECT oid FROM ( ' . implode( ' UNION ', $sql ) . ' ) found ORDER BY oid DESC LIMIT %d', // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared
 				$flat
 			)
 		);
@@ -857,8 +857,12 @@ class Andreani_Shipments_List extends WP_List_Table {
 		return $sql;
 	}
 
-	private static function count_andreani_orders_sql( $where_sql = '' ) {
-		return 'SELECT COUNT(*) ' . self::andreani_orders_from_sql() . $where_sql;
+	private static function count_andreani_orders( $where_sql = '' ) {
+		global $wpdb;
+
+		$sql = 'SELECT COUNT(*) ' . self::andreani_orders_from_sql() . $where_sql;
+
+		return (int) $wpdb->get_var( $sql ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 	}
 
 	public static function register_query_scope() {
@@ -914,8 +918,6 @@ class Andreani_Shipments_List extends WP_List_Table {
 			return $cached;
 		}
 
-		global $wpdb;
-
 		$stats = array(
 			'pending'  => 0,
 			'awaiting' => 0,
@@ -925,27 +927,23 @@ class Andreani_Shipments_List extends WP_List_Table {
 			'total'    => 0,
 		);
 
-		$stats['total'] = (int) $wpdb->get_var( self::count_andreani_orders_sql() );
+		$stats['total'] = self::count_andreani_orders();
 
 		$shipped_conditions = array();
 		foreach ( Andreani_Client_Type::all_shipped_meta_keys() as $shipped_key ) {
 			$shipped_conditions[] = self::meta_exists_sql( $shipped_key, ' AND m.meta_value = %s', array( '1' ) );
 		}
-		$stats['shipped'] = (int) $wpdb->get_var(
-			self::count_andreani_orders_sql( ' AND ( ' . implode( ' OR ', $shipped_conditions ) . ' )' )
-		);
+		$stats['shipped'] = self::count_andreani_orders( ' AND ( ' . implode( ' OR ', $shipped_conditions ) . ' )' );
 
 		$created_sql = self::meta_exists_sql( '_order_andreani_created', ' AND m.meta_value = %s', array( '1' ) );
 
 		$awaiting_count = 0;
 		$ready_count    = 0;
 		foreach ( Andreani_Client_Type::all() as $type ) {
-			$type_count = (int) $wpdb->get_var(
-				self::count_andreani_orders_sql(
-					' AND ' . $created_sql
-					. ' AND ' . self::meta_exists_sql( '_order_andreani_client_type', ' AND m.meta_value = %s', array( $type->id() ) )
-					. ' AND NOT ' . self::meta_exists_sql( $type->shipped_meta_key() )
-				)
+			$type_count = self::count_andreani_orders(
+				' AND ' . $created_sql
+				. ' AND ' . self::meta_exists_sql( '_order_andreani_client_type', ' AND m.meta_value = %s', array( $type->id() ) )
+				. ' AND NOT ' . self::meta_exists_sql( $type->shipped_meta_key() )
 			);
 			if ( $type->has_payment_step() ) {
 				$awaiting_count += $type_count;
@@ -956,11 +954,9 @@ class Andreani_Shipments_List extends WP_List_Table {
 		$stats['awaiting'] = $awaiting_count;
 		$stats['ready']    = $ready_count;
 
-		$stats['failed'] = (int) $wpdb->get_var(
-			self::count_andreani_orders_sql(
-				' AND ' . self::meta_exists_sql( '_andreani_last_error', " AND m.meta_value <> ''" )
-				. ' AND NOT ' . self::meta_exists_sql( '_order_andreani_created', " AND m.meta_value NOT IN ( '', '0' )" )
-			)
+		$stats['failed'] = self::count_andreani_orders(
+			' AND ' . self::meta_exists_sql( '_andreani_last_error', " AND m.meta_value <> ''" )
+			. ' AND NOT ' . self::meta_exists_sql( '_order_andreani_created', " AND m.meta_value NOT IN ( '', '0' )" )
 		);
 
 		$pending = $stats['total'] - ( $stats['awaiting'] + $stats['ready'] + $stats['shipped'] + $stats['failed'] );

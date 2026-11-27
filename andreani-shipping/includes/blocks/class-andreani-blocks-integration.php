@@ -38,6 +38,7 @@ class Andreani_Blocks_Integration implements \Automattic\WooCommerce\Blocks\Inte
 				'placeholder'   => __( 'Elegí la sucursal donde retirás', 'andreani-shipping' ),
 				'cargando'      => __( 'Buscando sucursales…', 'andreani-shipping' ),
 				'sinCp'         => __( 'Ingresá tu código postal para ver las sucursales.', 'andreani-shipping' ),
+				/* translators: %s: código postal */
 				'sinSucursales' => __( 'No encontramos sucursales para el código postal %s.', 'andreani-shipping' ),
 				'error'         => __( 'No pudimos traer las sucursales. Probá de nuevo en unos segundos.', 'andreani-shipping' ),
 				'requerido'     => __( 'Elegí una sucursal Andreani para continuar.', 'andreani-shipping' ),

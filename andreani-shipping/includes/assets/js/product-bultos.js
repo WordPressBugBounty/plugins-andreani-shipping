@@ -103,7 +103,7 @@
 				return own.length > 0 && own.width > 0 && own.height > 0 ? { type: 'caja', length: own.length, width: own.width, height: own.height } : null;
 			}
 
-			var boxes = [ $.extend( { ref: $.trim( $('input[name="andreani_main_box_ref"]').val() ) }, own ) ].concat( bultos().map(function ( b ) {
+			var boxes = [ $.extend( { ref: (function ( v ) { return v == null ? '' : String( v ); })( $('input[name="andreani_main_box_ref"]').val() ).trim() }, own ) ].concat( bultos().map(function ( b ) {
 				return { ref: b.name, length: b.depth, width: b.width, height: b.height, weight: b.weight };
 			}) );
 			var complete = boxes.every(function ( b ) {
@@ -525,17 +525,17 @@
 
 			if ( apiladoInvalid ) {
 				$apiladoInvalid.show();
-				$('#andreani-apilado-max-units').focus();
+				$('#andreani-apilado-max-units').trigger('focus');
 			} else if ( partialRows().length ) {
 				var $partial = partialRows();
 
 				$partial.find('.andreani-bulto-incomplete').show();
 				$partial.first().find('input[type="number"]').filter(function () {
 					return ! ( parseFloat( $(this).val() ) > 0 );
-				}).first().focus();
+				}).first().trigger('focus');
 			} else {
 				$bultosInvalid.show();
-				$list.find('.andreani-bulto-row').first().find('input').first().focus();
+				$list.find('.andreani-bulto-row').first().find('input').first().trigger('focus');
 			}
 
 			releaseButtons();

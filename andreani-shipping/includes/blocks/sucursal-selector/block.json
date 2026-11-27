@@ -1,6 +1,6 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
-	"apiVersion": 2,
+	"apiVersion": 3,
 	"name": "andreani/sucursal-selector",
 	"version": "1.6.4",
 	"title": "Sucursal Andreani",

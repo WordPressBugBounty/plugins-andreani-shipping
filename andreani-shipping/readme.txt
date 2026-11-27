@@ -3,9 +3,9 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Copyright: 2025 Andreani.com
 Requires at least: 5.8
-Tested up to: 6.9
+Tested up to: 7.2
 Requires PHP: 7.4
-Stable tag: 1.8.12
+Stable tag: 1.8.13
 Contributors: integracionandreani
 Donate link:
 Tags: woocommerce, shipping, andreani, envio, etiquetas
@@ -252,6 +252,13 @@ Los dos `GET` reciben únicamente el código postal de origen de la tienda y la 
 **Términos y condiciones:** https://www.andreani.com/terminos-y-condiciones
 **Política de privacidad:** https://www.andreani.com/politica-de-privacidad
 
+**Servicio:** Google Fonts (fonts.googleapis.com y fonts.gstatic.com)
+**Propósito:** Cargar las tipografías Roboto y Rubik con las que se muestran las pantallas del plugin
+**Cuándo se carga:** En las pantallas de administración del plugin y en el checkout y el cotizador, donde se encolan los estilos del plugin
+**Datos enviados:** La dirección IP y el user agent del visitante, al pedir el archivo de la fuente
+**Términos y condiciones:** https://policies.google.com/terms
+**Política de privacidad:** https://policies.google.com/privacy
+
 == Para desarrolladores ==
 
 Guía técnica del **contrato público estable a partir de 1.5.0**. Todo lo listado acá es seguro de usar desde temas, page builders o plugins custom. Los cambios breaking se anuncian en el Changelog.
@@ -368,6 +375,12 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * El checkbox *Forzar carga de assets*: **sigue funcionando** pero casi nunca es necesario. Úsalo solo como último recurso.
 
 == Changelog ==
+
+= 1.8.13 =
+* Compatibilidad: probado con WordPress 7.2 y PHP 8.6
+* Corregido: el análisis de "Mis productos" ya no queda detenido cuando un producto no se puede clasificar; ese producto queda marcado como "faltan datos" y el análisis sigue con el resto
+* Mejora: el peso y las medidas cargadas con coma decimal (por ejemplo 12,5) se leen correctamente
+* Mejora: ajustes de seguridad y calidad de código según la revisión de WordPress.org
 
 = 1.8.12 =
 * Agregado: pestaña Notificaciones en la configuración, con un panel por mail para activarlo, ver su asunto y editarlo
@@ -615,6 +628,9 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * Versión inicial publicada en el repositorio de WordPress
 
 == Upgrade Notice ==
+
+= 1.8.13 =
+Compatible con WordPress 7.2. El análisis de "Mis productos" ya no se detiene en catálogos con productos con datos incorrectos.
 
 = 1.8.12 =
 Nueva pestaña Notificaciones en la configuración y nuevo mail de listo para retirar (viene apagado). Los mails al comprador se envían en segundo plano.

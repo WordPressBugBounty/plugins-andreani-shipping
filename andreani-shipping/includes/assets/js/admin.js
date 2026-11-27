@@ -196,7 +196,7 @@
 
     cancelCredentialEdit() {
       const $field = $('input[id*="hash_andreani"]');
-      $field.val(this.originalCredential).blur();
+      $field.val(this.originalCredential).trigger('blur');
       $('.andreani-cancel-edit').hide();
       $('.andreani-cliente-info').removeClass('andreani-cliente-info--hidden');
       $('.andreani-cliente-summary').removeClass('andreani-cliente-summary--hidden');
@@ -3432,7 +3432,7 @@
         return own.length > 0 && own.width > 0 && own.height > 0 ? { type: 'caja', length: own.length, width: own.width, height: own.height } : null;
       }
 
-      const boxes = [Object.assign({ ref: $.trim($('#andreani-edit-main-ref').val()) }, own)].concat(this.collectBultos().map((b) => ({ ref: b.name, length: b.depth, width: b.width, height: b.height, weight: b.weight })));
+      const boxes = [Object.assign({ ref: String($('#andreani-edit-main-ref').val() ?? '').trim() }, own)].concat(this.collectBultos().map((b) => ({ ref: b.name, length: b.depth, width: b.width, height: b.height, weight: b.weight })));
       const complete = boxes.every((b) => b.length > 0 && b.width > 0 && b.height > 0 && b.weight > 0);
 
       return complete && boxes.length >= 2 ? { type: 'juego', boxes } : null;
@@ -3647,7 +3647,7 @@
       $row.attr('aria-expanded', 'true').closest('.andreani-product-entry').addClass('is-open');
 
       if ($row.attr('data-missing') === '1') {
-        this.$panel.find('.andreani-product-dims input').filter(function() { return !parseFloat($(this).val()); }).first().focus();
+        this.$panel.find('.andreani-product-dims input').filter(function() { return !parseFloat($(this).val()); }).first().trigger('focus');
       }
     },
 
@@ -3685,7 +3685,7 @@
 
     refreshSkuHint() {
       const $hint = $('#andreani-edit-sku-hint').removeClass('andr-pem__hint--error');
-      const value = $.trim($('#andreani-edit-sku').val());
+      const value = String($('#andreani-edit-sku').val() ?? '').trim();
       const text = (key) => $hint.attr('data-' + key);
       $('#andreani-edit-sku').attr('title', text('default'));
 
@@ -3841,7 +3841,7 @@
         dispatch_mode: mode,
         box_ref:       this.picker ? this.picker.value() : '',
         bultos_json:   JSON.stringify(mode === this.MODE_MULTIBULTO && this.packageMode() !== 'juego' ? this.collectBultos() : []),
-        main_ref:      mode === this.MODE_MULTIBULTO && this.packageMode() !== 'juego' ? $.trim($('#andreani-edit-main-ref').val()) : '',
+        main_ref:      mode === this.MODE_MULTIBULTO && this.packageMode() !== 'juego' ? String($('#andreani-edit-main-ref').val() ?? '').trim() : '',
         units_per_box: mode === this.MODE_SINGLE ? $('#andreani-edit-units').val() : 1,
         overflow:      this.overflowValue(),
         apilado_json:  JSON.stringify(mode === this.MODE_APILADO ? (apilado || {}) : {}),
@@ -3955,21 +3955,21 @@
       // vuelve OK y el producto sigue cotizando una caja por unidad.
       if (mode === this.MODE_APILADO && !apilado) {
         $('#andreani-edit-apilado-invalid').show();
-        $('#andreani-edit-apilado-max-units').focus();
+        $('#andreani-edit-apilado-max-units').trigger('focus');
         return;
       }
 
       if (mode === this.MODE_MULTIBULTO && this.packageMode() !== 'juego' && this.partialCards().length) {
         const $partial = this.partialCards();
         $partial.find('.andreani-bulto-card__incomplete').show();
-        $partial.first().find('input[type="number"]').filter(function() { return !(parseFloat($(this).val()) > 0); }).first().focus();
+        $partial.first().find('input[type="number"]').filter(function() { return !(parseFloat($(this).val()) > 0); }).first().trigger('focus');
         $partial.first().find('.andreani-bulto-card__incomplete').get(0).scrollIntoView({ block: 'nearest' });
         return;
       }
 
       if (mode === this.MODE_MULTIBULTO && this.packageMode() !== 'juego' && !this.hasCompleteBulto()) {
         $('#andreani-edit-bultos-invalid').show();
-        $('#andreani-bultos-cards .andreani-bulto-card').first().find('input').first().focus();
+        $('#andreani-bultos-cards .andreani-bulto-card').first().find('input').first().trigger('focus');
         return;
       }
 
@@ -4010,10 +4010,10 @@
           const data = self.serverError(xhr);
           if (data.field === 'apilado') {
             $('#andreani-edit-apilado-invalid').text(data.message).show();
-            $('#andreani-edit-apilado-max-units').focus();
+            $('#andreani-edit-apilado-max-units').trigger('focus');
           } else if (data.field === 'sku') {
             $('#andreani-edit-sku-hint').addClass('andr-pem__hint--error').text(data.message);
-            $('#andreani-edit-sku').focus();
+            $('#andreani-edit-sku').trigger('focus');
           } else if (data.field === 'bultos') {
             $('#andreani-edit-bultos-invalid').text(data.message).show();
           } else {

@@ -147,7 +147,7 @@ class Andreani_Products_Stats {
 				continue;
 			}
 
-			self::store( $product );
+			self::store_safely( $product );
 
 			if ( $product->is_type( 'variable' ) ) {
 				self::refresh_children( $product );
@@ -172,7 +172,7 @@ class Andreani_Products_Stats {
 			$child = wc_get_product( $child_id );
 
 			if ( $child ) {
-				self::store( $child );
+				self::store_safely( $child );
 			}
 		}
 	}
@@ -202,6 +202,33 @@ class Andreani_Products_Stats {
 
 		update_post_meta( $product->get_id(), self::META_CLASS, $values[0] );
 		update_post_meta( $product->get_id(), self::META_MODE, $values[1] );
+	}
+
+	/**
+	 * Un producto que no se puede clasificar queda como «faltan datos» en vez de
+	 * cortar el lote: sin meta, el próximo lote lo volvería a tomar primero.
+	 */
+	private static function store_safely( $product ) {
+		try {
+			self::store( $product );
+		} catch ( \Throwable $e ) {
+			self::flag_unclassifiable( $product->get_id(), $e );
+		}
+	}
+
+	private static function flag_unclassifiable( $id, $error ) {
+		Andreani_Utils::andreani_log( sprintf( 'No se pudo clasificar el producto %d: %s', $id, $error->getMessage() ), 'error' );
+
+		self::mark_missing( $id );
+	}
+
+	/**
+	 * Marca previa al clasificar: si el proceso muere (memoria, timeout) el producto ya
+	 * tiene meta y el lote siguiente no lo vuelve a tomar primero; store() la pisa.
+	 */
+	private static function mark_missing( $id ) {
+		update_post_meta( $id, self::META_CLASS, self::CLASS_MISSING );
+		update_post_meta( $id, self::META_MODE, Andreani_Product_Bultos::MODE_SINGLE );
 	}
 
 	/**
@@ -586,13 +613,18 @@ class Andreani_Products_Stats {
 		$ids = $wpdb->get_col( self::scope_sql( 'ids', self::BATCH_SIZE ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 
 		foreach ( $ids as $id ) {
-			$product = wc_get_product( (int) $id );
+			try {
+				$product = wc_get_product( (int) $id );
 
-			if ( $product ) {
-				self::store( $product );
-			} else {
-				update_post_meta( (int) $id, self::META_CLASS, self::CLASS_NA );
-				update_post_meta( (int) $id, self::META_MODE, Andreani_Product_Bultos::MODE_SINGLE );
+				if ( $product ) {
+					self::mark_missing( (int) $id );
+					self::store( $product );
+				} else {
+					update_post_meta( (int) $id, self::META_CLASS, self::CLASS_NA );
+					update_post_meta( (int) $id, self::META_MODE, Andreani_Product_Bultos::MODE_SINGLE );
+				}
+			} catch ( \Throwable $e ) {
+				self::flag_unclassifiable( (int) $id, $e );
 			}
 		}
 

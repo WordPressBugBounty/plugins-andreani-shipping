@@ -328,7 +328,7 @@ class Andreani_Blocks {
 
 	private function throw_route_exception( $code, $message ) {
 		if ( class_exists( '\Automattic\WooCommerce\StoreApi\Exceptions\RouteException' ) ) {
-			throw new \Automattic\WooCommerce\StoreApi\Exceptions\RouteException( $code, $message, 400 );
+			throw new \Automattic\WooCommerce\StoreApi\Exceptions\RouteException( $code, $message, 400 ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- la Store API devuelve el mensaje como JSON y el checkout de bloques lo escapa al renderizar.
 		}
 	}
 }

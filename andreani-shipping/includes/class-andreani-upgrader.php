@@ -818,7 +818,7 @@ class Andreani_Upgrader {
 		);
 
 		if ( null === $rows || '' !== (string) $wpdb->last_error ) {
-			throw new \RuntimeException( 'No se pudieron leer los settings de las instancias: ' . $wpdb->last_error );
+			throw new \RuntimeException( esc_html( 'No se pudieron leer los settings de las instancias: ' . $wpdb->last_error ) );
 		}
 
 		$result = self::migrate_instances_to_promotions( $rows );

@@ -470,7 +470,7 @@
       }
       if ($select.length && $select.is(":visible")) {
         $("html, body").animate({ scrollTop: $select.offset().top - 100 }, 300);
-        $select.focus();
+        $select.trigger('focus');
       }
     },
 

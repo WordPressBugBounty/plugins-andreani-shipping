@@ -347,10 +347,10 @@ class Andreani_Shipment_Exporter {
 
 	private function build_csv( array $order_ids ) {
 		$columns = $this->get_columns();
-		$output  = fopen( 'php://temp', 'r+' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_fopen
+		$output  = fopen( 'php://temp', 'r+' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
 
 		// BOM para que Excel reconozca UTF-8 sin pedirle al user importar manualmente.
-		fwrite( $output, "\xEF\xBB\xBF" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_fwrite
+		fwrite( $output, "\xEF\xBB\xBF" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
 
 		fputcsv( $output, array_column( $columns, 'label' ), ';' );
 
@@ -378,7 +378,7 @@ class Andreani_Shipment_Exporter {
 
 		rewind( $output );
 		$csv = stream_get_contents( $output );
-		fclose( $output ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_fclose
+		fclose( $output ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 
 		return $csv;
 	}

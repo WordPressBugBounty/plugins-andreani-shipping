@@ -569,8 +569,8 @@ class Andreani_Product_Bultos {
 			'bultos_invalid'           => self::bultos_invalid_message(),
 			'piece_incomplete'         => __( 'Completá el peso y las tres medidas de esta caja, o quitala.', 'andreani-shipping' ),
 			/* translators: %s: número de caja */
-			/* translators: %s: número de caja */
 			'piece_complete'           => __( 'Completá las medidas de la caja %s', 'andreani-shipping' ),
+			/* translators: %s: número de caja */
 			'piece_ignored'            => __( 'Completá la caja %s para verla.', 'andreani-shipping' ),
 			/* translators: %s: números de caja, separados por coma */
 			'piece_ignored_many'       => __( 'Completá las cajas %s para verlas.', 'andreani-shipping' ),

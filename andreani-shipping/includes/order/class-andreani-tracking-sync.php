@@ -252,7 +252,7 @@ class Andreani_Tracking_Sync {
 			self::BATCH
 		);
 
-		return array_map( 'intval', $wpdb->get_col( $sql ) );
+		return array_map( 'intval', $wpdb->get_col( $sql ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 	}
 
 	/**

@@ -94,7 +94,7 @@ class Andreani_Shipping extends WC_Shipping_Method {
 		<tr valign="top">
 			<th scope="row" class="titledesc">
 				<label for="<?php echo esc_attr( $field_key ); ?>"><?php esc_html_e( 'Cotizador en producto', 'andreani-shipping' ); ?></label>
-				<?php echo wc_help_tip( __( 'Muestra un widget para cotizar el costo de envío en cada página de producto.', 'andreani-shipping' ) ); ?>
+				<?php echo wp_kses( wc_help_tip( __( 'Muestra un widget para cotizar el costo de envío en cada página de producto.', 'andreani-shipping' ) ), array( 'span' => array( 'class' => true, 'tabindex' => true, 'aria-label' => true, 'data-tip' => true ) ) ); ?>
 			</th>
 			<td class="forminp">
 				<select name="<?php echo esc_attr( $field_key ); ?>" id="<?php echo esc_attr( $field_key ); ?>" class="andreani-cotizador-enabled">
@@ -1149,10 +1149,11 @@ class Andreani_Shipping extends WC_Shipping_Method {
 							<div class="andreani-notif-card__toggle">
 								<table class="form-table andreani-notif-card__switch">
 									<?php
-									echo $this->generate_checkbox_html( $field, array( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+									$checkbox_html = $this->generate_checkbox_html( $field, array(
 										'title' => '',
 										'label' => __( 'Activar', 'andreani-shipping' ),
 									) );
+									echo $checkbox_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 									?>
 								</table>
 								<input type="hidden" name="<?php echo esc_attr( $this->get_field_key( $field ) ); ?>_present" value="1">
@@ -1187,11 +1188,12 @@ class Andreani_Shipping extends WC_Shipping_Method {
 					<?php
 					$this->generate_settings_html( $avanzado_fields );
 					$this->settings[ self::TRACKING_SYNC_FIELD ] = Andreani_Tracking_Sync::is_enabled() ? 'yes' : 'no';
-					echo $this->generate_checkbox_html( self::TRACKING_SYNC_FIELD, array( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+					$tracking_sync_html = $this->generate_checkbox_html( self::TRACKING_SYNC_FIELD, array(
 						'title'       => __( 'Seguimiento automático', 'andreani-shipping' ),
 						'label'       => __( 'Actualizar el seguimiento automáticamente', 'andreani-shipping' ),
 						'description' => __( 'Consulta el estado de tus envíos en segundo plano. No cambia el estado de tus pedidos ni envía mails.', 'andreani-shipping' ),
 					) );
+					echo $tracking_sync_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 					?>
 				</table>
 				<input type="hidden" name="<?php echo esc_attr( $this->get_field_key( self::TRACKING_SYNC_FIELD ) ); ?>_present" value="1">
@@ -1239,7 +1241,7 @@ class Andreani_Shipping extends WC_Shipping_Method {
 					printf(
 						/* translators: %d: number of products */
 						esc_html__( 'Productos sin peso o dimensiones (%d)', 'andreani-shipping' ),
-						$total_productos
+						absint( $total_productos )
 					);
 					?>
 				</div>
@@ -1272,7 +1274,7 @@ class Andreani_Shipping extends WC_Shipping_Method {
 						printf(
 							/* translators: %d: number of additional products */
 							esc_html__( 'y %d más...', 'andreani-shipping' ),
-							$total_productos - 20
+							absint( $total_productos - 20 )
 						);
 						?>
 					</p>

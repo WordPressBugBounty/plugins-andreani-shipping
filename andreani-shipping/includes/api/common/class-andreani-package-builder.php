@@ -209,6 +209,7 @@ class Andreani_Package_Builder {
 
 		if ( Andreani_Store_Boxes::is_set( $package ) ) {
 			foreach ( $package['boxes'] as $position => $box ) {
+				/* translators: %d: número de caja */
 				$parts[] = '' !== trim( (string) $box['ref'] ) ? trim( (string) $box['ref'] ) : sprintf( __( 'Caja %d', 'andreani-shipping' ), $position + 1 );
 			}
 		}
@@ -661,6 +662,7 @@ class Andreani_Package_Builder {
 
 			$package          = self::drawn_package( $bundle['width'], $bundle['depth'], $bundle['height'], $bundle['weight_kg'], $bundle['units'], $bundle['height'], 0.0, '' );
 			$package['count'] = 1;
+			/* translators: %s: nombres de los productos */
 			$package['name']  = sprintf( __( '%s (todo junto)', 'andreani-shipping' ), self::join_names( $names ) );
 
 			if ( ! empty( $bundle['store_box'] ) ) {

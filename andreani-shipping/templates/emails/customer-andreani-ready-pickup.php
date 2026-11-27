@@ -15,13 +15,14 @@ $text_color = wc_light_or_dark( $base_color, '#202020', '#ffffff' );
 do_action( 'woocommerce_email_header', $email_heading, $email );
 ?>
 
-<p><?php printf( esc_html__( 'Hola %s,', 'andreani-shipping' ), esc_html( $order->get_billing_first_name() ) ); ?></p>
+<p><?php /* translators: %s: nombre del cliente */ printf( esc_html__( 'Hola %s,', 'andreani-shipping' ), esc_html( $order->get_billing_first_name() ) ); ?></p>
 <p>
 	<?php
 	printf(
-		/* translators: %s: número de pedido */
 		'' !== $sucursal_nombre
+			/* translators: %s: número de pedido */
 			? esc_html__( 'Tu pedido #%s ya llegó y está listo para retirar. Podés retirarlo en:', 'andreani-shipping' )
+			/* translators: %s: número de pedido */
 			: esc_html__( 'Tu pedido #%s ya llegó y está listo para retirar.', 'andreani-shipping' ),
 		esc_html( $order->get_order_number() )
 	);

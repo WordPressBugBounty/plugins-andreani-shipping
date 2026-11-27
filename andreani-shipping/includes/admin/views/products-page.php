@@ -146,7 +146,7 @@ defined( 'ABSPATH' ) || exit;
 			<?php endif; ?>
 			<button type="button" class="andr-btn andr-btn--secondary andr-btn--sm andreani-bulk__btn" id="andreani-bulk-pkg-open" aria-expanded="false" aria-controls="andreani-bulk-pkg-panel"><?php esc_html_e( 'Asignar paquete…', 'andreani-shipping' ); ?></button>
 			<div class="andreani-bulk__pkg" id="andreani-bulk-pkg-panel" hidden
-				data-confirm="<?php echo esc_attr__( '%d productos pasan a «Varias cajas». ¿Asignar igual?', 'andreani-shipping' ); ?>"
+				data-confirm="<?php /* translators: %d: cantidad de productos */ echo esc_attr__( '%d productos pasan a «Varias cajas». ¿Asignar igual?', 'andreani-shipping' ); ?>"
 				data-none="<?php echo esc_attr__( 'Todavía no guardaste paquetes. Creá uno en Paquetes guardados.', 'andreani-shipping' ); ?>"
 				data-boxes-label="<?php echo esc_attr__( 'Cajas y sobres', 'andreani-shipping' ); ?>"
 				data-sets-label="<?php echo esc_attr__( 'Juegos de cajas', 'andreani-shipping' ); ?>">

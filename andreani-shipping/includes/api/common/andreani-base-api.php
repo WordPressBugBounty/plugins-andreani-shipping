@@ -44,7 +44,7 @@ abstract class Andreani_Base_Api implements Andreani_API_Interface {
 		if ( empty( $this->info_cliente ) ) {
 			if ( ! $this->validate_hash( $this->hash_andreani ) ) {
 				$tipo = ucfirst( static::$client_type );
-				throw new Exception( "Error al validar el hash de cliente {$tipo}" );
+				throw new Exception( esc_html( "Error al validar el hash de cliente {$tipo}" ) );
 			}
 		}
 	}

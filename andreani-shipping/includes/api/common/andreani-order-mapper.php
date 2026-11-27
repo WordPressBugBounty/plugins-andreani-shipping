@@ -348,8 +348,26 @@ class Andreani_Order_Mapper {
 		return $bultos;
 	}
 
+	public static function to_number( $value ) {
+		if ( is_int( $value ) || is_float( $value ) ) {
+			return (float) $value;
+		}
+
+		if ( ! is_scalar( $value ) ) {
+			return 0.0;
+		}
+
+		$value = trim( (string) $value );
+
+		if ( 1 === substr_count( $value, ',' ) && false === strpos( $value, '.' ) ) {
+			$value = str_replace( ',', '.', $value );
+		}
+
+		return floatval( $value );
+	}
+
 	public static function convert_weight_to_unit( $weight, $unit = 'kg' ) {
-		$weight  = floatval( $weight );
+		$weight  = self::to_number( $weight );
 		$wc_unit = get_option( 'woocommerce_weight_unit', 'kg' );
 
 		if ( $wc_unit === $unit ) {
@@ -381,7 +399,7 @@ class Andreani_Order_Mapper {
 	}
 
 	public static function convert_dimension_to_cm( $dimension ) {
-		$dimension = floatval( $dimension );
+		$dimension = self::to_number( $dimension );
 		$wc_unit   = get_option( 'woocommerce_dimension_unit', 'cm' );
 
 		switch ( $wc_unit ) {

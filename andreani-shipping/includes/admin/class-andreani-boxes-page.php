@@ -328,8 +328,8 @@ class Andreani_Boxes_Page {
 			'modal_new_set' => __( 'Agregar juego de cajas', 'andreani-shipping' ),
 			'modal_edit_set' => __( 'Editar juego de cajas', 'andreani-shipping' ),
 			'products_none' => __( 'Sin productos', 'andreani-shipping' ),
-			/* translators: %s: cantidad de productos con el paquete asignado */
 			'assigned_one'  => __( '1 asignado', 'andreani-shipping' ),
+			/* translators: %s: cantidad de productos asignados */
 			'assigned_many' => __( '%s asignados', 'andreani-shipping' ),
 			/* translators: %s: cantidad de productos que entran sin tener el paquete asignado */
 			'enter_many'    => __( '%s entran sin asignar', 'andreani-shipping' ),

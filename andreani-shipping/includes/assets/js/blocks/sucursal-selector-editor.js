@@ -8,6 +8,7 @@
   var el = wp.element.createElement;
 
   wp.blocks.registerBlockType('andreani/sucursal-selector', {
+    apiVersion: 3,
     title: 'Sucursal Andreani',
     category: 'woocommerce',
     parent: ['woocommerce/checkout-shipping-methods-block'],
