@@ -5,7 +5,7 @@ Copyright: 2025 Andreani.com
 Requires at least: 5.8
 Tested up to: 7.2
 Requires PHP: 7.4
-Stable tag: 1.8.13
+Stable tag: 1.8.14
 Contributors: integracionandreani
 Donate link:
 Tags: woocommerce, shipping, andreani, envio, etiquetas
@@ -376,6 +376,9 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 
 == Changelog ==
 
+= 1.8.14 =
+* Corregido: la caja guardada en Paquetes guardados ahora solo se recomienda: la cotización y el alta usan las medidas de los productos
+
 = 1.8.13 =
 * Compatibilidad: probado con WordPress 7.2 y PHP 8.6
 * Corregido: el análisis de "Mis productos" ya no queda detenido cuando un producto no se puede clasificar; ese producto queda marcado como "faltan datos" y el análisis sigue con el resto
@@ -628,6 +631,9 @@ La actualización a 1.5.0 es transparente — el upgrader corre automáticamente
 * Versión inicial publicada en el repositorio de WordPress
 
 == Upgrade Notice ==
+
+= 1.8.14 =
+La caja guardada en Paquetes guardados ahora solo se recomienda: la cotización y el alta usan las medidas de los productos.
 
 = 1.8.13 =
 Compatible con WordPress 7.2. El análisis de "Mis productos" ya no se detiene en catálogos con productos con datos incorrectos.

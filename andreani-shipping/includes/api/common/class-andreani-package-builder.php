@@ -414,19 +414,20 @@ class Andreani_Package_Builder {
 	}
 
 	/**
-	 * Decisión única de Bigger y de bulto para un conjunto de líneas. Con cajas
-	 * de la tienda cargadas, lo que viaja junto se declara con las medidas de la
-	 * más chica donde entra; las cajas propias del producto no se reemplazan.
+	 * Decisión única de Bigger y de bulto para un conjunto de líneas. La caja de la
+	 * tienda es solo una recomendación (store_box): nunca cambia lo que se declara.
 	 *
 	 * @param array $lines Líneas: product, quantity e id opcional.
-	 * @return array{force_bigger:bool,reason:string,line:int,bundled:array,bundle:?array} reason: multibulto, separate o none.
+	 * @return array{force_bigger:bool,reason:string,line:int,bundled:array,bundle:?array,store_box:?array} reason: multibulto, separate o none.
 	 */
 	public static function cart_decision( array $lines ) {
-		$none  = array( 'force_bigger' => false, 'reason' => 'none', 'line' => 0, 'bundled' => array(), 'bundle' => null );
+		$none  = array( 'force_bigger' => false, 'reason' => 'none', 'line' => 0, 'bundled' => array(), 'bundle' => null, 'store_box' => null );
 		$boxes = Andreani_Store_Boxes::all();
 
 		if ( ! Andreani_Product_Bultos::overflow_supported() ) {
-			return empty( $boxes ) ? $none : self::boxed_decision( $none, $lines, $boxes );
+			$none['store_box'] = self::recommended_box( $lines, $boxes );
+
+			return $none;
 		}
 
 		$forcing = false;
@@ -450,26 +451,28 @@ class Andreani_Package_Builder {
 		}
 
 		if ( ! $forcing ) {
-			return empty( $boxes ) ? $none : self::boxed_decision( $none, $lines, $boxes );
+			$none['store_box'] = self::recommended_box( $lines, $boxes );
+
+			return $none;
 		}
 
 		$bundled_lines = array_intersect_key( $lines, array_flip( $bundled ) );
-		$bundle        = self::bundle_of( $bundled_lines );
 
 		return array(
 			'force_bigger' => true,
 			'reason'       => $multi ? 'multibulto' : 'separate',
 			'line'         => $multi ? $multi : $first,
 			'bundled'      => $bundled,
-			'bundle'       => self::with_store_box( $bundle, self::contents_of( $bundled_lines ), $boxes ),
+			'bundle'       => self::bundle_of( $bundled_lines ),
+			'store_box'    => self::recommended_box( $bundled_lines, $boxes ),
 		);
 	}
 
-	/**
-	 * Sin Bigger de por medio: las líneas sueltas viajan en una caja de la tienda
-	 * si entran en alguna; las que traen su propia caja se declaran como siempre.
-	 */
-	private static function boxed_decision( array $none, array $lines, array $boxes ) {
+	private static function recommended_box( array $lines, array $boxes ) {
+		if ( empty( $boxes ) ) {
+			return null;
+		}
+
 		$loose = array();
 
 		foreach ( $lines as $key => $line ) {
@@ -479,42 +482,8 @@ class Andreani_Package_Builder {
 		}
 
 		$contents = self::contents_of( $loose );
-		$box      = $contents ? Andreani_Store_Boxes::pick( $contents['pieces'], $boxes ) : null;
 
-		if ( ! $box ) {
-			return $none;
-		}
-
-		$none['bundled'] = array_keys( $loose );
-		$none['bundle']  = array(
-			'width'     => (float) $box['width'],
-			'height'    => (float) $box['height'],
-			'depth'     => (float) $box['length'],
-			'weight_kg' => $contents['kg'],
-			'units'     => $contents['units'],
-			'store_box' => $box,
-		);
-
-		return $none;
-	}
-
-	private static function with_store_box( $bundle, $contents, array $boxes ) {
-		if ( ! $bundle || empty( $boxes ) || ! $contents ) {
-			return $bundle;
-		}
-
-		$box = Andreani_Store_Boxes::pick( $contents['pieces'], $boxes );
-
-		if ( ! $box ) {
-			return $bundle;
-		}
-
-		return array_merge( $bundle, array(
-			'width'     => (float) $box['width'],
-			'height'    => (float) $box['height'],
-			'depth'     => (float) $box['length'],
-			'store_box' => $box,
-		) );
+		return $contents ? Andreani_Store_Boxes::pick( $contents['pieces'], $boxes ) : null;
 	}
 
 	/**
@@ -547,10 +516,10 @@ class Andreani_Package_Builder {
 
 	/**
 	 * @param array $decision Resultado de cart_decision.
-	 * @return array{name:string,type:string,length:float,width:float,height:float}|null Caja de la tienda con la que viaja lo que va junto.
+	 * @return array{name:string,type:string,length:float,width:float,height:float}|null Caja de la tienda recomendada para lo que va junto.
 	 */
 	public static function store_box_of( array $decision ) {
-		return empty( $decision['bundle']['store_box'] ) ? null : $decision['bundle']['store_box'];
+		return empty( $decision['store_box'] ) ? null : $decision['store_box'];
 	}
 
 	/**
@@ -664,12 +633,6 @@ class Andreani_Package_Builder {
 			$package['count'] = 1;
 			/* translators: %s: nombres de los productos */
 			$package['name']  = sprintf( __( '%s (todo junto)', 'andreani-shipping' ), self::join_names( $names ) );
-
-			if ( ! empty( $bundle['store_box'] ) ) {
-				$package['ref']       = $bundle['store_box']['name'];
-				$package['store_box'] = $bundle['store_box'];
-				$package['store_for'] = implode( ', ', $names );
-			}
 
 			$packages[]       = $package;
 		}
